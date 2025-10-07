@@ -1,0 +1,13 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Create PRD",
+			"type": "shell",
+			"command": "touch",
+			"args": [
+				"docs/seat-booking-prd.md"
+			]
+		}
+	]
+}
