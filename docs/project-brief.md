@@ -21,13 +21,13 @@ Build a small Progressive Web App (PWA) used internally by all employees to acce
 1. Only one office floor is in scope for the PoC.
 2. Employee directory and authentication managed by Microsoft 365 / Azure AD.
 3. Admins are defined by an Azure AD group or app role (recommended: AD group).
-4. Frontend scaffold already exists in `frontend/` (React + Vite). We'll add MSAL and PWA support.
-5. Backend will be .NET 9 Web API; tokens are validated via Microsoft identity platform.
+4. Frontend scaffold exists in `src/frontend/` (React + Vite). We'll add MSAL and PWA support.
+5. Backend is a .NET 9 Minimal API in `src/backend/`; tokens are validated via Microsoft identity platform.
 
 ## High-level architecture
 
-- Frontend: React (existing `frontend/`), MSAL.js for Azure AD sign-in, PWA manifest + service worker.
-- Backend: ASP.NET Core Web API (Azure App Service or Container Apps), JWT Bearer validating Azure AD tokens.
+- Frontend: React (in `src/frontend/`), MSAL.js for Azure AD sign-in, PWA manifest + service worker.
+- Backend: ASP.NET Core Minimal API (in `src/backend/`), hosted in Azure App Service or Container Apps, JWT Bearer validating Azure AD tokens.
 - Database: Azure SQL. Stores bookings, per-day seat overrides, and minimal site configuration including the default seat count.
 - Auth: Microsoft Entra ID (Azure AD) — app registration for SPA + Web API. Use group/role claims to identify admins.
 
@@ -194,11 +194,12 @@ Recommendation: Use Azure AD group for canonical truth and seed admin users in D
 
 ## Backend (.NET) implementation notes
 
-1. Use .NET 9 and create an ASP.NET Core Web API.
+1. Using .NET 9 with ASP.NET Core Minimal API approach in `src/backend/`.
 2. Use Microsoft.Identity.Web for Azure AD token validation.
 3. Seed the `SeatConfig` table on first run with a sensible default (e.g., 50) via EF Core migrations or startup code. Allow overriding via API.
 4. Use EF Core (Code First) for PoC. Add migrations for the tables above.
 5. For capacity operations, use transactions and locking as noted in concurrency section.
+6. Group API endpoints by feature using extension methods to maintain clean Program.cs.
 
 ## Telemetry and logging
 
