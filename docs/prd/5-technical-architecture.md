@@ -1,35 +1,33 @@
 # 5. Technical Architecture
 
-## 5.1 Frontend Architecture
+## 5.1 Monorepo Architecture
 
-### Current Implementation
+The project has been migrated to an Nx monorepo to unify the development of the frontend, backend, and shared libraries. This structure improves code consistency, simplifies dependency management, and streamlines the overall development process.
 
-- React 18+ with TypeScript
-- Vite build system
-- ShadcnUI component library
-- Calendar and modal components
-- Basic routing setup
+- **`apps/`**: Contains the deployable applications, `swivel-portal` (React) and `swivel-portal-api` (Node.js).
+- **`libs/`**: Includes shared libraries for `dal` (Data Access Layer), `domain` (business logic), and `types` (shared interfaces).
 
-### To Be Implemented
+### Frontend Architecture
 
-- MSAL React for authentication
-- Protected routes wrapper
-- PWA manifest and service worker
-- API integration layer
-- Error handling and loading states
+- **Framework**: React 18+ with TypeScript, built and managed with Nx.
+- **UI Components**: ShadcnUI for the component library, with custom components for calendars and modals.
+- **Authentication**: MSAL React for Azure AD integration and protected routes.
+- **State Management**: React Context and Hooks for managing application state.
+- **API Communication**: A dedicated API integration layer for handling communication with the backend.
 
-## 5.2 Backend Architecture
+### Backend Architecture
 
-- AWS Lambda with TypeScript
-- Amazon API Gateway for RESTful endpoints
-- Azure AD integration for authentication
-- Mongoose for MongoDB data access
-- Structured logging with Amazon CloudWatch
+- **Runtime**: AWS Lambda with TypeScript, managed within the Nx monorepo.
+- **API Gateway**: Amazon API Gateway for defining and exposing RESTful endpoints.
+- **Authentication**: Azure AD integration for secure authentication.
+- **Data Access**: Mongoose for interacting with the MongoDB database, with the logic encapsulated in the `dal` library.
+- **Logging**: Structured logging is implemented using Amazon CloudWatch.
 
-## 5.3 Database Design
+## 5.2 Database Design
 
-- MongoDB hosted on MongoDB Atlas
-- `users` collection for profile data
-- `seatConfigurations` for global settings
-- `daySeatOverrides` for capacity management
-- `bookings` for reservation tracking
+- **Database**: MongoDB, hosted on MongoDB Atlas.
+- **Collections**:
+  - `users`: Stores user profile information.
+  - `seatConfigurations`: Defines global settings for seat availability.
+  - `daySeatOverrides`: Manages exceptions and overrides for daily capacity.
+  - `bookings`: Tracks all reservation data.

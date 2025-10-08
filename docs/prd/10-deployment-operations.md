@@ -2,19 +2,19 @@
 
 ## 10.1 Infrastructure
 
-- Frontend: Azure Static Web Apps or AWS S3/CloudFront
-- Backend: AWS Lambda with Amazon API Gateway
-- Database: MongoDB Atlas
-- CI/CD: GitHub Actions
+- **Frontend**: AWS S3/CloudFront for hosting the React application.
+- **Backend**: AWS Lambda with Amazon API Gateway for serverless functions.
+- **Database**: MongoDB Atlas for the database.
+- **Infrastructure as Code**: AWS CDK for defining and managing all cloud resources.
+- **CI/CD**: GitHub Actions with Nx Cloud for efficient monorepo builds.
 
 ## 10.2 Monitoring
 
-- Uptime and performance monitoring with Amazon CloudWatch
-- Error tracking with Sentry or similar
-- Log aggregation for backend functions
+- **Performance**: Uptime and performance are monitored using Amazon CloudWatch.
+- **Error Tracking**: Sentry is used for real-time error tracking.
+- **Logging**: Backend functions are configured with log aggregation for easier debugging.
 
 ## 10.3 Backup & Recovery
 
-- Automated backups via MongoDB Atlas
-- Point-in-time recovery for the database
-- Infrastructure-as-code for disaster recovery
+- **Database**: Automated backups and point-in-time recovery are handled by MongoDB Atlas.
+- **Infrastructure**: The use of AWS CDK for infrastructure-as-code facilitates disaster recovery and environment replication.

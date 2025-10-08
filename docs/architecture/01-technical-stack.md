@@ -3,7 +3,8 @@
 ## 2.1 Frontend Stack
 
 - **Framework**: React 18.2.0 with TypeScript 5.2
-- **Build Tool**: Vite 5.0
+- **Monorepo**: Nx (Nrwl Extensions)
+- **Build Tool**: Nx
 - **UI Framework**: ShadcnUI (React) with Tailwind CSS
 - **State Management**: React Context + Hooks
 - **Authentication**: MSAL.js 3.0 for Azure AD
@@ -18,9 +19,10 @@
 
 ## 2.2 Backend Stack
 
+- **Monorepo**: Nx (Nrwl Extensions)
 - **Runtime**: Node.js (LTS version) on AWS Lambda
 - **Language**: TypeScript
-- **Framework**: Serverless Framework or AWS CDK for deployment
+- **Framework**: AWS CDK for deployment
 - **API Gateway**: Amazon API Gateway for routing and exposure
 - **Authentication**: Passport.js with the `passport-azure-ad` strategy for Azure AD token validation
 - **Data Access**: Mongoose ODM or the native MongoDB Node.js driver
