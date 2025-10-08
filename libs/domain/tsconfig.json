@@ -4,6 +4,9 @@
   "include": [],
   "references": [
     {
+      "path": "../dal"
+    },
+    {
       "path": "./tsconfig.lib.json"
     },
     {
