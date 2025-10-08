@@ -24,7 +24,7 @@
 - **Language**: TypeScript
 - **Framework**: AWS CDK for deployment
 - **API Gateway**: Amazon API Gateway for routing and exposure
-- **Authentication**: Passport.js with the `passport-azure-ad` strategy for Azure AD token validation
+- **Authentication**: Custom Lambda Authorizer for Azure AD token validation
 - **Data Access**: Mongoose ODM or the native MongoDB Node.js driver
 - **Testing**: Jest or Vitest
 - **Code Quality**:
