@@ -1,52 +1,38 @@
 # Epics and Implementation Status
 
-## Epic 1: Data Foundation (Not Started) 🔴 - IMMEDIATE PRIORITY
+## Epic 1: Backend Foundation
 
-- Set up Azure SQL database schema
-- Create Entity Framework Core models and migrations
-- Implement data access layer
-- Set up initial configuration tables
-- Add database connection and context configuration
+- **Status**: Not Started
+- **Stories**:
+  - Set up Serverless Framework project for AWS Lambda
+  - Design and implement MongoDB schema with Mongoose
+  - Create data access layer for core models
+  - Implement basic CRUD API endpoints
 
-## Epic 2: Authentication & Authorization (Not Started) 🔴
+## Epic 2: User Authentication
 
-- Implement Microsoft 365 (Azure AD) authentication for all employees
-- Set up role-based access control for admin users
-- Integrate MSAL.js for secure token handling
-- Configure backend JWT validation for Azure AD tokens
+- **Status**: Not Started
+- **Stories**:
+  - Integrate MSAL.js in the React frontend
+  - Create login page with Microsoft sign-in button
+  - Implement backend token validation endpoint
+  - Secure API endpoints with authentication middleware
 
-## Epic 3: Dashboard & Navigation (Frontend Complete) 🟡
+## Epic 3: Core Booking Functionality
 
-- ✅ Create a responsive dashboard layout
-- ✅ Implement tool listing functionality
-- ✅ Add navigation structure for future tool additions
-- Set up PWA configuration
+- **Status**: In Progress
+- **Stories**:
+  - Connect calendar UI to backend to fetch availability (Blocked by Epic 1)
+  - Implement booking creation modal (UI Done)
+  - Develop API for creating and managing bookings (Blocked by Epic 1)
+  - Display user's existing bookings (Blocked by Epic 1)
 
-## Epic 4: Seat Booking Calendar (Frontend Complete) 🟡
+## Epic 4: Admin Features
 
-- ✅ Implement interactive calendar view
-- ✅ Design seat availability display
-- ✅ Enable date selection with future-only restriction
-- Integrate with backend for real-time seat count
-
-## Epic 5: Booking Management (Frontend UI Complete) 🟡
-
-- ✅ Create booking modal with duration options
-- ✅ Design booking workflow UI
-- Implement API integration for booking submission
-- Add booking confirmation system
-- Enable booking cancellation
-- Display user's existing bookings
-
-## Epic 6: Admin Features (Not Started) 🔴
+- **Status**: Not Started
+- **Stories**:
 
 - Create seat capacity management interface
 - Enable per-date seat count overrides
 - Implement default seat count configuration
 - Add admin-only views and controls
-
-Legend:
-
-- ✅ Implemented
-- 🟡 Partially Complete
-- 🔴 Not Started

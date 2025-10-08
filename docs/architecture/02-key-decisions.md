@@ -28,19 +28,18 @@
 
 ## 3.2 Backend Decisions
 
-1. **.NET 9 Minimal API**:
+1. **AWS Lambda + TypeScript**:
 
-   - Reduced boilerplate
-   - High performance
-   - Built-in OpenAPI support
-   - Strong typing and IDE support
+   - **Serverless**: Reduces operational overhead and scales automatically.
+   - **Cost-Effective**: Pay-per-execution model is ideal for variable workloads.
+   - **TypeScript**: Provides strong typing, aligning with the frontend stack for consistency.
+   - **Ecosystem**: Leverages the vast Node.js and npm ecosystem.
 
-2. **Entity Framework Core**:
+2. **Mongoose ODM**:
 
-   - Type-safe queries
-   - Migration management
-   - Rich querying capabilities
-   - Performance optimization features
+   - **Schema Validation**: Enforces data structure on top of flexible MongoDB.
+   - **Developer Experience**: Simplifies interaction with the database.
+   - **Middleware**: Allows for custom logic on operations (e.g., pre-save hooks).
 
 3. **Azure AD Integration**:
    - Seamless Microsoft 365 integration

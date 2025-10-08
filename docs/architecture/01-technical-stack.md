@@ -18,28 +18,29 @@
 
 ## 2.2 Backend Stack
 
-- **Framework**: .NET 9 Minimal API
-- **Authentication**: Microsoft.Identity.Web
-- **Database Access**: Entity Framework Core 9.0
-- **API Documentation**: Swagger/OpenAPI
-- **Logging**: Serilog with Azure App Insights
-- **Testing**: xUnit with Moq
+- **Runtime**: Node.js (LTS version) on AWS Lambda
+- **Language**: TypeScript
+- **Framework**: Serverless Framework or AWS CDK for deployment
+- **API Gateway**: Amazon API Gateway for routing and exposure
+- **Authentication**: Passport.js with the `passport-azure-ad` strategy for Azure AD token validation
+- **Data Access**: Mongoose ODM or the native MongoDB Node.js driver
+- **Testing**: Jest or Vitest
 - **Code Quality**:
-  - .NET Analyzer
-  - StyleCop
-  - SonarQube integration
+  - ESLint with TypeScript rules
+  - Prettier
+  - Husky for pre-commit hooks
 
 ## 2.3 Database
 
-- **Type**: Azure SQL
-- **ORM**: Entity Framework Core 9.0
-- **Migrations**: EF Core Code-First Migrations
-- **Backup**: Azure Automated Backups
+- **Type**: MongoDB
+- **Hosting**: MongoDB Atlas (or self-hosted)
+- **Schema**: Flexible schema with defined collections for core entities
 
 ## 2.4 Infrastructure
 
-- **Hosting**: Azure App Service (Frontend & Backend)
-- **Database**: Azure SQL
+- **Compute**: AWS Lambda for serverless functions
+- **API**: Amazon API Gateway
+- **Database**: MongoDB Atlas
 - **Identity**: Azure AD
-- **Monitoring**: Application Insights
-- **CDN**: Azure CDN (for static assets)
+- **Monitoring**: Amazon CloudWatch
+- **CDN**: Amazon CloudFront (for static assets)

@@ -29,7 +29,6 @@ Types: feat, fix, docs, style, refactor, test, chore
 
 - **TypeScript**: Strict mode enabled
 - **ESLint**: Airbnb preset + custom rules
-- **C# Style**: .NET standard + StyleCop rules
 - **Test Coverage**: Minimum 80%
 - **Pull Request Requirements**:
   - No failing tests

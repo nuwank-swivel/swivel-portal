@@ -1,17 +1,18 @@
 # 14. Appendix
 
-## A. Technical Stack
+## 14.1 Technology Stack
 
-- Frontend: React, TypeScript, MSAL.js, Vite
-- Backend: .NET 9, EF Core
-- Database: Azure SQL
-- Auth: Azure AD
-- Hosting: Azure App Service/Container Apps
+- Frontend: React, Vite, ShadcnUI, Tailwind CSS
+- Backend: Node.js/TypeScript on AWS Lambda
+- Database: MongoDB Atlas
+- Authentication: Azure AD with MSAL.js
 
-## B. Database Schema
+## 14.2 Key Integrations
 
-Detailed schema available in project documentation.
+- Microsoft Graph API (for user profile data)
+- Future: Outlook Calendar for booking synchronization
 
-## C. API Documentation
+## 14.3 Mockups & Designs
 
-Full API specification available in Swagger/OpenAPI format.
+- Link to Figma designs: [URL]
+

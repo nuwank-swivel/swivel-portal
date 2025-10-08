@@ -4,7 +4,7 @@ Date: 2025-10-07
 
 ## Summary
 
-Build a small Progressive Web App (PWA) used internally by all employees to access company tools. The initial tool is a seat-booking system for a single-floor office. Users authenticate with their Office 365 (Microsoft 365) accounts via Azure AD. Backend will be a .NET Core Web API hosted in Azure and the database will be Azure SQL.
+Build a small Progressive Web App (PWA) used internally by all employees to access company tools. The initial tool is a seat-booking system for a single-floor office. Users authenticate with their Office 365 (Microsoft 365) accounts via Azure AD. Backend will be TypeScript Lambda functions hosted in AWS and the database will be MongoDB.
 
 ## Goals (PoC scope)
 
@@ -22,13 +22,13 @@ Build a small Progressive Web App (PWA) used internally by all employees to acce
 2. Employee directory and authentication managed by Microsoft 365 / Azure AD.
 3. Admins are defined by an Azure AD group or app role (recommended: AD group).
 4. Frontend scaffold exists in `src/frontend/` (React + Vite). We'll add MSAL and PWA support.
-5. Backend is a .NET 9 Minimal API in `src/backend/`; tokens are validated via Microsoft identity platform.
+5. Backend is a set of TypeScript Lambda functions in `src/backend/`; tokens are validated via Microsoft identity platform.
 
 ## High-level architecture
 
 - Frontend: React (in `src/frontend/`), MSAL.js for Azure AD sign-in, PWA manifest + service worker.
-- Backend: ASP.NET Core Minimal API (in `src/backend/`), hosted in Azure App Service or Container Apps, JWT Bearer validating Azure AD tokens.
-- Database: Azure SQL. Stores bookings, per-day seat overrides, and minimal site configuration including the default seat count.
+- Backend: TypeScript Lambda functions hosted on AWS, using API Gateway. JWTs are validated via a Lambda authorizer or built-in API Gateway validation.
+- Database: MongoDB. Stores bookings, per-day seat overrides, and minimal site configuration including the default seat count.
 - Auth: Microsoft Entra ID (Azure AD) — app registration for SPA + Web API. Use group/role claims to identify admins.
 
 ## Contract (tiny)
@@ -93,49 +93,61 @@ PUT /api/seatbooking/config/default-seat-count
 - Admin only. Body: { defaultSeatCount }
 - Updates the global default seat count stored in DB.
 
-## Database schema (initial)
+## Database schema (initial) - MongoDB
 
-Use simple normalized schema. All dates stored as DATE; times as TIME.
+Collections will be used to store the application data. Dates and times will be stored as ISO 8601 strings or BSON dates.
 
-App configuration: for the PoC the default seat count will be stored in the database (see `SeatConfig` below). Secrets and Azure AD configuration remain in `appsettings` / Key Vault.
+App configuration: for the PoC the default seat count will be stored in the database (see `SeatConfig` collection). Secrets and Azure AD configuration will be managed via AWS Secrets Manager.
 
-CREATE TABLE Users (
-id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWSEQUENTIALID(),
-oid NVARCHAR(100) NOT NULL UNIQUE, -- object id from Azure AD
-email NVARCHAR(256),
-displayName NVARCHAR(256),
-isAdmin BIT DEFAULT 0,
-lastSeen DATETIME2
-);
+**Users collection:**
+```json
+{
+  "_id": "ObjectId",
+  "oid": "string", 
+  "email": "string",
+  "displayName": "string",
+  "isAdmin": "boolean",
+  "lastSeen": "Date"
+}
+```
 
-CREATE TABLE SeatConfig (
-id INT PRIMARY KEY CHECK (id = 1), -- single-row table, id = 1
-default_seat_count INT NOT NULL,
-updated_by UNIQUEIDENTIFIER NULL,
-updated_at DATETIME2 DEFAULT SYSUTCDATETIME()
-);
+**SeatConfig collection (singleton):**
+```json
+{
+  "_id": "ObjectId", 
+  "defaultSeatCount": "number",
+  "updatedBy": "string", 
+  "updatedAt": "Date"
+}
+```
 
-CREATE TABLE DaySeatOverrides (
-date DATE PRIMARY KEY,
-seat_count INT NOT NULL,
-updated_by UNIQUEIDENTIFIER NULL,
-updated_at DATETIME2 DEFAULT SYSUTCDATETIME()
-);
+**DaySeatOverrides collection:**
+```json
+{
+  "_id": "ObjectId",
+  "date": "string", 
+  "seatCount": "number",
+  "updatedBy": "string", 
+  "updatedAt": "Date"
+}
+```
 
-CREATE TABLE Bookings (
-id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWSEQUENTIALID(),
-user_id UNIQUEIDENTIFIER NULL,
-user_oid NVARCHAR(100) NOT NULL,
-date DATE NOT NULL,
-start_time TIME NOT NULL,
-end_time TIME NOT NULL,
-duration_type NVARCHAR(20) NOT NULL,
-created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
-canceled_at DATETIME2 NULL,
-canceled_by UNIQUEIDENTIFIER NULL
-);
+**Bookings collection:**
+```json
+{
+  "_id": "ObjectId",
+  "userOid": "string",
+  "date": "string", 
+  "startTime": "string", 
+  "endTime": "string", 
+  "durationType": "string", 
+  "createdAt": "Date",
+  "canceledAt": "Date",
+  "canceledBy": "string" 
+}
+```
 
-Indexes: Bookings(date), Bookings(user_id).
+Indexes: `Bookings(date)`, `Bookings(userOid)`.
 
 ## Seat count logic and storage rationale
 
@@ -153,8 +165,8 @@ Cons:
 
 ## Booking capacity enforcement
 
-1. Read `SeatConfig.default_seat_count` (from DB, with in-memory cache if needed).
-2. Read DaySeatOverrides for the date; if present, use its seat_count; otherwise use the default from SeatConfig.
+1. Read `SeatConfig.defaultSeatCount` (from DB, with in-memory cache if needed).
+2. Read DaySeatOverrides for the date; if present, use its seatCount; otherwise use the default from SeatConfig.
 3. Count active bookings for that date (exclude canceled bookings).
 4. If bookingsCount >= seatCount => return 409 Conflict.
 
@@ -192,18 +204,18 @@ Recommendation: Use Azure AD group for canonical truth and seed admin users in D
    - Admins can also update the global default via PUT /api/seatbooking/config/default-seat-count (accessible from an admin settings area or modal).
 4. Make app a PWA: add manifest.json, icons, and register a service worker (Vite PWA plugin can be used).
 
-## Backend (.NET) implementation notes
+## Backend (TypeScript) implementation notes
 
-1. Using .NET 9 with ASP.NET Core Minimal API approach in `src/backend/`.
-2. Use Microsoft.Identity.Web for Azure AD token validation.
-3. Seed the `SeatConfig` table on first run with a sensible default (e.g., 50) via EF Core migrations or startup code. Allow overriding via API.
-4. Use EF Core (Code First) for PoC. Add migrations for the tables above.
-5. For capacity operations, use transactions and locking as noted in concurrency section.
-6. Group API endpoints by feature using extension methods to maintain clean Program.cs.
+1. Using TypeScript with the Serverless Framework or AWS SAM for defining and deploying Lambda functions and API Gateway.
+2. A Lambda authorizer will be used for validating Azure AD tokens.
+3. Seed the `SeatConfig` collection on first run with a sensible default (e.g., 50) via a seeding script. Allow overriding via API.
+4. Use Mongoose or a similar ODM for interacting with MongoDB.
+5. For capacity operations, use transactions if using a replica set, or implement optimistic locking at the application level.
+6. Each API endpoint will correspond to a Lambda function, following a single-responsibility principle.
 
 ## Telemetry and logging
 
-- Add structured logs (Serilog) and Application Insights for Azure.
+- Use Amazon CloudWatch for structured logs and monitoring.
 
 ## Edge cases & open questions
 
@@ -215,29 +227,29 @@ Recommendation: Use Azure AD group for canonical truth and seed admin users in D
 
 1. This project brief (docs/project-brief.md).
 2. Frontend changes: MSAL + minimal dashboard + seat booking page + modal + PWA basics.
-3. Backend scaffold: Web API with endpoints, EF Core models, migrations, Azure AD validation wired for dev.
-4. SQL migration scripts for the initial schema (including seeding `SeatConfig`).
+3. Backend scaffold: Serverless project with Lambda handlers, API Gateway configuration, and Azure AD validation wired for dev.
+4. A script to seed the `SeatConfig` collection in MongoDB.
 5. README with local setup steps for frontend and backend.
 
 ## Implementation plan & rough timeline (1 dev)
 
 Day 0: Finalize requirements and admin list.
-Day 1: Backend scaffold, EF Core models, migrations, and dev Azure AD app registration docs.
+Day 1: Backend scaffold, Serverless/SAM configuration, MongoDB models, and dev Azure AD app registration docs.
 Day 2: Frontend MSAL integration, dashboard, calendar UI connected to API.
 Day 3: Booking flow, modal, validations, admin override endpoint and UI.
 Day 4: Concurrency guard, basic tests/manual smoke, PWA manifest and service worker.
-Day 5: Polish, README, deployment docs to Azure, handover.
+Day 5: Polish, README, deployment docs to AWS, handover.
 
 ## Quality gates
 
-- Backend builds and migrations run.
+- Backend deploys successfully.
 - Frontend builds; MSAL auth flow tested locally.
 - Unit tests for booking capacity logic (happy path + conflict).
 - Smoke test: sign-in with test Office 365 user, create booking, admin override.
 
 ## Next steps (choose one)
 
-1. Create backend scaffold (Web API + EF models + migrations).
+1. Create backend scaffold (Serverless/SAM project with Lambda handlers).
 2. Add MSAL + dashboard + minimal booking UI to `frontend/` and PWA basics.
 3. Implement both (1) and (2) — full PoC scaffold.
 4. Ask clarifying questions first.

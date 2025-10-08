@@ -20,15 +20,16 @@
 
 ## 5.2 Backend Architecture
 
-- ASP.NET Core Minimal API
-- Azure AD integration
-- EF Core with SQL Server
-- RESTful API endpoints
-- Structured logging with Serilog
+- AWS Lambda with TypeScript
+- Amazon API Gateway for RESTful endpoints
+- Azure AD integration for authentication
+- Mongoose for MongoDB data access
+- Structured logging with Amazon CloudWatch
 
 ## 5.3 Database Design
 
-- Users table for profile data
-- SeatConfig for global settings
-- DaySeatOverrides for capacity management
-- Bookings for reservation tracking
+- MongoDB hosted on MongoDB Atlas
+- `users` collection for profile data
+- `seatConfigurations` for global settings
+- `daySeatOverrides` for capacity management
+- `bookings` for reservation tracking

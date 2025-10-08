@@ -1,79 +1,71 @@
 # 5. Database Design
 
-## 5.1 Entity Model
+## 5.1 Data Model (MongoDB)
 
-```mermaid
-erDiagram
-    User {
-        string Id PK "UUID"
-        string AzureAdId "Unique Azure AD Object ID"
-        string Email
-        string Name
-        string Department "Optional - from Azure AD"
-        bool IsAdmin
-        datetime FirstLogin
-        datetime LastLogin
-        datetime CreatedAt
-    }
-    SeatConfiguration {
-        int Id PK
-        int DefaultSeatCount
-        datetime LastModified
-        string ModifiedBy FK
-    }
-    DaySeatOverride {
-        int Id PK
-        date Date
-        int SeatCount
-        datetime CreatedAt
-        string CreatedBy FK
-    }
-    Booking {
-        int Id PK
-        string UserId FK
-        date BookingDate
-        time StartTime
-        time EndTime
-        datetime CreatedAt
-    }
-```
+Instead of a relational schema, we will use a collection-based NoSQL model in MongoDB.
+
+- **`users` collection**:
+  - `_id`: ObjectId (Primary Key)
+  - `azureAdId`: String (Indexed, Unique) - The Azure AD Object ID.
+  - `email`: String
+  - `name`: String
+  - `department`: String (Optional)
+  - `isAdmin`: Boolean
+  - `firstLogin`: Date
+  - `lastLogin`: Date
+  - `createdAt`: Date
+
+- **`seatConfigurations` collection**:
+  - `_id`: ObjectId
+  - `defaultSeatCount`: Number
+  - `lastModified`: Date
+  - `modifiedBy`: ObjectId (references `users._id`)
+
+- **`daySeatOverrides` collection**:
+  - `_id`: ObjectId
+  - `date`: ISODate (e.g., "2025-10-28T00:00:00.000Z")
+  - `seatCount`: Number
+  - `createdAt`: Date
+  - `createdBy`: ObjectId (references `users._id`)
+
+- **`bookings` collection**:
+  - `_id`: ObjectId
+  - `userId`: ObjectId (references `users._id`)
+  - `bookingDate`: ISODate
+  - `startTime`: String (e.g., "09:00")
+  - `endTime`: String (e.g., "17:00")
+  - `createdAt`: Date
 
 ## 5.2 User Synchronization Flow
 
-1. **Initial Authentication**:
+1.  **Initial Authentication**:
+    - User logs in via MSAL.js in the frontend.
+    - Frontend obtains an Azure AD access token.
+    - Frontend sends the token to the backend API (e.g., `/api/auth/login`).
 
-   - User logs in via MSAL.js in frontend
-   - Frontend obtains Azure AD token
-   - Frontend sends token to backend `/api/auth/login`
-   - Backend validates token with Azure AD
+2.  **User Creation/Update (Backend)**:
+    - The backend Lambda function receives the token.
+    - It uses a library like `passport-azure-ad` to validate the token against Azure AD's configuration.
+    - Upon successful validation, the backend extracts user info from the token payload (Azure AD Object ID, email, name, etc.).
+    - The backend searches the `users` collection for a document with a matching `azureAdId`.
+    - **If new user**:
+      - A new document is created in the `users` collection.
+      - `firstLogin` and `createdAt` are set.
+      - The backend can optionally use the Microsoft Graph API (with appropriate permissions) to check for admin group membership.
+    - **If existing user**:
+      - `name` and `email` are updated if they have changed.
+      - `lastLogin` timestamp is updated.
+    - The backend returns user details to the frontend, along with a session token if applicable.
 
-2. **User Creation/Update**:
-
-   - Backend extracts user info from validated token:
-     - Azure AD Object ID
-     - Email
-     - Name
-     - Department (if available)
-   - Backend checks if user exists by AzureAdId
-   - If new user:
-     - Creates User record
-     - Sets FirstLogin and CreatedAt
-     - Checks admin group membership via Graph API
-   - If existing user:
-     - Updates Name/Email if changed
-     - Updates LastLogin timestamp
-   - Returns user details with session token
-
-3. **Admin Status Management**:
-   - Admin status is determined by Azure AD group membership
-   - Configured admin group ID in appsettings.json
-   - Backend checks group membership on login
-   - Updates IsAdmin flag accordingly
+3.  **Admin Status Management**:
+    - Admin status is determined by Azure AD group membership.
+    - The ID of the admin group is stored in an environment variable for the Lambda function.
+    - The backend checks group membership on login and updates the `isAdmin` flag in the user's document.
 
 ## 5.3 Data Access Layer
 
-- Repository pattern implementation
-- Unit of Work for transactions
-- Async/await throughout
-- Optimized queries with indexes
-- Soft delete pattern
+- **ODM**: Mongoose is used for data modeling, schema validation, and queries.
+- **Pattern**: A repository-like pattern can be implemented with services that encapsulate Mongoose models.
+- **Transactions**: For multi-document operations, MongoDB transactions will be used to ensure atomicity.
+- **Asynchronous Operations**: All database operations are asynchronous, using async/await.
+- **Indexing**: Proper indexes are created on fields like `azureAdId` and `bookingDate` to optimize query performance.

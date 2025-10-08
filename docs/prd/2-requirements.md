@@ -39,9 +39,8 @@
 
 ### Backend
 
-- .NET 9 Minimal API
-- Azure AD token validation
-- EF Core with SQL Server
+- AWS Lambda with Node.js/TypeScript
+- MongoDB Atlas
 - Transactional data integrity
 - Caching for performance optimization
 

@@ -16,5 +16,5 @@
 - CORS configuration
 - Content Security Policy
 - Azure AD role-based access
-- SQL parameters to prevent injection
+- Input validation and sanitization to prevent NoSQL injection
 - Regular security audits
