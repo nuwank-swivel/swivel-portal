@@ -24,6 +24,7 @@
 - ShadcnUI modal for booking interface (Implemented)
 - Real-time seat availability display (API integration pending)
 - Flexible booking durations (1 hour, half-day, full-day) (UI implemented)
+- Lunch option selection during booking (UI implemented)
 - User booking management (API integration pending)
 - Admin capacity management (API integration pending)
 

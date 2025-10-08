@@ -34,7 +34,15 @@ Instead of a relational schema, we will use a collection-based NoSQL model in Mo
   - `bookingDate`: ISODate
   - `startTime`: String (e.g., "09:00")
   - `endTime`: String (e.g., "17:00")
+  - `lunchOption`: String (e.g., "veg")
   - `createdAt`: Date
+
+- **`lunchOptions` collection**:
+  - `_id`: ObjectId
+  - `name`: String (e.g., "veg", "fish")
+  - `description`: String (e.g., "Vegetarian")
+  - `createdAt`: Date
+  - `createdBy`: ObjectId (references `users._id`)
 
 ## 5.2 User Synchronization Flow
 

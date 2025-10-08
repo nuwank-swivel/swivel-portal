@@ -15,3 +15,5 @@
 7. PUT /api/seatbooking/day-overrides/{date}
 8. GET /api/seatbooking/config
 9. PUT /api/seatbooking/config/default-seat-count
+10. GET /api/lunch-options
+11. PUT /api/lunch-options

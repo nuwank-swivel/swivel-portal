@@ -13,3 +13,4 @@
 3. As an employee, I can view and cancel my bookings
 4. As an admin, I can modify seat capacity for specific dates
 5. As an admin, I can set the default seat count
+6. As an admin, I can configure the available lunch options

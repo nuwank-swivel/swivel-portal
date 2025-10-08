@@ -16,6 +16,10 @@ GET / api / seats / bookings / me; // Get user's bookings
 POST / api / seats / bookings; // Create booking
 DELETE / api / seats / bookings / { id }; // Cancel booking
 
+// Lunch Options
+GET / api / lunch - options; // Get all lunch options
+PUT / api / lunch - options; // Update all lunch options
+
 // Admin Endpoints
 GET / api / admin / seats / config; // Get seat configuration
 PUT / api / admin / seats / config; // Update default seat count
