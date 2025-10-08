@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, MapPin, AlertCircle } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Calendar, Clock, MapPin, AlertCircle, Utensils } from "lucide-react";
 import { format } from "date-fns";
 import type { Seat } from "./SeatCard";
 
@@ -21,6 +22,7 @@ export interface BookingDetails {
   date: Date;
   startTime: string;
   endTime: string;
+  lunch?: string;
   notes?: string;
 }
 
@@ -38,6 +40,7 @@ const timeSlots = Array.from({ length: 19 }, (_, i) => {
 export function BookingModal({ isOpen, onClose, seat, selectedDate, onConfirm }: BookingModalProps) {
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("17:00");
+  const [lunch, setLunch] = useState<string>("");
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -60,10 +63,12 @@ export function BookingModal({ isOpen, onClose, seat, selectedDate, onConfirm }:
       date: selectedDate,
       startTime,
       endTime,
+      lunch,
       notes,
     });
     
     setIsSubmitting(false);
+    setLunch("");
     setNotes("");
   };
 
@@ -172,6 +177,26 @@ export function BookingModal({ isOpen, onClose, seat, selectedDate, onConfirm }:
               </div>
             </div>
           )}
+
+          {/* Lunch Selection */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium flex items-center gap-2">
+              <Utensils className="h-4 w-4" />
+              Lunch (optional)
+            </Label>
+            <RadioGroup value={lunch} onValueChange={setLunch}>
+              <div className="grid grid-cols-2 gap-3">
+                {["Veg", "Fish", "Chicken", "Egg", "Seafood"].map((option) => (
+                  <div key={option} className="flex items-center space-x-2">
+                    <RadioGroupItem value={option.toLowerCase()} id={option.toLowerCase()} />
+                    <Label htmlFor={option.toLowerCase()} className="font-normal cursor-pointer">
+                      {option}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </RadioGroup>
+          </div>
 
           {/* Notes */}
           <div className="space-y-2">
