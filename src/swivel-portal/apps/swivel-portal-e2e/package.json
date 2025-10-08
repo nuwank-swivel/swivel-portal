@@ -1,0 +1,10 @@
+{
+  "name": "@swivel-portal/swivel-portal-e2e",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "implicitDependencies": [
+      "@swivel-portal/swivel-portal"
+    ]
+  }
+}
