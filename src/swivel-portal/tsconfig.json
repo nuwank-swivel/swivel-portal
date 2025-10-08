@@ -8,6 +8,18 @@
     },
     {
       "path": "./apps/swivel-portal"
+    },
+    {
+      "path": "./libs/domain"
+    },
+    {
+      "path": "./libs/dal"
+    },
+    {
+      "path": "./apps/swivel-portal-api"
+    },
+    {
+      "path": "./libs/types"
     }
   ]
 }
