@@ -5,4 +5,10 @@ export const handler = async (
   context: Context
 ) => {
   // Function code
+  return {
+    statusCode: 200,
+    body: JSON.stringify({
+      message: 'Hello from Lambda!',
+    }),
+  };
 };
