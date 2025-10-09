@@ -14,7 +14,7 @@ api.interceptors.request.use(
   (config) => {
     if (idToken) {
       config.headers = config.headers || {};
-      config.headers['Authorization'] = `Bearer ${idToken}`;
+      config.headers['Authorization'] = idToken;
     }
     return config;
   },
