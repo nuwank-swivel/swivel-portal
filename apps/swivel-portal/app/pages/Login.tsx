@@ -1,18 +1,26 @@
 import { useIsAuthenticated, useMsal } from '@azure/msal-react';
 import { Button } from '@/components/ui/button';
 import { useCallback } from 'react';
+import api, { setIdToken } from '../lib/axios';
 
 export default function Login() {
   const { instance } = useMsal();
   const authenticated = useIsAuthenticated();
 
-  const handleLogin = useCallback(() => {
+  const handleLogin = useCallback(async () => {
     if (authenticated) {
       instance.logoutPopup();
       return;
     }
-    instance.loginPopup();
-  }, [instance]);
+    try {
+      const loginResponse = await instance.loginPopup();
+      const idToken = loginResponse.idToken;
+      setIdToken(idToken);
+      await api.post('/auth/login');
+    } catch (err) {
+      console.error('Login error:', err);
+    }
+  }, [instance, authenticated]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100">
