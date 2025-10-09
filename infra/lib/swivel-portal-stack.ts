@@ -15,6 +15,8 @@ export class SwivelPortalStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_22_X,
       environment: {
         // Add environment variables if needed
+        DB_USERNAME: process.env.DB_USERNAME || '',
+        DB_PASSWORD: process.env.DB_PASSWORD || '',
       },
     });
 
