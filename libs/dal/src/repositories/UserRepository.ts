@@ -1,11 +1,23 @@
 import { IRepository, User } from '@swivel-portal/types';
+import { User as UserModal } from '../models/User.js';
 
 export class UserRepository implements IRepository<User> {
-  getById(id: string): Promise<User | null> {
-    throw new Error('Method not implemented.');
+  async getById(id: string): Promise<User | null> {
+    try {
+      const user = await UserModal.findOne({ azureAdId: id }).exec();
+      if (!user) {
+        return null;
+      }
+      return user.toObject() as User;
+    } catch (error) {
+      console.log('Error fetching user by ID:', error);
+      return null;
+    }
   }
-  create(item: User): Promise<User> {
-    throw new Error('Method not implemented.');
+  async create(item: User): Promise<User> {
+    const newUser = new UserModal(item);
+    await newUser.save();
+    return newUser.toObject() as User;
   }
   update(id: string, item: Partial<User>): Promise<User | null> {
     throw new Error('Method not implemented.');
