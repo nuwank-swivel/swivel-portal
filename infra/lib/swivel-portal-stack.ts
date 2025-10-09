@@ -14,11 +14,30 @@ export class SwivelPortalStack extends cdk.Stack {
       handler: 'handler',
       runtime: lambda.Runtime.NODEJS_22_X,
       environment: {
-        // Add environment variables if needed
         DB_USERNAME: process.env.DB_USERNAME || '',
         DB_PASSWORD: process.env.DB_PASSWORD || '',
       },
     });
+
+    // Lambda function for custom authorizer
+    const authorizerLambda = new NodejsFunction(this, 'ApiAuthorizerLambda', {
+      entry: '../apps/swivel-portal-api/dist/authorizor.js',
+      handler: 'handler',
+      runtime: lambda.Runtime.NODEJS_22_X,
+      environment: {
+        MS_ENTRA_PUBLIC_KEY: process.env.MS_ENTRA_PUBLIC_KEY || '',
+      },
+    });
+
+    // API Gateway Lambda Authorizer
+    const apiAuthorizer = new apigateway.RequestAuthorizer(
+      this,
+      'ApiGatewayAuthorizer',
+      {
+        handler: authorizerLambda,
+        identitySources: [apigateway.IdentitySource.header('Authorization')],
+      }
+    );
 
     // API Gateway
     const api = new apigateway.RestApi(this, 'SwivelPortalApi', {
@@ -35,7 +54,11 @@ export class SwivelPortalStack extends cdk.Stack {
     const loginResource = authResource.addResource('login');
     loginResource.addMethod(
       'POST',
-      new apigateway.LambdaIntegration(loginLambda, { proxy: true })
+      new apigateway.LambdaIntegration(loginLambda, { proxy: true }),
+      {
+        authorizer: apiAuthorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
+      }
     );
   }
 }
