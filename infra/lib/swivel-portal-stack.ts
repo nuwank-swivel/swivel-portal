@@ -46,6 +46,11 @@ export class SwivelPortalStack extends cdk.Stack {
       deployOptions: {
         stageName: 'dev',
       },
+      defaultCorsPreflightOptions: {
+        allowOrigins: apigateway.Cors.ALL_ORIGINS,
+        allowMethods: apigateway.Cors.ALL_METHODS,
+        allowHeaders: apigateway.Cors.DEFAULT_HEADERS,
+      },
     });
 
     // /auth resource

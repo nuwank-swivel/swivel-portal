@@ -1,11 +1,15 @@
-import { Context, APIGatewayProxyEvent } from 'aws-lambda';
+import {
+  Context,
+  APIGatewayProxyEvent,
+  APIGatewayProxyResult,
+} from 'aws-lambda';
 import { loginUser } from '@swivel-portal/domain';
 import { connectToDb } from '@swivel-portal/dal';
 
 export const handler = async (
   event: APIGatewayProxyEvent,
   context: Context
-) => {
+): Promise<APIGatewayProxyResult> => {
   console.log('Event:', JSON.stringify(event));
   await connectToDb();
   const azureAdId = event.requestContext.authorizer?.azureAdId as string;
@@ -18,5 +22,17 @@ export const handler = async (
   }
   const name = event.requestContext.authorizer?.name as string;
   const email = event.requestContext.authorizer?.email as string;
-  return await loginUser(azureAdId, name, email);
+  const user = await loginUser(azureAdId, name, email);
+
+  return {
+    statusCode: 200,
+    body: JSON.stringify(user),
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*', // Allow from all origins
+      'Access-Control-Allow-Credentials': true, // Allow cookies and credentials
+      'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS', // Allowed methods
+      'Access-Control-Allow-Headers': 'Content-Type,Authorization', // Allowed headers
+    },
+  };
 };
