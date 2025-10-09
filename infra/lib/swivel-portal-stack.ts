@@ -10,7 +10,7 @@ export class SwivelPortalStack extends cdk.Stack {
 
     // Lambda function for /auth/login
     const loginLambda = new NodejsFunction(this, 'AuthLoginLambda', {
-      entry: '../apps/swivel-portal-api/src/functions/auth/login.ts',
+      entry: '../apps/swivel-portal-api/dist/login.js',
       handler: 'handler',
       runtime: lambda.Runtime.NODEJS_22_X,
       environment: {

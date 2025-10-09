@@ -1,14 +1,10 @@
 import { Context, APIGatewayProxyEvent } from 'aws-lambda';
+import { loginUser } from '@swivel-portal/domain';
 
 export const handler = async (
   event: APIGatewayProxyEvent,
   context: Context
 ) => {
   // Function code
-  return {
-    statusCode: 200,
-    body: JSON.stringify({
-      message: 'Hello from Lambda!',
-    }),
-  };
+  return loginUser();
 };
