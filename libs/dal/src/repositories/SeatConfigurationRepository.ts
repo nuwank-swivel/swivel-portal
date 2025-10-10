@@ -1,7 +1,7 @@
-import { IRepository, SeatConfiguration as SeatConfigurationType } from '@swivel-portal/types';
+import { ISeatConfigurationRepository, SeatConfiguration as SeatConfigurationType } from '@swivel-portal/types';
 import { SeatConfiguration } from '../models/SeatConfiguration.js';
 
-export class SeatConfigurationRepository implements IRepository<SeatConfigurationType> {
+export class SeatConfigurationRepository implements ISeatConfigurationRepository<SeatConfigurationType> {
   async getById(id: string): Promise<SeatConfigurationType | null> {
     try {
       const config = await SeatConfiguration.findById(id).exec();

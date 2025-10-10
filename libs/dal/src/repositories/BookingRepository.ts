@@ -1,7 +1,7 @@
-import { IRepository, Booking as BookingType } from '@swivel-portal/types';
+import { IBookingRepository, Booking as BookingType } from '@swivel-portal/types';
 import { Booking } from '../models/Booking.js';
 
-export class BookingRepository implements IRepository<BookingType> {
+export class BookingRepository implements IBookingRepository<BookingType> {
   async getById(id: string): Promise<BookingType | null> {
     try {
       const booking = await Booking.findById(id).exec();

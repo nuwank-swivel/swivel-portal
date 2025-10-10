@@ -1,7 +1,7 @@
-import { IRepository, DaySeatOverride as DaySeatOverrideType } from '@swivel-portal/types';
+import { IDaySeatOverrideRepository, DaySeatOverride as DaySeatOverrideType } from '@swivel-portal/types';
 import { DaySeatOverride } from '../models/DaySeatOverride.js';
 
-export class DaySeatOverrideRepository implements IRepository<DaySeatOverrideType> {
+export class DaySeatOverrideRepository implements IDaySeatOverrideRepository<DaySeatOverrideType> {
   async getById(id: string): Promise<DaySeatOverrideType | null> {
     try {
       const override = await DaySeatOverride.findById(id).exec();

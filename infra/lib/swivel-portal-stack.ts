@@ -40,6 +40,17 @@ export class SwivelPortalStack extends cdk.Stack {
       },
     });
 
+    // Lambda function for creating bookings
+    const createBookingLambda = new NodejsFunction(this, 'CreateBookingLambda', {
+      entry: '../apps/swivel-portal-api/dist/bookings.js',
+      handler: 'handler',
+      runtime: lambda.Runtime.NODEJS_22_X,
+      environment: {
+        DB_USERNAME: process.env.DB_USERNAME || '',
+        DB_PASSWORD: process.env.DB_PASSWORD || '',
+      },
+    });
+
     // API Gateway Lambda Authorizer
     const apiAuthorizer = new apigateway.RequestAuthorizer(
       this,
@@ -81,11 +92,23 @@ export class SwivelPortalStack extends cdk.Stack {
     const apiResource = api.root.addResource('api');
     // /api/seatbooking resource
     const seatBookingResource = apiResource.addResource('seatbooking');
-    // /api/seatbooking/availability resource
+    
+    // /api/seatbooking/availability resource (GET)
     const availabilityResource = seatBookingResource.addResource('availability');
     availabilityResource.addMethod(
       'GET',
       new apigateway.LambdaIntegration(seatAvailabilityLambda, { proxy: true }),
+      {
+        authorizer: apiAuthorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
+      }
+    );
+
+    // /api/seatbooking/bookings resource (POST)
+    const bookingsResource = seatBookingResource.addResource('bookings');
+    bookingsResource.addMethod(
+      'POST',
+      new apigateway.LambdaIntegration(createBookingLambda, { proxy: true }),
       {
         authorizer: apiAuthorizer,
         authorizationType: apigateway.AuthorizationType.CUSTOM,
