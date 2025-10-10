@@ -43,6 +43,8 @@ export function BookingModal({ isOpen, onClose, seat, selectedDate, onConfirm }:
   const [lunch, setLunch] = useState<string>("");
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   if (!seat) return null;
 
@@ -54,23 +56,59 @@ export function BookingModal({ isOpen, onClose, seat, selectedDate, onConfirm }:
 
   const handleConfirm = async () => {
     setIsSubmitting(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    onConfirm({
-      seatId: seat.id,
-      date: selectedDate,
-      startTime,
-      endTime,
-      lunch,
-      notes,
-    });
-    
-    setIsSubmitting(false);
-    setLunch("");
-    setNotes("");
+    setMessage(null);
+    setError(null);
+    try {
+      // Compose booking payload
+      const payload = {
+        seatId: seat.id,
+        date: selectedDate.toISOString(),
+        duration: getDuration(),
+        lunchOption: lunch,
+        // Optionally add notes if backend supports
+      };
+      // TODO: Replace with real user id from auth context
+      const userId = "test-user";
+      const res = await fetch("/api/seatbooking/bookings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-id": userId,
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Booking failed");
+      setMessage("Booking confirmed!");
+      // Compose BookingDetails for onConfirm
+      onConfirm({
+        seatId: seat.id,
+        date: selectedDate,
+        startTime,
+        endTime,
+        lunch,
+        notes,
+      });
+      setLunch("");
+      setNotes("");
+    } catch (err: unknown) {
+      const errMsg = (err && typeof err === 'object' && 'message' in err) ? (err as { message: string }).message : 'Booking failed';
+      setError(errMsg);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  // Helper to get duration label based on selected times
+  function getDuration() {
+    const start = parseInt(startTime.split(":")[0]);
+    const end = parseInt(endTime.split(":")[0]);
+    const diff = end - start;
+    if (diff === 1) return "1 hour";
+    if (diff === 4) return "Half day";
+    if (diff === 8) return "Full day";
+    return `${diff} hours`;
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -235,6 +273,9 @@ export function BookingModal({ isOpen, onClose, seat, selectedDate, onConfirm }:
             {isSubmitting ? "Confirming..." : "Confirm Booking"}
           </Button>
         </DialogFooter>
+        {/* Success/Error Messages */}
+        {message && <div className="mt-2 text-green-600 text-sm">{message}</div>}
+        {error && <div className="mt-2 text-red-600 text-sm">{error}</div>}
       </DialogContent>
     </Dialog>
   );

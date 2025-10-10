@@ -75,5 +75,30 @@ export class BookingRepository implements IRepository<BookingType> {
       return 0;
     }
   }
-}
 
+  /**
+   * Find bookings by seat and date (from create-booking feature)
+   */
+  async findBookingsByDateAndSeat(seatId: string, date: Date): Promise<BookingType[]> {
+    try {
+      const bookings = await Booking.find({ seatId, date }).exec();
+      return bookings.map(b => b.toObject() as BookingType);
+    } catch (error) {
+      console.log('Error finding bookings by seat and date:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Check if a seat is available (from create-booking feature)
+   */
+  async isSeatAvailable(seatId: string, date: Date): Promise<boolean> {
+    try {
+      const count = await Booking.countDocuments({ seatId, date }).exec();
+      return count === 0;
+    } catch (error) {
+      console.log('Error checking seat availability:', error);
+      return false;
+    }
+  }
+}
