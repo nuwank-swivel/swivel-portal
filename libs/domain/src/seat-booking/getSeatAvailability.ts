@@ -3,14 +3,7 @@ import {
   SeatConfigurationRepository, 
   DaySeatOverrideRepository 
 } from '@swivel-portal/dal';
-
-export interface SeatAvailabilityResponse {
-  date: string;
-  defaultSeatCount: number;
-  overrideSeatCount?: number;
-  bookingsCount: number;
-  availableSeats: number;
-}
+import { SeatAvailabilityResponse } from '@swivel-portal/types';
 
 export async function getSeatAvailability(date: string) {
   // Validate date parameter

@@ -7,13 +7,17 @@ export interface User {
 
 export interface Booking {
   _id?: string;
+  seatId?: string; // Added for create-booking feature
   userId: string;
   bookingDate: string; // YYYY-MM-DD format
+  date?: Date; // Added for create-booking feature
   startTime?: string;
   endTime?: string;
   durationType: 'hour' | 'half-day' | 'full-day';
+  duration?: string; // Alias for durationType (create-booking compatibility)
   lunchOption?: string;
   createdAt?: Date;
+  updatedAt?: Date;
   canceledAt?: Date | null;
   canceledBy?: string | null;
 }

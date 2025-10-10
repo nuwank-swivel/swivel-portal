@@ -10,7 +10,7 @@ export class SwivelPortalStack extends cdk.Stack {
 
     // Lambda function for /auth/login
     const loginLambda = new NodejsFunction(this, 'AuthLoginLambda', {
-      entry: '../apps/swivel-portal-api/dist/login.js',
+      entry: '../apps/swivel-portal-api/dist/auth/login.js',
       handler: 'handler',
       runtime: lambda.Runtime.NODEJS_22_X,
       environment: {
@@ -21,7 +21,7 @@ export class SwivelPortalStack extends cdk.Stack {
 
     // Lambda function for custom authorizer
     const authorizerLambda = new NodejsFunction(this, 'ApiAuthorizerLambda', {
-      entry: '../apps/swivel-portal-api/dist/authorizor.js',
+      entry: '../apps/swivel-portal-api/dist/auth/authorizor.js',
       handler: 'handler',
       runtime: lambda.Runtime.NODEJS_22_X,
       environment: {
@@ -31,7 +31,7 @@ export class SwivelPortalStack extends cdk.Stack {
 
     // Lambda function for seat availability
     const seatAvailabilityLambda = new NodejsFunction(this, 'SeatAvailabilityLambda', {
-      entry: '../apps/swivel-portal-api/dist/availability.js',
+      entry: '../apps/swivel-portal-api/dist/availability/getAvailability.js',
       handler: 'handler',
       runtime: lambda.Runtime.NODEJS_22_X,
       environment: {
@@ -42,7 +42,7 @@ export class SwivelPortalStack extends cdk.Stack {
 
     // Lambda function for creating bookings
     const createBookingLambda = new NodejsFunction(this, 'CreateBookingLambda', {
-      entry: '../apps/swivel-portal-api/dist/bookings.js',
+      entry: '../apps/swivel-portal-api/dist/seatbooking/bookings.js',
       handler: 'handler',
       runtime: lambda.Runtime.NODEJS_22_X,
       environment: {

@@ -9,10 +9,8 @@ import {
   type BookingDetails,
 } from '@/components/booking/BookingModal';
 import { toast } from 'sonner';
-import {
-  getSeatAvailability,
-  type SeatAvailability,
-} from '@/lib/api/seatBooking';
+import { getSeatAvailability } from '@/lib/api/seatBooking';
+import type { SeatAvailabilityResponse } from '@swivel-portal/types';
 
 const mockSeats: Seat[] = [
   {
@@ -67,9 +65,8 @@ export default function SeatBooking() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedSeat, setSelectedSeat] = useState<Seat | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [availability, setAvailability] = useState<SeatAvailability | null>(
-    null
-  );
+  const [availability, setAvailability] =
+    useState<SeatAvailabilityResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
