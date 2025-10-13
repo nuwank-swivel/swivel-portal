@@ -291,13 +291,13 @@ export function BookingModal({
           </div>
 
           {/* Tags Display */}
-          <div className="flex flex-wrap gap-1.5">
+          {/* <div className="flex flex-wrap gap-1.5">
             {seat.tags.map((tag) => (
               <Badge key={tag} variant="secondary" className="text-xs">
                 {tag}
               </Badge>
             ))}
-          </div>
+          </div> */}
         </div>
 
         <DialogFooter>
