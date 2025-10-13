@@ -2,6 +2,8 @@ import { Card } from '@/components/ui/card';
 import { Calendar, Users, FileText, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
+import LogoutButton from '../components/LogoutButton';
+
 const tools = [
   {
     id: 'seat-booking',
@@ -43,11 +45,19 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-6">
-          <h1 className="text-3xl font-bold text-foreground">Company Portal</h1>
-          <p className="text-muted-foreground mt-1">
-            Welcome back! Select a tool to get started.
-          </p>
+        <div className="container mx-auto px-4 py-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">
+              Company Portal
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Welcome back! Select a tool to get started.
+            </p>
+          </div>
+          <div>
+            {/* Logout button */}
+            <LogoutButton />
+          </div>
         </div>
       </header>
 

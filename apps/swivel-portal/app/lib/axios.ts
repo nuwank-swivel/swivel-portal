@@ -4,6 +4,14 @@ let idToken: string | null = null;
 
 export function setIdToken(token: string) {
   idToken = token;
+  localStorage.setItem('token', token);
+}
+
+function getIdToken() {
+  if (!idToken) {
+    idToken = localStorage.getItem('token');
+  }
+  return idToken;
 }
 
 const api = axios.create({
@@ -12,7 +20,8 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    if (idToken) {
+    const token = getIdToken();
+    if (token) {
       config.headers = config.headers || {};
       config.headers['Authorization'] = idToken;
     }
