@@ -3,6 +3,7 @@ import { Calendar, Users, FileText, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
 import LogoutButton from '../components/LogoutButton';
+import { useUser } from '../lib/UserContext';
 
 const tools = [
   {
@@ -41,14 +42,20 @@ const tools = [
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { user } = useUser();
 
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-6 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">
-              Company Portal
+            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+              Swivel Portal
+              {user?.isAdmin && (
+                <span className=" px-1 py-1 text-xs font-semibold rounded bg-yellow-100 text-yellow-800 border border-yellow-300 align-middle">
+                  Admin
+                </span>
+              )}
             </h1>
             <p className="text-muted-foreground mt-1">
               Welcome back! Select a tool to get started.
