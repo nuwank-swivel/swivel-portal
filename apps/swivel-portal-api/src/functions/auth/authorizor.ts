@@ -43,9 +43,7 @@ export const handler = async (
 
   // Attach azureAdId to context (context is not directly modifiable, so return in context field)
   const policy = generatePolicy(azureAdId, 'Allow', event.methodArn, context);
-  console.log('====================================');
-  console.log('policy:', policy);
-  console.log('====================================');
+  console.log('Generated policy:', JSON.stringify(policy));
   return policy;
 };
 

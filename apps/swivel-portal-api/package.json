@@ -60,6 +60,9 @@
       },
       "build": {
         "executor": "nx:run-commands",
+        "dependsOn": [
+          "^build"
+        ],
         "options": {
           "command": "node ./apps/swivel-portal-api/esbuild.config.js"
         }
