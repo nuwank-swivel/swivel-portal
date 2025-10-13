@@ -77,6 +77,28 @@ export class SwivelPortalStack extends cdk.Stack {
       }
     );
 
+    // Lambda function for creating bookings
+    const createBookingLambda = new lambda.Function(
+      this,
+      'CreateBookingLambda',
+      {
+        code: lambda.Code.fromAsset(
+          path.join(
+            __dirname,
+            '../../apps/swivel-portal-api/dist/seat-bookings/seatBookings.js.zip'
+          )
+        ),
+        handler: 'seatBookings.handler',
+        runtime: lambda.Runtime.NODEJS_22_X,
+        environment: {
+          DB_USERNAME: process.env.DB_USERNAME || '',
+          DB_PASSWORD: process.env.DB_PASSWORD || '',
+        },
+        layers: [sharedLayer],
+        timeout: cdk.Duration.seconds(10),
+      }
+    );
+  
     // API Gateway Lambda Authorizer
     const apiAuthorizer = new apigateway.RequestAuthorizer(
       this,
@@ -164,6 +186,17 @@ export class SwivelPortalStack extends cdk.Stack {
     availabilityResource.addMethod(
       'GET',
       new apigateway.LambdaIntegration(seatAvailabilityLambda, { proxy: true }),
+      {
+        authorizer: apiAuthorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
+      }
+    );
+
+    // /api/seatbooking/bookings resource (POST)
+    const bookingsResource = seatBookingResource.addResource('bookings');
+    bookingsResource.addMethod(
+      'POST',
+      new apigateway.LambdaIntegration(createBookingLambda, { proxy: true }),
       {
         authorizer: apiAuthorizer,
         authorizationType: apigateway.AuthorizationType.CUSTOM,
