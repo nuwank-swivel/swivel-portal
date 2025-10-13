@@ -67,6 +67,8 @@ This project is deployed via AWS CDK. Setup AWS credentials before running below
   cd infra
   cdk deploy
   ```
+  Deployment architecture:
+  ![alt text](assets/deployment-diagram.png)
 
 ## Semantic Commit Message Enforcement
 
