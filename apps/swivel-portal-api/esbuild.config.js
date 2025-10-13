@@ -22,4 +22,5 @@ require('esbuild').build({
   minifyWhitespace: true,
   minifyIdentifiers: false,
   minifySyntax: true,
+  external: ['mongoose'],
 });
