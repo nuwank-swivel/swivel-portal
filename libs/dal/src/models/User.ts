@@ -9,6 +9,7 @@ interface IUser extends Document {
   password: string;
   createdAt: Date;
   updatedAt: Date;
+  isAdmin: boolean;
 }
 
 const UserSchema: Schema = new Schema(
@@ -23,6 +24,10 @@ const UserSchema: Schema = new Schema(
       required: true,
       unique: true,
       trim: true,
+    },
+    isAdmin: {
+      type: Boolean,
+      default: false,
     },
     email: {
       type: String,
