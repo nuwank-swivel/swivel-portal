@@ -10,7 +10,7 @@ export class SwivelPortalStack extends cdk.Stack {
 
     // Lambda function for /auth/login
     const loginLambda = new NodejsFunction(this, 'AuthLoginLambda', {
-      entry: '../apps/swivel-portal-api/dist/login.js',
+      entry: '../apps/swivel-portal-api/dist/auth/login.js',
       handler: 'handler',
       runtime: lambda.Runtime.NODEJS_22_X,
       environment: {
@@ -21,13 +21,25 @@ export class SwivelPortalStack extends cdk.Stack {
 
     // Lambda function for custom authorizer
     const authorizerLambda = new NodejsFunction(this, 'ApiAuthorizerLambda', {
-      entry: '../apps/swivel-portal-api/dist/authorizor.js',
+      entry: '../apps/swivel-portal-api/dist/auth/authorizor.js',
       handler: 'handler',
       runtime: lambda.Runtime.NODEJS_22_X,
       environment: {
         MS_ENTRA_PUBLIC_KEY: process.env.MS_ENTRA_PUBLIC_KEY || '',
       },
     });
+
+    // Lambda function for seat availability
+    const seatAvailabilityLambda = new NodejsFunction(this, 'SeatAvailabilityLambda', {
+      entry: '../apps/swivel-portal-api/dist/availability/getAvailability.js',
+      handler: 'handler',
+      runtime: lambda.Runtime.NODEJS_22_X,
+      environment: {
+        DB_USERNAME: process.env.DB_USERNAME || '',
+        DB_PASSWORD: process.env.DB_PASSWORD || '',
+      },
+    });
+
 
     // API Gateway Lambda Authorizer
     const apiAuthorizer = new apigateway.RequestAuthorizer(
@@ -60,6 +72,22 @@ export class SwivelPortalStack extends cdk.Stack {
     loginResource.addMethod(
       'POST',
       new apigateway.LambdaIntegration(loginLambda, { proxy: true }),
+      {
+        authorizer: apiAuthorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
+      }
+    );
+
+    // /api resource
+    const apiResource = api.root.addResource('api');
+    // /api/seatbooking resource
+    const seatBookingResource = apiResource.addResource('seatbooking');
+    
+    // /api/seatbooking/availability resource (GET)
+    const availabilityResource = seatBookingResource.addResource('availability');
+    availabilityResource.addMethod(
+      'GET',
+      new apigateway.LambdaIntegration(seatAvailabilityLambda, { proxy: true }),
       {
         authorizer: apiAuthorizer,
         authorizationType: apigateway.AuthorizationType.CUSTOM,

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -9,6 +9,8 @@ import {
   type BookingDetails,
 } from '@/components/booking/BookingModal';
 import { toast } from 'sonner';
+import { getSeatAvailability } from '@/lib/api/seatBooking';
+import type { SeatAvailabilityResponse } from '@swivel-portal/types';
 
 const mockSeats: Seat[] = [
   {
@@ -63,6 +65,44 @@ export default function SeatBooking() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedSeat, setSelectedSeat] = useState<Seat | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [availability, setAvailability] =
+    useState<SeatAvailabilityResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch availability when date is selected
+  useEffect(() => {
+    if (!selectedDate) {
+      setAvailability(null);
+      setError(null);
+      return;
+    }
+
+    const fetchAvailability = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        // Format date as YYYY-MM-DD in local timezone (not UTC)
+        const year = selectedDate.getFullYear();
+        const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+        const day = String(selectedDate.getDate()).padStart(2, '0');
+        const dateStr = `${year}-${month}-${day}`;
+
+        const data = await getSeatAvailability(dateStr);
+        setAvailability(data);
+      } catch (err) {
+        console.error('Error fetching seat availability:', err);
+        setError('Failed to load seat availability. Please try again.');
+        toast.error('Failed to load availability', {
+          description: 'Please try selecting a different date.',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAvailability();
+  }, [selectedDate]);
 
   const handleReserve = (seatId: string) => {
     const seat = mockSeats.find((s) => s.id === seatId);
@@ -81,7 +121,7 @@ export default function SeatBooking() {
     setSelectedSeat(null);
   };
 
-  const availableSeats = mockSeats.filter((s) => s.status === 'available');
+  const availableSeatsCount = availability?.availableSeats ?? 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -137,29 +177,51 @@ export default function SeatBooking() {
                     day: 'numeric',
                   })}
                 </h2>
-                <div className="text-6xl font-bold text-primary mb-2">
-                  {availableSeats.length}
-                </div>
-                <p className="text-muted-foreground">
-                  {availableSeats.length === 1
-                    ? 'seat available'
-                    : 'seats available'}
-                </p>
+                {isLoading ? (
+                  <div className="text-6xl font-bold text-muted-foreground mb-2">
+                    ...
+                  </div>
+                ) : error ? (
+                  <div className="text-sm text-destructive mb-2">{error}</div>
+                ) : (
+                  <>
+                    <div className="text-6xl font-bold text-primary mb-2">
+                      {availableSeatsCount}
+                    </div>
+                    <p className="text-muted-foreground">
+                      {availableSeatsCount === 1
+                        ? 'seat available'
+                        : 'seats available'}
+                    </p>
+                    {availability && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {availability.bookingsCount} of{' '}
+                        {availability.overrideSeatCount ??
+                          availability.defaultSeatCount}{' '}
+                        seats booked
+                      </p>
+                    )}
+                  </>
+                )}
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button
                   size="lg"
                   onClick={() => {
-                    const firstAvailable = availableSeats[0];
+                    const firstAvailable = mockSeats[0];
                     if (firstAvailable) {
                       handleReserve(firstAvailable.id);
                     }
                   }}
-                  disabled={availableSeats.length === 0}
+                  disabled={isLoading || availableSeatsCount === 0}
                   className="min-w-[200px]"
                 >
-                  Book a Seat
+                  {isLoading
+                    ? 'Loading...'
+                    : availableSeatsCount === 0
+                    ? 'Fully Booked'
+                    : 'Book a Seat'}
                 </Button>
                 <Button
                   variant="outline"

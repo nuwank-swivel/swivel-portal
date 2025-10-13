@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { useCallback, useState } from 'react';
 import api, { setIdToken } from '../lib/axios';
 import { useNavigate } from 'react-router';
-
 export default function Login() {
   const { instance } = useMsal();
   const authenticated = useIsAuthenticated();
