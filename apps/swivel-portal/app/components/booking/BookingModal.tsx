@@ -80,7 +80,7 @@ export function BookingModal({
       const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
       const day = String(selectedDate.getDate()).padStart(2, '0');
       const dateStr = `${year}-${month}-${day}`;
-      
+
       // Compose booking payload
       const payload = {
         seatId: seat.id,

@@ -22,27 +22,31 @@ function mapDurationToEnum(duration: string): 'hour' | 'half-day' | 'full-day' {
 export async function bookSeat({ seatId, userId, date, duration, lunchOption }: {
   seatId: string;
   userId: string;
-  date: Date | string;
+  date: string; // YYYY-MM-DD format
   duration: string;
   lunchOption?: string;
 }) {
   const bookingRepo = new BookingRepository();
   
-  // Convert date to Date object if it's a string
-  const bookingDate = typeof date === 'string' ? new Date(date) : date;
+  // Validate date format
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(date)) {
+    throw new Error('Invalid date format. Expected YYYY-MM-DD');
+  }
   
   // Validate date is not in the past (allow today)
   const today = new Date();
   today.setHours(0, 0, 0, 0); // Reset to start of day
-  const bookingDateOnly = new Date(bookingDate);
-  bookingDateOnly.setHours(0, 0, 0, 0); // Reset to start of day
+  const [year, month, day] = date.split('-').map(Number);
+  const bookingDate = new Date(year, month - 1, day); // month is 0-indexed
+  bookingDate.setHours(0, 0, 0, 0);
   
-  if (bookingDateOnly < today) {
+  if (bookingDate < today) {
     throw new Error('Booking date cannot be in the past');
   }
   
-  // Check seat availability
-  const available = await bookingRepo.isSeatAvailable(seatId, bookingDate);
+  // Check seat availability (using string date)
+  const available = await bookingRepo.isSeatAvailable(seatId, date);
   if (!available) {
     throw new Error('Seat is not available for the selected date');
   }
@@ -50,12 +54,12 @@ export async function bookSeat({ seatId, userId, date, duration, lunchOption }: 
   // Map duration string to enum value
   const durationType = mapDurationToEnum(duration);
   
-  // Create booking
+  // Create booking with both date formats for compatibility
   const bookingData: Booking = {
     seatId,
     userId,
-    date: bookingDate,
-    bookingDate: bookingDate.toISOString().split('T')[0], // YYYY-MM-DD format
+    date: bookingDate, // Date object for legacy compatibility
+    bookingDate: date, // YYYY-MM-DD string (primary)
     durationType,
     duration,
     lunchOption,

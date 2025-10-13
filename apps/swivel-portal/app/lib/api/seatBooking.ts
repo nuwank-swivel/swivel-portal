@@ -17,7 +17,7 @@ export async function getSeatAvailability(date: string): Promise<SeatAvailabilit
  */
 export interface CreateBookingRequest {
   seatId: string;
-  date: string; // ISO date string
+  date: string; // YYYY-MM-DD format
   duration: string; // e.g., "1 hour", "Half day", "Full day"
   lunchOption?: string;
 }
