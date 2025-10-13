@@ -24,10 +24,10 @@ export const handler = async (
       body: result.body,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Credentials': true,
-        'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+        'Access-Control-Allow-Origin': '*', // Allow from all origins
+        'Access-Control-Allow-Credentials': true, // Allow cookies and credentials
+        'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS', // Allowed methods
+        'Access-Control-Allow-Headers': 'Content-Type,Authorization', // Allowed headers
       },
     };
   } catch (error) {
@@ -40,10 +40,10 @@ export const handler = async (
       }),
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Credentials': true,
-        'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+        'Access-Control-Allow-Origin': '*', // Allow from all origins
+        'Access-Control-Allow-Credentials': true, // Allow cookies and credentials
+        'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS', // Allowed methods
+        'Access-Control-Allow-Headers': 'Content-Type,Authorization', // Allowed headers
       },
     };
   }

@@ -2,11 +2,11 @@ import { useIsAuthenticated, useMsal } from '@azure/msal-react';
 import { Button } from '@/components/ui/button';
 import { useCallback } from 'react';
 import api, { setIdToken } from '../lib/axios';
-
+import { useNavigate } from 'react-router';
 export default function Login() {
   const { instance } = useMsal();
   const authenticated = useIsAuthenticated();
-
+  const navigate = useNavigate();
   const handleLogin = useCallback(async () => {
     if (authenticated) {
       instance.logoutPopup();
@@ -17,6 +17,7 @@ export default function Login() {
       const idToken = loginResponse.idToken;
       setIdToken(idToken);
       await api.post('/auth/login');
+      navigate('/');
     } catch (err) {
       console.error('Login error:', err);
     }

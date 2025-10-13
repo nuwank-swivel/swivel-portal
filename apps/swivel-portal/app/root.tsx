@@ -45,7 +45,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       authority: `https://login.microsoftonline.com/${
         import.meta.env.VITE_AZURE_TENANT_ID
       }`,
-      redirectUri: 'http://localhost:4200/redirect',
+      redirectUri: 'http://localhost:4200/auth',
     },
   };
   const msalInstance = new PublicClientApplication(msalConfig);

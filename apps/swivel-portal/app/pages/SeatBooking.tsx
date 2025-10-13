@@ -82,8 +82,12 @@ export default function SeatBooking() {
       setIsLoading(true);
       setError(null);
       try {
-        // Format date as YYYY-MM-DD
-        const dateStr = selectedDate.toISOString().split('T')[0];
+        // Format date as YYYY-MM-DD in local timezone (not UTC)
+        const year = selectedDate.getFullYear();
+        const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+        const day = String(selectedDate.getDate()).padStart(2, '0');
+        const dateStr = `${year}-${month}-${day}`;
+
         const data = await getSeatAvailability(dateStr);
         setAvailability(data);
       } catch (err) {
