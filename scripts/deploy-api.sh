@@ -9,8 +9,8 @@ rm -rf ./apps/swivel-portal-api/dist
 nx build swivel-portal-api
 
 # zip api functions
-./zip-api-functions.sh
+./scripts/zip-api-functions.sh
 
 cd ./infra
-cdk deploy
+npx cdk deploy
 

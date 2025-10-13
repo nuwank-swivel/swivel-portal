@@ -46,7 +46,6 @@ export class BookingRepository implements IBookingRepository<BookingType> {
 
   /**
    * Count bookings for a specific date (excludes canceled bookings)
-   * For testing: Returns dummy data for certain dates if DB is empty
    */
   async countBookingsByDate(date: string): Promise<number> {
     try {
@@ -55,21 +54,7 @@ export class BookingRepository implements IBookingRepository<BookingType> {
         canceledAt: null 
       }).exec();
       
-      // Return actual count if bookings exist
-      if (count > 0) {
-        return count;
-      }
-      
-      // DUMMY DATA: Return sample counts for testing
-      // This simulates different booking scenarios
-      const dummyData: Record<string, number> = {
-        '2025-10-15': 35,  // Partially booked
-        '2025-10-16': 48,  // Almost full
-        '2025-10-17': 10,  // Light booking
-        '2025-10-18': 50,  // Fully booked (assuming default 50)
-      };
-      
-      return dummyData[date] ?? 0; // Default to 0 for other dates
+      return count;
     } catch (error) {
       console.log('Error counting bookings by date:', error);
       return 0;
