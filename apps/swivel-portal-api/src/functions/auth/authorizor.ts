@@ -1,8 +1,17 @@
+interface JWTClaims {
+  sub: string;
+  name?: string;
+  preferred_username?: string;
+  roles?: string[];
+  [key: string]: unknown;
+}
 import {
   APIGatewayAuthorizerResult,
   APIGatewayRequestAuthorizerEvent,
 } from 'aws-lambda';
 import jwt from 'jsonwebtoken';
+
+const ADMIN_GROUP_ID = process.env.ADMIN_GROUP_ID;
 
 // Replace with your Microsoft Entra ID (Azure AD) public key or JWKS logic
 // const MICROSOFT_PUBLIC_KEY = process.env.MS_ENTRA_PUBLIC_KEY || '';
@@ -18,9 +27,9 @@ export const handler = async (
     throw 'Unauthorized';
   }
 
-  let decoded: any;
+  let decoded: JWTClaims;
   try {
-    decoded = jwt.decode(token);
+    decoded = jwt.decode(token) as JWTClaims;
   } catch (err) {
     console.log('Token verification failed', err);
     throw 'Unauthorized';
@@ -34,11 +43,19 @@ export const handler = async (
 
   const name = decoded.name;
   const email = decoded.preferred_username;
+  const roles: string[] = decoded.roles || [];
+
+  // Check if user is admin
+  let isAdmin = false;
+  if (ADMIN_GROUP_ID && Array.isArray(roles)) {
+    isAdmin = roles.includes(ADMIN_GROUP_ID);
+  }
 
   const context = {
     azureAdId,
     name,
     email,
+    isAdmin,
   };
 
   // Attach azureAdId to context (context is not directly modifiable, so return in context field)

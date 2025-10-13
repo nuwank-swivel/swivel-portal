@@ -48,7 +48,7 @@ export default function Dashboard() {
         <div className="container mx-auto px-4 py-6 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
-              Company Portal
+              Swivel Portal
             </h1>
             <p className="text-muted-foreground mt-1">
               Welcome back! Select a tool to get started.

@@ -35,6 +35,7 @@ export class SwivelPortalStack extends cdk.Stack {
       environment: {
         DB_USERNAME: process.env.DB_USERNAME || '',
         DB_PASSWORD: process.env.DB_PASSWORD || '',
+        ADMIN_GROUP_ID: process.env.ADMIN_GROUP_ID || '',
       },
       layers: [sharedLayer],
       timeout: cdk.Duration.seconds(10),
@@ -52,6 +53,7 @@ export class SwivelPortalStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_22_X,
       environment: {
         MS_ENTRA_PUBLIC_KEY: process.env.MS_ENTRA_PUBLIC_KEY || '',
+        ADMIN_GROUP_ID: process.env.ADMIN_GROUP_ID || '',
       },
     });
 

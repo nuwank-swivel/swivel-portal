@@ -3,6 +3,7 @@ export interface User {
   azureAdId: string;
   name?: string;
   email: string;
+  isAdmin?: boolean;
 }
 
 export interface Booking {

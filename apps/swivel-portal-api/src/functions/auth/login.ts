@@ -1,19 +1,13 @@
-import {
-  Context,
-  APIGatewayProxyEvent,
-  APIGatewayProxyResult,
-} from 'aws-lambda';
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { loginUser } from '@swivel-portal/domain';
 import { connectToDb } from '@swivel-portal/dal';
 
 export const handler = async (
-  event: APIGatewayProxyEvent,
-  context: Context
+  event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   console.log('Event:', JSON.stringify(event));
   await connectToDb();
   const azureAdId = event.requestContext.authorizer?.azureAdId as string;
-
   if (!azureAdId) {
     return {
       statusCode: 400,
@@ -22,7 +16,10 @@ export const handler = async (
   }
   const name = event.requestContext.authorizer?.name as string;
   const email = event.requestContext.authorizer?.email as string;
-  const user = await loginUser(azureAdId, name, email);
+  const isAdmin =
+    event.requestContext.authorizer?.isAdmin === true ||
+    event.requestContext.authorizer?.isAdmin === 'true';
+  const user = await loginUser(azureAdId, name, email, isAdmin);
 
   return {
     statusCode: 200,
