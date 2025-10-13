@@ -9,8 +9,8 @@ export interface IRepository<T> {
 
 export interface IBookingRepository<T> extends IRepository<T> {
   countBookingsByDate(date: string): Promise<number>;
-  findBookingsByDateAndSeat(seatId: string, date: Date): Promise<T[]>;
-  isSeatAvailable(seatId: string, date: Date): Promise<boolean>;
+  findBookingsByDateAndSeat(seatId: string, bookingDate: string): Promise<T[]>;
+  isSeatAvailable(seatId: string, bookingDate: string): Promise<boolean>;
 }
 
 export interface ISeatConfigurationRepository<T> extends IRepository<T> {

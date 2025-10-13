@@ -79,6 +79,28 @@ export class SwivelPortalStack extends cdk.Stack {
       }
     );
 
+    // Lambda function for creating bookings
+    const createBookingLambda = new lambda.Function(
+      this,
+      'CreateBookingLambda',
+      {
+        code: lambda.Code.fromAsset(
+          path.join(
+            __dirname,
+            '../../apps/swivel-portal-api/dist/seat-bookings/seatBookings.js.zip'
+          )
+        ),
+        handler: 'seatBookings.handler',
+        runtime: lambda.Runtime.NODEJS_22_X,
+        environment: {
+          DB_USERNAME: process.env.DB_USERNAME || '',
+          DB_PASSWORD: process.env.DB_PASSWORD || '',
+        },
+        layers: [sharedLayer],
+        timeout: cdk.Duration.seconds(10),
+      }
+    );
+  
     // API Gateway Lambda Authorizer
     const apiAuthorizer = new apigateway.RequestAuthorizer(
       this,
@@ -86,6 +108,7 @@ export class SwivelPortalStack extends cdk.Stack {
       {
         handler: authorizerLambda,
         identitySources: [apigateway.IdentitySource.header('Authorization')],
+        resultsCacheTtl: cdk.Duration.seconds(0),
       }
     );
 
@@ -100,6 +123,45 @@ export class SwivelPortalStack extends cdk.Stack {
         allowOrigins: apigateway.Cors.ALL_ORIGINS,
         allowMethods: apigateway.Cors.ALL_METHODS,
         allowHeaders: apigateway.Cors.DEFAULT_HEADERS,
+      },
+    });
+
+    // Add CORS headers to Gateway Responses (for authorizer failures)
+    api.addGatewayResponse('Unauthorized', {
+      type: apigateway.ResponseType.UNAUTHORIZED,
+      statusCode: '401',
+      responseHeaders: {
+        'Access-Control-Allow-Origin': "'*'",
+        'Access-Control-Allow-Headers': "'Content-Type,Authorization'",
+        'Access-Control-Allow-Methods': "'GET,POST,PUT,DELETE,OPTIONS'",
+      },
+    });
+
+    api.addGatewayResponse('AccessDenied', {
+      type: apigateway.ResponseType.ACCESS_DENIED,
+      statusCode: '403',
+      responseHeaders: {
+        'Access-Control-Allow-Origin': "'*'",
+        'Access-Control-Allow-Headers': "'Content-Type,Authorization'",
+        'Access-Control-Allow-Methods': "'GET,POST,PUT,DELETE,OPTIONS'",
+      },
+    });
+
+    api.addGatewayResponse('Default4xx', {
+      type: apigateway.ResponseType.DEFAULT_4XX,
+      responseHeaders: {
+        'Access-Control-Allow-Origin': "'*'",
+        'Access-Control-Allow-Headers': "'Content-Type,Authorization'",
+        'Access-Control-Allow-Methods': "'GET,POST,PUT,DELETE,OPTIONS'",
+      },
+    });
+
+    api.addGatewayResponse('Default5xx', {
+      type: apigateway.ResponseType.DEFAULT_5XX,
+      responseHeaders: {
+        'Access-Control-Allow-Origin': "'*'",
+        'Access-Control-Allow-Headers': "'Content-Type,Authorization'",
+        'Access-Control-Allow-Methods': "'GET,POST,PUT,DELETE,OPTIONS'",
       },
     });
 
@@ -127,6 +189,17 @@ export class SwivelPortalStack extends cdk.Stack {
     availabilityResource.addMethod(
       'GET',
       new apigateway.LambdaIntegration(seatAvailabilityLambda, { proxy: true }),
+      {
+        authorizer: apiAuthorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
+      }
+    );
+
+    // /api/seatbooking/bookings resource (POST)
+    const bookingsResource = seatBookingResource.addResource('bookings');
+    bookingsResource.addMethod(
+      'POST',
+      new apigateway.LambdaIntegration(createBookingLambda, { proxy: true }),
       {
         authorizer: apiAuthorizer,
         authorizationType: apigateway.AuthorizationType.CUSTOM,

@@ -112,13 +112,29 @@ export default function SeatBooking() {
     }
   };
 
-  const handleConfirmBooking = (details: BookingDetails) => {
+  const handleConfirmBooking = async (details: BookingDetails) => {
     toast.success('Booking Confirmed', {
       description: `${selectedSeat?.name} reserved for ${details.startTime} - ${details.endTime}`,
       duration: 5000,
     });
     setIsModalOpen(false);
     setSelectedSeat(null);
+    
+    // Refetch availability to update the counts
+    if (selectedDate) {
+      try {
+        const year = selectedDate.getFullYear();
+        const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+        const day = String(selectedDate.getDate()).padStart(2, '0');
+        const dateStr = `${year}-${month}-${day}`;
+
+        const data = await getSeatAvailability(dateStr);
+        setAvailability(data);
+      } catch (err) {
+        console.error('Error refreshing availability:', err);
+        // Don't show error toast here since booking was successful
+      }
+    }
   };
 
   const availableSeatsCount = availability?.availableSeats ?? 0;

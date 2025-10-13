@@ -1,5 +1,5 @@
 import api from '../axios';
-import { SeatAvailabilityResponse } from '@swivel-portal/types';
+import { SeatAvailabilityResponse, Booking } from '@swivel-portal/types';
 
 /**
  * Get seat availability for a specific date
@@ -12,3 +12,22 @@ export async function getSeatAvailability(date: string): Promise<SeatAvailabilit
   return response.data;
 }
 
+/**
+ * Create a new seat booking
+ */
+export interface CreateBookingRequest {
+  seatId: string;
+  date: string; // YYYY-MM-DD format
+  duration: string; // e.g., "1 hour", "Half day", "Full day"
+  lunchOption?: string;
+}
+
+export interface CreateBookingResponse {
+  message: string;
+  booking: Booking;
+}
+
+export async function createBooking(bookingData: CreateBookingRequest): Promise<CreateBookingResponse> {
+  const response = await api.post<CreateBookingResponse>('/api/seatbooking/bookings', bookingData);
+  return response.data;
+}

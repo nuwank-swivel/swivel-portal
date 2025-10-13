@@ -12,5 +12,5 @@ nx build swivel-portal-api
 ./scripts/zip-api-functions.sh
 
 cd ./infra
-cdk deploy
+npx cdk deploy
 

@@ -16,6 +16,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Calendar, Clock, MapPin, AlertCircle, Utensils } from 'lucide-react';
 import { format } from 'date-fns';
 import type { Seat } from './SeatCard';
+import { createBooking } from '../../lib/api/seatBooking';
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -55,6 +56,7 @@ export function BookingModal({
   const { user } = useUser();
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('17:00');
+  const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
   const [lunch, setLunch] = useState<string>('');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,10 +65,11 @@ export function BookingModal({
 
   if (!seat) return null;
 
-  const handlePreset = (hours: number) => {
+  const handlePreset = (label: string, hours: number) => {
     const start = parseInt(startTime.split(':')[0]);
     const end = start + hours;
     setEndTime(`${end.toString().padStart(2, '0')}:00`);
+    setSelectedPreset(label);
   };
 
   const handleConfirm = async () => {
@@ -74,27 +77,25 @@ export function BookingModal({
     setMessage(null);
     setError(null);
     try {
+      // Format date as YYYY-MM-DD in local timezone (not UTC)
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+
       // Compose booking payload
       const payload = {
         seatId: seat.id,
-        date: selectedDate.toISOString(),
+        date: dateStr,
         duration: getDuration(),
-        lunchOption: lunch,
-        // Optionally add notes if backend supports
+        lunchOption: lunch || undefined,
       };
-      // TODO: Replace with real user id from auth context
-      const userId = 'test-user';
-      const res = await fetch('/api/seatbooking/bookings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': userId,
-        },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Booking failed');
+
+      // Call the API using axios with auto-injected auth token
+      await createBooking(payload);
+
       setMessage('Booking confirmed!');
+
       // Compose BookingDetails for onConfirm
       onConfirm({
         seatId: seat.id,
@@ -104,6 +105,8 @@ export function BookingModal({
         lunch,
         notes,
       });
+
+      // Reset form
       setLunch('');
       setNotes('');
     } catch (err: unknown) {
@@ -131,7 +134,7 @@ export function BookingModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className="sm:max-w-[550px]"
+        className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto"
         aria-describedby="booking-description"
       >
         <DialogHeader>
@@ -148,7 +151,7 @@ export function BookingModal({
               <MapPin className="h-5 w-5" />
             </div>
             <div>
-              <div className="font-semibold">{seat.name}</div>
+              <div className="font-semibold">{'Book your seat'}</div>
             </div>
           </DialogTitle>
           <DialogDescription id="booking-description">
@@ -175,9 +178,11 @@ export function BookingModal({
               {timePresets.map((preset) => (
                 <Button
                   key={preset.label}
-                  variant="outline"
+                  variant={
+                    selectedPreset === preset.label ? 'default' : 'outline'
+                  }
                   size="sm"
-                  onClick={() => handlePreset(preset.duration)}
+                  onClick={() => handlePreset(preset.label, preset.duration)}
                   className="text-xs"
                 >
                   {preset.label}
@@ -199,7 +204,10 @@ export function BookingModal({
                   <select
                     id="start-time"
                     value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
+                    onChange={(e) => {
+                      setStartTime(e.target.value);
+                      setSelectedPreset(null);
+                    }}
                     className="w-full pl-9 pr-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                     aria-label="Select start time"
                   >
@@ -224,7 +232,10 @@ export function BookingModal({
                   <select
                     id="end-time"
                     value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
+                    onChange={(e) => {
+                      setEndTime(e.target.value);
+                      setSelectedPreset(null);
+                    }}
                     className="w-full pl-9 pr-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                     aria-label="Select end time"
                   >
