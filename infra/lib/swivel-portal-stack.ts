@@ -1,28 +1,54 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
+
+import * as path from 'path';
 
 export class SwivelPortalStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+    // Lambda Layer from infra/layers/layer.zip
+    const sharedLayer = new lambda.LayerVersion(
+      this,
+      'SwivelPortalSharedLayer',
+      {
+        code: lambda.Code.fromAsset(
+          path.join(__dirname, '../layers/layer.zip')
+        ),
+        compatibleRuntimes: [lambda.Runtime.NODEJS_22_X],
+        description: 'Shared layer for Swivel Portal Lambdas',
+      }
+    );
+
     // Lambda function for /auth/login
-    const loginLambda = new NodejsFunction(this, 'AuthLoginLambda', {
-      entry: '../apps/swivel-portal-api/dist/auth/login.js',
-      handler: 'handler',
+    const loginLambda = new lambda.Function(this, 'AuthLoginLambda', {
+      code: lambda.Code.fromAsset(
+        path.join(
+          __dirname,
+          '../../apps/swivel-portal-api/dist/auth/login.js.zip'
+        )
+      ),
+      handler: 'login.handler',
       runtime: lambda.Runtime.NODEJS_22_X,
       environment: {
         DB_USERNAME: process.env.DB_USERNAME || '',
         DB_PASSWORD: process.env.DB_PASSWORD || '',
       },
+      layers: [sharedLayer],
+      timeout: cdk.Duration.seconds(10),
     });
 
     // Lambda function for custom authorizer
-    const authorizerLambda = new NodejsFunction(this, 'ApiAuthorizerLambda', {
-      entry: '../apps/swivel-portal-api/dist/auth/authorizor.js',
-      handler: 'handler',
+    const authorizerLambda = new lambda.Function(this, 'ApiAuthorizerLambda', {
+      code: lambda.Code.fromAsset(
+        path.join(
+          __dirname,
+          '../../apps/swivel-portal-api/dist/auth/authorizor.js.zip'
+        )
+      ),
+      handler: 'authorizor.handler',
       runtime: lambda.Runtime.NODEJS_22_X,
       environment: {
         MS_ENTRA_PUBLIC_KEY: process.env.MS_ENTRA_PUBLIC_KEY || '',
@@ -30,16 +56,26 @@ export class SwivelPortalStack extends cdk.Stack {
     });
 
     // Lambda function for seat availability
-    const seatAvailabilityLambda = new NodejsFunction(this, 'SeatAvailabilityLambda', {
-      entry: '../apps/swivel-portal-api/dist/availability/getAvailability.js',
-      handler: 'handler',
-      runtime: lambda.Runtime.NODEJS_22_X,
-      environment: {
-        DB_USERNAME: process.env.DB_USERNAME || '',
-        DB_PASSWORD: process.env.DB_PASSWORD || '',
-      },
-    });
-
+    const seatAvailabilityLambda = new lambda.Function(
+      this,
+      'SeatAvailabilityLambda',
+      {
+        code: lambda.Code.fromAsset(
+          path.join(
+            __dirname,
+            '../../apps/swivel-portal-api/dist/availability/getAvailability.js.zip'
+          )
+        ),
+        handler: 'getAvailability.handler',
+        runtime: lambda.Runtime.NODEJS_22_X,
+        environment: {
+          DB_USERNAME: process.env.DB_USERNAME || '',
+          DB_PASSWORD: process.env.DB_PASSWORD || '',
+        },
+        layers: [sharedLayer],
+        timeout: cdk.Duration.seconds(10),
+      }
+    );
 
     // API Gateway Lambda Authorizer
     const apiAuthorizer = new apigateway.RequestAuthorizer(
@@ -121,9 +157,10 @@ export class SwivelPortalStack extends cdk.Stack {
     const apiResource = api.root.addResource('api');
     // /api/seatbooking resource
     const seatBookingResource = apiResource.addResource('seatbooking');
-    
+
     // /api/seatbooking/availability resource (GET)
-    const availabilityResource = seatBookingResource.addResource('availability');
+    const availabilityResource =
+      seatBookingResource.addResource('availability');
     availabilityResource.addMethod(
       'GET',
       new apigateway.LambdaIntegration(seatAvailabilityLambda, { proxy: true }),
