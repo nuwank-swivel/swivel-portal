@@ -108,6 +108,7 @@ export class SwivelPortalStack extends cdk.Stack {
       {
         handler: authorizerLambda,
         identitySources: [apigateway.IdentitySource.header('Authorization')],
+        resultsCacheTtl: cdk.Duration.seconds(0),
       }
     );
 
