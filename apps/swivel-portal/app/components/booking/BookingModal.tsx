@@ -151,7 +151,7 @@ export function BookingModal({
               <MapPin className="h-5 w-5" />
             </div>
             <div>
-              <div className="font-semibold">{seat.name}</div>
+              <div className="font-semibold">{'Book your seat'}</div>
             </div>
           </DialogTitle>
           <DialogDescription id="booking-description">
@@ -178,7 +178,9 @@ export function BookingModal({
               {timePresets.map((preset) => (
                 <Button
                   key={preset.label}
-                  variant={selectedPreset === preset.label ? 'default' : 'outline'}
+                  variant={
+                    selectedPreset === preset.label ? 'default' : 'outline'
+                  }
                   size="sm"
                   onClick={() => handlePreset(preset.label, preset.duration)}
                   className="text-xs"
