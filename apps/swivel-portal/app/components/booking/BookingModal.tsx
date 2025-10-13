@@ -75,10 +75,16 @@ export function BookingModal({
     setMessage(null);
     setError(null);
     try {
+      // Format date as YYYY-MM-DD in local timezone (not UTC)
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+      
       // Compose booking payload
       const payload = {
         seatId: seat.id,
-        date: selectedDate.toISOString(),
+        date: dateStr,
         duration: getDuration(),
         lunchOption: lunch || undefined,
       };
