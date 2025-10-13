@@ -17,6 +17,7 @@ import './index.css';
 import { Configuration, PublicClientApplication } from '@azure/msal-browser';
 import { MsalProvider } from '@azure/msal-react';
 import { useEffect, useMemo, useState } from 'react';
+import { UserProvider } from './lib/UserContext';
 
 export const meta: MetaFunction = () => [
   {
@@ -88,11 +89,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <QueryClientProvider client={queryClient}>
           <TooltipProvider>
             <MsalProvider instance={msalInstance}>
-              <Toaster />
-              <Sonner />
-              {initialized ? children : null}
-              <ScrollRestoration />
-              <Scripts />
+              <UserProvider>
+                <Toaster />
+                <Sonner />
+                {initialized ? children : null}
+                <ScrollRestoration />
+                <Scripts />
+              </UserProvider>
             </MsalProvider>
           </TooltipProvider>
         </QueryClientProvider>

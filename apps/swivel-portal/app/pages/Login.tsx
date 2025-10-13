@@ -1,14 +1,17 @@
 import { useIsAuthenticated, useMsal } from '@azure/msal-react';
 import { Button } from '@/components/ui/button';
 import { useCallback, useState } from 'react';
+import { useUser, User } from '../lib/UserContext';
 import api, { setIdToken } from '../lib/axios';
 import { useNavigate } from 'react-router';
+import { getUserInfo } from '@/lib/api/auth';
 export default function Login() {
   const { instance } = useMsal();
   const authenticated = useIsAuthenticated();
   const navigate = useNavigate();
 
   const [isLoading, setIsLoading] = useState(false);
+  const { setUser, initializeUserInfo } = useUser();
 
   const handleLogin = useCallback(async () => {
     setIsLoading(true);
@@ -23,14 +26,14 @@ export default function Login() {
       const loginResponse = await instance.loginPopup();
       const idToken = loginResponse.idToken;
       setIdToken(idToken);
-      await api.post('/auth/login');
+      initializeUserInfo();
       navigate('/');
     } catch (err) {
       console.error('Login error:', err);
     } finally {
       setIsLoading(false);
     }
-  }, [authenticated, instance, navigate]);
+  }, [authenticated, instance, navigate, setUser]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100">

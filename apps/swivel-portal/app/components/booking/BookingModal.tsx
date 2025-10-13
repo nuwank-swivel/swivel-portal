@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useUser } from '../../lib/UserContext';
 import {
   Dialog,
   DialogContent,
@@ -15,7 +16,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Calendar, Clock, MapPin, AlertCircle, Utensils } from 'lucide-react';
 import { format } from 'date-fns';
 import type { Seat } from './SeatCard';
-import { createBooking } from '@/lib/api/seatBooking';
+import { createBooking } from '../../lib/api/seatBooking';
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -52,6 +53,7 @@ export function BookingModal({
   selectedDate,
   onConfirm,
 }: BookingModalProps) {
+  const { user } = useUser();
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('17:00');
   const [lunch, setLunch] = useState<string>('');
@@ -129,6 +131,14 @@ export function BookingModal({
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
+            {/* Admin-only UI: Edit Capacity button */}
+            {user?.isAdmin && (
+              <div className="flex justify-end mb-2">
+                <Button variant="outline" size="sm">
+                  Edit Capacity
+                </Button>
+              </div>
+            )}
             <div className="p-2 rounded-lg bg-primary-light text-primary">
               <MapPin className="h-5 w-5" />
             </div>
