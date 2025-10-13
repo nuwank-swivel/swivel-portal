@@ -1,13 +1,21 @@
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Calendar, Clock, MapPin, AlertCircle, Utensils } from "lucide-react";
-import { format } from "date-fns";
-import type { Seat } from "./SeatCard";
+import { useState } from 'react';
+import { useUser } from '../../lib/UserContext';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Calendar, Clock, MapPin, AlertCircle, Utensils } from 'lucide-react';
+import { format } from 'date-fns';
+import type { Seat } from './SeatCard';
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -27,21 +35,28 @@ export interface BookingDetails {
 }
 
 const timePresets = [
-  { label: "1 hour", duration: 1 },
-  { label: "Half day", duration: 4 },
-  { label: "Full day", duration: 8 },
+  { label: '1 hour', duration: 1 },
+  { label: 'Half day', duration: 4 },
+  { label: 'Full day', duration: 8 },
 ];
 
 const timeSlots = Array.from({ length: 19 }, (_, i) => {
   const hour = i + 7; // 7 AM to 1 AM
-  return `${hour.toString().padStart(2, "0")}:00`;
+  return `${hour.toString().padStart(2, '0')}:00`;
 });
 
-export function BookingModal({ isOpen, onClose, seat, selectedDate, onConfirm }: BookingModalProps) {
-  const [startTime, setStartTime] = useState("09:00");
-  const [endTime, setEndTime] = useState("17:00");
-  const [lunch, setLunch] = useState<string>("");
-  const [notes, setNotes] = useState("");
+export function BookingModal({
+  isOpen,
+  onClose,
+  seat,
+  selectedDate,
+  onConfirm,
+}: BookingModalProps) {
+  const { user } = useUser();
+  const [startTime, setStartTime] = useState('09:00');
+  const [endTime, setEndTime] = useState('17:00');
+  const [lunch, setLunch] = useState<string>('');
+  const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -49,9 +64,9 @@ export function BookingModal({ isOpen, onClose, seat, selectedDate, onConfirm }:
   if (!seat) return null;
 
   const handlePreset = (hours: number) => {
-    const start = parseInt(startTime.split(":")[0]);
+    const start = parseInt(startTime.split(':')[0]);
     const end = start + hours;
-    setEndTime(`${end.toString().padStart(2, "0")}:00`);
+    setEndTime(`${end.toString().padStart(2, '0')}:00`);
   };
 
   const handleConfirm = async () => {
@@ -68,18 +83,18 @@ export function BookingModal({ isOpen, onClose, seat, selectedDate, onConfirm }:
         // Optionally add notes if backend supports
       };
       // TODO: Replace with real user id from auth context
-      const userId = "test-user";
-      const res = await fetch("/api/seatbooking/bookings", {
-        method: "POST",
+      const userId = 'test-user';
+      const res = await fetch('/api/seatbooking/bookings', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
-          "x-user-id": userId,
+          'Content-Type': 'application/json',
+          'x-user-id': userId,
         },
         body: JSON.stringify(payload),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Booking failed");
-      setMessage("Booking confirmed!");
+      if (!res.ok) throw new Error(data.error || 'Booking failed');
+      setMessage('Booking confirmed!');
       // Compose BookingDetails for onConfirm
       onConfirm({
         seatId: seat.id,
@@ -89,10 +104,13 @@ export function BookingModal({ isOpen, onClose, seat, selectedDate, onConfirm }:
         lunch,
         notes,
       });
-      setLunch("");
-      setNotes("");
+      setLunch('');
+      setNotes('');
     } catch (err: unknown) {
-      const errMsg = (err && typeof err === 'object' && 'message' in err) ? (err as { message: string }).message : 'Booking failed';
+      const errMsg =
+        err && typeof err === 'object' && 'message' in err
+          ? (err as { message: string }).message
+          : 'Booking failed';
       setError(errMsg);
     } finally {
       setIsSubmitting(false);
@@ -101,23 +119,31 @@ export function BookingModal({ isOpen, onClose, seat, selectedDate, onConfirm }:
 
   // Helper to get duration label based on selected times
   function getDuration() {
-    const start = parseInt(startTime.split(":")[0]);
-    const end = parseInt(endTime.split(":")[0]);
+    const start = parseInt(startTime.split(':')[0]);
+    const end = parseInt(endTime.split(':')[0]);
     const diff = end - start;
-    if (diff === 1) return "1 hour";
-    if (diff === 4) return "Half day";
-    if (diff === 8) return "Full day";
+    if (diff === 1) return '1 hour';
+    if (diff === 4) return 'Half day';
+    if (diff === 8) return 'Full day';
     return `${diff} hours`;
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent 
+      <DialogContent
         className="sm:max-w-[550px]"
         aria-describedby="booking-description"
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
+            {/* Admin-only UI: Edit Capacity button */}
+            {user?.isAdmin && (
+              <div className="flex justify-end mb-2">
+                <Button variant="outline" size="sm">
+                  Edit Capacity
+                </Button>
+              </div>
+            )}
             <div className="p-2 rounded-lg bg-primary-light text-primary">
               <MapPin className="h-5 w-5" />
             </div>
@@ -126,7 +152,8 @@ export function BookingModal({ isOpen, onClose, seat, selectedDate, onConfirm }:
             </div>
           </DialogTitle>
           <DialogDescription id="booking-description">
-            Configure your booking details including time, duration, and any special notes.
+            Configure your booking details including time, duration, and any
+            special notes.
           </DialogDescription>
         </DialogHeader>
 
@@ -135,14 +162,14 @@ export function BookingModal({ isOpen, onClose, seat, selectedDate, onConfirm }:
           <div className="flex items-center gap-2 p-3 rounded-lg bg-accent">
             <Calendar className="h-4 w-4 text-accent-foreground" />
             <span className="text-sm font-medium text-accent-foreground">
-              {format(selectedDate, "EEEE, MMMM d, yyyy")}
+              {format(selectedDate, 'EEEE, MMMM d, yyyy')}
             </span>
           </div>
 
           {/* Time Selection */}
           <div className="space-y-3">
             <Label className="text-sm font-medium">Time</Label>
-            
+
             {/* Quick Presets */}
             <div className="flex gap-2">
               {timePresets.map((preset) => (
@@ -161,7 +188,10 @@ export function BookingModal({ isOpen, onClose, seat, selectedDate, onConfirm }:
             {/* Time Pickers */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="start-time" className="text-xs text-muted-foreground">
+                <Label
+                  htmlFor="start-time"
+                  className="text-xs text-muted-foreground"
+                >
                   Start Time
                 </Label>
                 <div className="relative">
@@ -183,7 +213,10 @@ export function BookingModal({ isOpen, onClose, seat, selectedDate, onConfirm }:
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="end-time" className="text-xs text-muted-foreground">
+                <Label
+                  htmlFor="end-time"
+                  className="text-xs text-muted-foreground"
+                >
                   End Time
                 </Label>
                 <div className="relative">
@@ -224,10 +257,16 @@ export function BookingModal({ isOpen, onClose, seat, selectedDate, onConfirm }:
             </Label>
             <RadioGroup value={lunch} onValueChange={setLunch}>
               <div className="grid grid-cols-2 gap-3">
-                {["Veg", "Fish", "Chicken", "Egg", "Seafood"].map((option) => (
+                {['Veg', 'Fish', 'Chicken', 'Egg', 'Seafood'].map((option) => (
                   <div key={option} className="flex items-center space-x-2">
-                    <RadioGroupItem value={option.toLowerCase()} id={option.toLowerCase()} />
-                    <Label htmlFor={option.toLowerCase()} className="font-normal cursor-pointer">
+                    <RadioGroupItem
+                      value={option.toLowerCase()}
+                      id={option.toLowerCase()}
+                    />
+                    <Label
+                      htmlFor={option.toLowerCase()}
+                      className="font-normal cursor-pointer"
+                    >
                       {option}
                     </Label>
                   </div>
@@ -265,16 +304,18 @@ export function BookingModal({ isOpen, onClose, seat, selectedDate, onConfirm }:
           <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleConfirm} 
+          <Button
+            onClick={handleConfirm}
             disabled={isSubmitting || startTime >= endTime}
             aria-live="polite"
           >
-            {isSubmitting ? "Confirming..." : "Confirm Booking"}
+            {isSubmitting ? 'Confirming...' : 'Confirm Booking'}
           </Button>
         </DialogFooter>
         {/* Success/Error Messages */}
-        {message && <div className="mt-2 text-green-600 text-sm">{message}</div>}
+        {message && (
+          <div className="mt-2 text-green-600 text-sm">{message}</div>
+        )}
         {error && <div className="mt-2 text-red-600 text-sm">{error}</div>}
       </DialogContent>
     </Dialog>
