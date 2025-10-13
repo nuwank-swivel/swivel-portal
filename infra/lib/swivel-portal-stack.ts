@@ -65,6 +65,45 @@ export class SwivelPortalStack extends cdk.Stack {
       },
     });
 
+    // Add CORS headers to Gateway Responses (for authorizer failures)
+    api.addGatewayResponse('Unauthorized', {
+      type: apigateway.ResponseType.UNAUTHORIZED,
+      statusCode: '401',
+      responseHeaders: {
+        'Access-Control-Allow-Origin': "'*'",
+        'Access-Control-Allow-Headers': "'Content-Type,Authorization'",
+        'Access-Control-Allow-Methods': "'GET,POST,PUT,DELETE,OPTIONS'",
+      },
+    });
+
+    api.addGatewayResponse('AccessDenied', {
+      type: apigateway.ResponseType.ACCESS_DENIED,
+      statusCode: '403',
+      responseHeaders: {
+        'Access-Control-Allow-Origin': "'*'",
+        'Access-Control-Allow-Headers': "'Content-Type,Authorization'",
+        'Access-Control-Allow-Methods': "'GET,POST,PUT,DELETE,OPTIONS'",
+      },
+    });
+
+    api.addGatewayResponse('Default4xx', {
+      type: apigateway.ResponseType.DEFAULT_4XX,
+      responseHeaders: {
+        'Access-Control-Allow-Origin': "'*'",
+        'Access-Control-Allow-Headers': "'Content-Type,Authorization'",
+        'Access-Control-Allow-Methods': "'GET,POST,PUT,DELETE,OPTIONS'",
+      },
+    });
+
+    api.addGatewayResponse('Default5xx', {
+      type: apigateway.ResponseType.DEFAULT_5XX,
+      responseHeaders: {
+        'Access-Control-Allow-Origin': "'*'",
+        'Access-Control-Allow-Headers': "'Content-Type,Authorization'",
+        'Access-Control-Allow-Methods': "'GET,POST,PUT,DELETE,OPTIONS'",
+      },
+    });
+
     // /auth resource
     const authResource = api.root.addResource('auth');
     // /auth/login resource
