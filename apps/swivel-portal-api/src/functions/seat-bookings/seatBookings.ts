@@ -1,4 +1,8 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
+import {
+  APIGatewayProxyEvent,
+  APIGatewayProxyResult,
+  Context,
+} from 'aws-lambda';
 import { connectToDb } from '@swivel-portal/dal';
 import { bookSeat } from '@swivel-portal/domain';
 
@@ -42,8 +46,8 @@ export const handler = async (
       headers: corsHeaders,
     };
   }
-  const { date, duration, lunchOption, seatId } = body || {};
-  if (!date || !duration || !seatId) {
+  const { date, duration, lunchOption } = body || {};
+  if (!date || !duration) {
     return {
       statusCode: 400,
       body: JSON.stringify({ error: 'Missing required fields' }),
@@ -53,14 +57,17 @@ export const handler = async (
 
   try {
     await connectToDb();
-    const booking = await bookSeat({ seatId, userId, date, duration, lunchOption });
+    const booking = await bookSeat({ userId, date, duration, lunchOption });
     return {
       statusCode: 201,
       body: JSON.stringify({ message: 'Booking created', booking }),
       headers: corsHeaders,
     };
   } catch (error: unknown) {
-    const errMsg = (error && typeof error === 'object' && 'message' in error) ? (error as { message: string }).message : 'Booking failed';
+    const errMsg =
+      error && typeof error === 'object' && 'message' in error
+        ? (error as { message: string }).message
+        : 'Booking failed';
     return {
       statusCode: 400,
       body: JSON.stringify({ error: errMsg }),

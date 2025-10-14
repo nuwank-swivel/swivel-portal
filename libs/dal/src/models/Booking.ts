@@ -1,12 +1,8 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 interface IBooking extends Document {
-  seatId?: string; // Optional for now, added by create-booking feature
   userId: string;
-  bookingDate: string; // YYYY-MM-DD format for availability feature
-  date?: Date; // For create-booking feature compatibility
-  startTime?: string;
-  endTime?: string;
+  bookingDate: string; // YYYY-MM-DD format
   durationType: 'hour' | 'half-day' | 'full-day';
   duration?: string; // Alias for durationType (create-booking compatibility)
   lunchOption?: string;
@@ -18,9 +14,6 @@ interface IBooking extends Document {
 
 const BookingSchema: Schema = new Schema(
   {
-    seatId: {
-      type: String,
-    },
     userId: {
       type: String,
       required: true,
@@ -30,15 +23,6 @@ const BookingSchema: Schema = new Schema(
       type: String,
       required: true,
       index: true,
-    },
-    date: {
-      type: Date,
-    },
-    startTime: {
-      type: String,
-    },
-    endTime: {
-      type: String,
     },
     durationType: {
       type: String,

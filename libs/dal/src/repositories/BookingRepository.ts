@@ -97,42 +97,23 @@ export class BookingRepository implements IBookingRepository<BookingType> {
   }
 
   /**
-   * Find bookings by seat and date
-   * @param seatId - The seat identifier
+   * Check if a user has a booking on a specific date
+   * @param userId - The user identifier
    * @param bookingDate - Date in YYYY-MM-DD format
    */
-  async findBookingsByDateAndSeat(
-    seatId: string,
+  async hasUserBookingOnDate(
+    userId: string,
     bookingDate: string
-  ): Promise<BookingType[]> {
-    try {
-      const bookings = await Booking.find({
-        seatId,
-        bookingDate,
-        canceledAt: null,
-      }).exec();
-      return bookings.map((b) => b.toObject() as BookingType);
-    } catch (error) {
-      console.log('Error finding bookings by seat and date:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Check if a seat is available for a specific date
-   * @param seatId - The seat identifier
-   * @param bookingDate - Date in YYYY-MM-DD format
-   */
-  async isSeatAvailable(seatId: string, bookingDate: string): Promise<boolean> {
+  ): Promise<boolean> {
     try {
       const count = await Booking.countDocuments({
-        seatId,
+        userId,
         bookingDate,
         canceledAt: null,
       }).exec();
-      return count === 0;
+      return count > 0;
     } catch (error) {
-      console.log('Error checking seat availability:', error);
+      console.log('Error checking user booking on date:', error);
       return false;
     }
   }
