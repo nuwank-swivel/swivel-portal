@@ -7,17 +7,22 @@ import {
   type MetaFunction,
   type LinksFunction,
 } from 'react-router';
-import { Toaster as Sonner } from '@/components/ui/sonner';
-
 import { Toaster } from '@/components/ui/toaster';
-
+import '@mantine/core/styles.css';
+import '@mantine/notifications/styles.css';
+import '@mantine/dates/styles.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { TooltipProvider } from './components/ui/tooltip';
 import './index.css';
 import { Configuration, PublicClientApplication } from '@azure/msal-browser';
 import { MsalProvider } from '@azure/msal-react';
 import { useEffect, useMemo, useState } from 'react';
 import { UserProvider } from './lib/UserContext';
+import { theme } from './theme';
+import {
+  ColorSchemeScript,
+  MantineProvider,
+  mantineHtmlProps,
+} from '@mantine/core';
 
 export const meta: MetaFunction = () => [
   {
@@ -78,7 +83,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   }, [initialized, msalInstance]);
 
   return (
-    <html lang="en">
+    <html lang="en" {...mantineHtmlProps}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -87,17 +92,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <QueryClientProvider client={queryClient}>
-          <TooltipProvider>
+          <MantineProvider theme={theme}>
             <MsalProvider instance={msalInstance}>
               <UserProvider>
                 <Toaster />
-                <Sonner />
                 {initialized ? children : null}
-                <ScrollRestoration />
-                <Scripts />
               </UserProvider>
             </MsalProvider>
-          </TooltipProvider>
+          </MantineProvider>
+          <ScrollRestoration />
+          <Scripts />
         </QueryClientProvider>
       </body>
     </html>

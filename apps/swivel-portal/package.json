@@ -5,17 +5,24 @@
   "scripts": {},
   "sideEffects": false,
   "dependencies": {
-    "@react-router/node": "^7.2.0",
-    "@react-router/serve": "^7.2.0",
+    "@react-router/node": "^7.9.4",
+    "@react-router/serve": "^7.9.4",
     "isbot": "^4.4.0",
     "react": "19.0.0",
     "react-dom": "19.0.0",
-    "react-router": "^7.2.0"
+    "react-router": "^7.9.4",
+    "@mantine/core": "^8.3.4",
+    "@mantine/dates": "^8.3.4",
+    "@mantine/form": "^8.3.4",
+    "@mantine/hooks": "^8.3.4",
+    "@mantine/notifications": "^8.3.4"
   },
   "devDependencies": {
-    "@react-router/dev": "^7.2.0",
+    "@react-router/dev": "^7.9.4",
     "@types/node": "^20.0.0",
     "@types/react": "19.0.0",
-    "@types/react-dom": "19.0.0"
+    "@types/react-dom": "19.0.0",
+    "postcss-preset-mantine": "^1.15.0",
+    "postcss-simple-vars": "^7.0.1"
   }
 }

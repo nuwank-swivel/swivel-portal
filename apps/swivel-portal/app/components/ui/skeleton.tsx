@@ -1,7 +1,3 @@
-import { cn } from "@/lib/utils";
+import { Skeleton as MantineSkeleton } from '@mantine/core';
 
-function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("animate-pulse rounded-md bg-muted", className)} {...props} />;
-}
-
-export { Skeleton };
+export { MantineSkeleton as Skeleton };
