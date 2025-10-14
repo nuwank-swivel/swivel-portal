@@ -65,23 +65,23 @@ const SeatBooking = () => {
       message: `Seat reserved for ${details.startTime} - ${details.endTime}`,
     });
     setIsModalOpen(false);
-
+    setSelectedDate(null);
     // Refetch availability to update the counts
-    if (selectedDate) {
-      try {
-        const date = new Date(selectedDate);
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const dateStr = `${year}-${month}-${day}`;
+    // if (selectedDate) {
+    //   try {
+    //     const date = new Date(selectedDate);
+    //     const year = date.getFullYear();
+    //     const month = String(date.getMonth() + 1).padStart(2, '0');
+    //     const day = String(date.getDate()).padStart(2, '0');
+    //     const dateStr = `${year}-${month}-${day}`;
 
-        const data = await getSeatAvailability(dateStr);
-        setAvailability(data);
-      } catch (err) {
-        console.error('Error refreshing availability:', err);
-        // Don't show error toast here since booking was successful
-      }
-    }
+    //     const data = await getSeatAvailability(dateStr);
+    //     setAvailability(data);
+    //   } catch (err) {
+    //     console.error('Error refreshing availability:', err);
+    //     // Don't show error toast here since booking was successful
+    //   }
+    // }
   };
 
   const availableSeatsCount = availability?.availableSeats ?? 0;

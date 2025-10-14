@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
+import { useUser } from '@/lib/UserContext';
+import { useExportBookingsExcel } from '@/hooks/useExportBookingsExcel';
 import { Modal, Group, Loader, Text, Badge, Table } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import { getAllBookingsForDate } from '@/lib/api/seatBooking';
+import { Button } from '../ui/button';
+import { Sheet } from 'lucide-react';
 
 interface AllBookingsModalProps {
   opened: boolean;
@@ -16,6 +20,8 @@ interface AdminBooking {
 }
 
 export function AllBookingsModal({ opened, onClose }: AllBookingsModalProps) {
+  const { user } = useUser();
+  const exportBookingsExcel = useExportBookingsExcel();
   // Use a calendar dropdown for date selection
   const [date, setDate] = useState<Date | null>(new Date());
   const [bookings, setBookings] = useState<AdminBooking[]>([]);
@@ -41,11 +47,23 @@ export function AllBookingsModal({ opened, onClose }: AllBookingsModalProps) {
     }
   };
 
+  const handleDownloadExcel = () => exportBookingsExcel(bookings, date);
+
   useEffect(() => {
     if (opened && date) {
+      setBookings([]);
       fetchBookings(date);
     }
   }, [opened, date]);
+
+  useEffect(() => {
+    if (!opened) {
+      setDate(new Date());
+      setBookings([]);
+      setLoading(false);
+      setError(null);
+    }
+  }, [opened]);
 
   return (
     <Modal
@@ -54,7 +72,7 @@ export function AllBookingsModal({ opened, onClose }: AllBookingsModalProps) {
       title="All Bookings (Admin)"
       size="lg"
     >
-      <Group mb="md">
+      <Group mb="md" className="flex flex-row justify-between items-end">
         <DatePickerInput
           label="Select a date"
           value={date}
@@ -64,6 +82,19 @@ export function AllBookingsModal({ opened, onClose }: AllBookingsModalProps) {
           popoverProps={{ withinPortal: true }}
           clearable={false}
         />
+        {user?.isAdmin && bookings.length > 0 && (
+          <Button
+            onClick={handleDownloadExcel}
+            type="button"
+            variant="outline"
+            data-testid="download-excel-btn"
+            size="xs"
+            color="green"
+          >
+            <Sheet size="20" className="mr-2" />
+            Download as Excel
+          </Button>
+        )}
       </Group>
       {loading ? (
         <div className="flex justify-center">
