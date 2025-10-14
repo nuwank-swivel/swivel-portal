@@ -2,13 +2,40 @@ import api from '../axios';
 import { SeatAvailabilityResponse, Booking } from '@swivel-portal/types';
 
 /**
+ * Fetch the authenticated user's upcoming bookings
+ */
+export async function getMyBookings(): Promise<Booking[]> {
+  const response = await api.get<{ bookings: Booking[] }>(
+    '/api/seatbooking/bookings/me'
+  );
+  return response.data.bookings;
+}
+
+/**
+ * Cancel a booking by ID
+ */
+export async function cancelBooking(
+  bookingId: string
+): Promise<{ message: string }> {
+  const response = await api.delete<{ message: string }>(
+    `/api/seatbooking/bookings/${bookingId}`
+  );
+  return response.data;
+}
+
+/**
  * Get seat availability for a specific date
  * @param date - Date in YYYY-MM-DD format
  */
-export async function getSeatAvailability(date: string): Promise<SeatAvailabilityResponse> {
-  const response = await api.get<SeatAvailabilityResponse>('/api/seatbooking/availability', {
-    params: { date },
-  });
+export async function getSeatAvailability(
+  date: string
+): Promise<SeatAvailabilityResponse> {
+  const response = await api.get<SeatAvailabilityResponse>(
+    '/api/seatbooking/availability',
+    {
+      params: { date },
+    }
+  );
   return response.data;
 }
 
@@ -27,7 +54,12 @@ export interface CreateBookingResponse {
   booking: Booking;
 }
 
-export async function createBooking(bookingData: CreateBookingRequest): Promise<CreateBookingResponse> {
-  const response = await api.post<CreateBookingResponse>('/api/seatbooking/bookings', bookingData);
+export async function createBooking(
+  bookingData: CreateBookingRequest
+): Promise<CreateBookingResponse> {
+  const response = await api.post<CreateBookingResponse>(
+    '/api/seatbooking/bookings',
+    bookingData
+  );
   return response.data;
 }

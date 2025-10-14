@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
+// import { useNavigate } from 'react-router';
 import { Button, Group, Text, Title, Paper, Loader } from '@mantine/core';
 import { DatePicker } from '@mantine/dates';
 import CoreLayout from '../components/CoreLayout';
-import { useNavigate } from 'react-router';
 import { type Seat } from '@/components/booking/SeatCard';
 import {
   BookingModal,
@@ -11,7 +11,7 @@ import {
 import { getSeatAvailability } from '@/lib/api/seatBooking';
 import type { SeatAvailabilityResponse } from '@swivel-portal/types';
 import { notifications } from '@mantine/notifications';
-
+import { MyBookingsModal } from '../components/booking/MyBookingsModal';
 const mockSeats: Seat[] = [
   {
     id: '1',
@@ -61,6 +61,8 @@ const mockSeats: Seat[] = [
 ];
 const SeatBooking = () => {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  // const navigate = useNavigate();
+  const [myBookingsOpen, setMyBookingsOpen] = useState(false);
   const [selectedSeat, setSelectedSeat] = useState<Seat | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [availability, setAvailability] =
@@ -135,7 +137,14 @@ const SeatBooking = () => {
     <CoreLayout>
       <Group align="center" mb="md">
         <Title order={2}>Seat Booking</Title>
+        <Button variant="outline" onClick={() => setMyBookingsOpen(true)}>
+          My bookings
+        </Button>
       </Group>
+      <MyBookingsModal
+        opened={myBookingsOpen}
+        onClose={() => setMyBookingsOpen(false)}
+      />
       {!selectedDate ? (
         <Paper
           p="xl"
