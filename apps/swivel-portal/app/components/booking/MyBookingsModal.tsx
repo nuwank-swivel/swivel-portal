@@ -7,10 +7,13 @@ import {
   Loader,
   Text,
   Title,
+  Badge,
 } from '@mantine/core';
 import { getMyBookings, cancelBooking } from '@/lib/api/seatBooking';
 import { Booking } from '@swivel-portal/types';
 import { notifications } from '@mantine/notifications';
+import { Card } from '../ui/card';
+import moment from 'moment';
 
 interface MyBookingsModalProps {
   opened: boolean;
@@ -63,22 +66,37 @@ export function MyBookingsModal({ opened, onClose }: MyBookingsModalProps) {
   return (
     <Modal opened={opened} onClose={onClose} title="My Bookings" size="lg">
       {loading ? (
-        <Loader size="lg" />
+        <div className="flex justify-center">
+          <Loader size="lg" />
+        </div>
       ) : error ? (
         <Text color="red">{error}</Text>
       ) : bookings.length === 0 ? (
         <Text>No upcoming bookings.</Text>
       ) : (
-        <Paper p="md" radius="md" withBorder>
+        <div>
           {bookings.map((booking: Booking) =>
             booking._id ? (
-              <Group key={booking._id} mb="sm">
-                <div>
-                  <Text fw={600}>{booking.seatId}</Text>
-                  <Text size="sm">
-                    {booking.bookingDate} ({booking.duration})
-                  </Text>
-                </div>
+              <Card
+                key={booking._id}
+                mb="sm"
+                radius="md"
+                className="flex flex-row justify-between items-center"
+                withBorder
+              >
+                <Group className="flex flex-col items-start gap-0">
+                  <Group className="flex flex-row gap-1">
+                    <Text size="md">
+                      {moment(booking.bookingDate).format('dddd')}
+                    </Text>
+                    <Text size="sm" c="dimmed">
+                      ({booking.bookingDate})
+                    </Text>
+                    <Badge color="indigo" size="sm" variant="light">
+                      {booking.duration}
+                    </Badge>
+                  </Group>
+                </Group>
                 <Button
                   color="red"
                   loading={cancelingId === booking._id}
@@ -87,10 +105,10 @@ export function MyBookingsModal({ opened, onClose }: MyBookingsModalProps) {
                 >
                   Cancel
                 </Button>
-              </Group>
+              </Card>
             ) : null
           )}
-        </Paper>
+        </div>
       )}
     </Modal>
   );

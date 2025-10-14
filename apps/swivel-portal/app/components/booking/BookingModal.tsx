@@ -7,20 +7,17 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Calendar, Clock, MapPin, AlertCircle, Utensils } from 'lucide-react';
 import { format } from 'date-fns';
-import type { Seat } from './SeatCard';
 import { createBooking } from '../../lib/api/seatBooking';
 import { AxiosError } from 'axios';
 
 interface BookingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  seat: Seat | null;
   selectedDate: Date;
   onConfirm: (bookingDetails: BookingDetails) => void;
 }
 
 export interface BookingDetails {
-  seatId: string;
   date: Date;
   startTime: string;
   endTime: string;
@@ -42,7 +39,6 @@ const timeSlots = Array.from({ length: 19 }, (_, i) => {
 export function BookingModal({
   isOpen,
   onClose,
-  seat,
   selectedDate,
   onConfirm,
 }: BookingModalProps) {
@@ -55,8 +51,6 @@ export function BookingModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  if (!seat) return null;
 
   const handlePreset = (label: string, hours: number) => {
     const start = parseInt(startTime.split(':')[0]);
@@ -90,7 +84,6 @@ export function BookingModal({
 
       // Compose BookingDetails for onConfirm
       onConfirm({
-        seatId: seat.id,
         date: selectedDate,
         startTime,
         endTime,
