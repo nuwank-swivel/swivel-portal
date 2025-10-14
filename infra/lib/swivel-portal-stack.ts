@@ -100,7 +100,51 @@ export class SwivelPortalStack extends cdk.Stack {
         timeout: cdk.Duration.seconds(10),
       }
     );
-  
+
+    // Lambda function for GET /api/seatbooking/bookings/me
+    const getMyBookingsLambda = new lambda.Function(
+      this,
+      'GetMyBookingsLambda',
+      {
+        code: lambda.Code.fromAsset(
+          path.join(
+            __dirname,
+            '../../apps/swivel-portal-api/dist/seat-bookings/getMyBookings.js.zip'
+          )
+        ),
+        handler: 'getMyBookings.handler',
+        runtime: lambda.Runtime.NODEJS_22_X,
+        environment: {
+          DB_USERNAME: process.env.DB_USERNAME || '',
+          DB_PASSWORD: process.env.DB_PASSWORD || '',
+        },
+        layers: [sharedLayer],
+        timeout: cdk.Duration.seconds(10),
+      }
+    );
+
+    // Lambda function for DELETE /api/seatbooking/bookings/{id}
+    const cancelBookingLambda = new lambda.Function(
+      this,
+      'CancelBookingLambda',
+      {
+        code: lambda.Code.fromAsset(
+          path.join(
+            __dirname,
+            '../../apps/swivel-portal-api/dist/seat-bookings/cancelBooking.js.zip'
+          )
+        ),
+        handler: 'cancelBooking.handler',
+        runtime: lambda.Runtime.NODEJS_22_X,
+        environment: {
+          DB_USERNAME: process.env.DB_USERNAME || '',
+          DB_PASSWORD: process.env.DB_PASSWORD || '',
+        },
+        layers: [sharedLayer],
+        timeout: cdk.Duration.seconds(10),
+      }
+    );
+
     // API Gateway Lambda Authorizer
     const apiAuthorizer = new apigateway.RequestAuthorizer(
       this,
@@ -195,11 +239,31 @@ export class SwivelPortalStack extends cdk.Stack {
       }
     );
 
-    // /api/seatbooking/bookings resource (POST)
+    // /api/seatbooking/bookings resource (POST, GET /me)
     const bookingsResource = seatBookingResource.addResource('bookings');
     bookingsResource.addMethod(
       'POST',
       new apigateway.LambdaIntegration(createBookingLambda, { proxy: true }),
+      {
+        authorizer: apiAuthorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
+      }
+    );
+    // /api/seatbooking/bookings/me (GET)
+    const myBookingsResource = bookingsResource.addResource('me');
+    myBookingsResource.addMethod(
+      'GET',
+      new apigateway.LambdaIntegration(getMyBookingsLambda, { proxy: true }),
+      {
+        authorizer: apiAuthorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
+      }
+    );
+    // /api/seatbooking/bookings/{id} (DELETE)
+    const deleteBookingResource = bookingsResource.addResource('{id}');
+    deleteBookingResource.addMethod(
+      'DELETE',
+      new apigateway.LambdaIntegration(cancelBookingLambda, { proxy: true }),
       {
         authorizer: apiAuthorizer,
         authorizationType: apigateway.AuthorizationType.CUSTOM,
