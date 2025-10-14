@@ -4,7 +4,7 @@ import {
   Context,
 } from 'aws-lambda';
 import { connectToDb } from '@swivel-portal/dal';
-import { bookSeat } from '@swivel-portal/domain';
+import { getAllBookingsForDate } from '@swivel-portal/domain';
 
 export const handler = async (
   event: APIGatewayProxyEvent,
@@ -17,7 +17,7 @@ export const handler = async (
     'Access-Control-Allow-Headers': 'Content-Type,Authorization',
   };
 
-  if (event.httpMethod !== 'POST') {
+  if (event.httpMethod !== 'GET') {
     return {
       statusCode: 405,
       body: JSON.stringify({ error: 'Method Not Allowed' }),
@@ -26,48 +26,38 @@ export const handler = async (
   }
 
   // Extract user from authorizer context
-  const userId = event.requestContext.authorizer?.azureAdId as string;
-  if (!userId) {
+  const isAdmin = event.requestContext.authorizer?.isAdmin;
+  if (!isAdmin) {
     return {
-      statusCode: 401,
-      body: JSON.stringify({ error: 'Unauthorized: missing user id' }),
+      statusCode: 403,
+      body: JSON.stringify({ error: 'Forbidden: admin access required' }),
       headers: corsHeaders,
     };
   }
 
-  // Parse and validate request body
-  let body: any = {};
-  try {
-    body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
-  } catch {
+  // Get date from query string
+  const date = event.queryStringParameters?.date;
+  if (!date) {
     return {
       statusCode: 400,
-      body: JSON.stringify({ error: 'Invalid JSON body' }),
-      headers: corsHeaders,
-    };
-  }
-  const { date, duration, lunchOption } = body || {};
-  if (!date || !duration) {
-    return {
-      statusCode: 400,
-      body: JSON.stringify({ error: 'Missing required fields' }),
+      body: JSON.stringify({ error: 'Missing date parameter' }),
       headers: corsHeaders,
     };
   }
 
   try {
     await connectToDb();
-    const booking = await bookSeat({ userId, date, duration, lunchOption });
+    const bookings = await getAllBookingsForDate(date);
     return {
-      statusCode: 201,
-      body: JSON.stringify({ message: 'Booking created', booking }),
+      statusCode: 200,
+      body: JSON.stringify({ bookings }),
       headers: corsHeaders,
     };
-  } catch (error: unknown) {
+  } catch (error) {
     const errMsg =
       error && typeof error === 'object' && 'message' in error
         ? (error as { message: string }).message
-        : 'Booking failed';
+        : 'Failed to fetch bookings';
     return {
       statusCode: 400,
       body: JSON.stringify({ error: errMsg }),

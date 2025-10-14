@@ -1,10 +1,6 @@
-import {
-  APIGatewayProxyEvent,
-  APIGatewayProxyResult,
-  Context,
-} from 'aws-lambda';
+import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import { connectToDb } from '@swivel-portal/dal';
-import { bookSeat } from '@swivel-portal/domain';
+import { cancelBooking } from '@swivel-portal/domain';
 
 export const handler = async (
   event: APIGatewayProxyEvent,
@@ -17,7 +13,7 @@ export const handler = async (
     'Access-Control-Allow-Headers': 'Content-Type,Authorization',
   };
 
-  if (event.httpMethod !== 'POST') {
+  if (event.httpMethod !== 'DELETE') {
     return {
       statusCode: 405,
       body: JSON.stringify({ error: 'Method Not Allowed' }),
@@ -35,39 +31,26 @@ export const handler = async (
     };
   }
 
-  // Parse and validate request body
-  let body: any = {};
-  try {
-    body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
-  } catch {
+  // Extract booking id from pathParameters
+  const bookingId = event.pathParameters?.id;
+  if (!bookingId) {
     return {
       statusCode: 400,
-      body: JSON.stringify({ error: 'Invalid JSON body' }),
-      headers: corsHeaders,
-    };
-  }
-  const { date, duration, lunchOption } = body || {};
-  if (!date || !duration) {
-    return {
-      statusCode: 400,
-      body: JSON.stringify({ error: 'Missing required fields' }),
+      body: JSON.stringify({ error: 'Missing booking id' }),
       headers: corsHeaders,
     };
   }
 
   try {
     await connectToDb();
-    const booking = await bookSeat({ userId, date, duration, lunchOption });
+    await cancelBooking(bookingId, userId);
     return {
-      statusCode: 201,
-      body: JSON.stringify({ message: 'Booking created', booking }),
+      statusCode: 200,
+      body: JSON.stringify({ message: 'Booking canceled' }),
       headers: corsHeaders,
     };
-  } catch (error: unknown) {
-    const errMsg =
-      error && typeof error === 'object' && 'message' in error
-        ? (error as { message: string }).message
-        : 'Booking failed';
+  } catch (error) {
+    const errMsg = (error && typeof error === 'object' && 'message' in error) ? (error as { message: string }).message : 'Failed to cancel booking';
     return {
       statusCode: 400,
       body: JSON.stringify({ error: errMsg }),

@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
+// import { useNavigate } from 'react-router';
 import { Button, Group, Text, Title, Paper, Loader } from '@mantine/core';
 import { DatePicker } from '@mantine/dates';
 import CoreLayout from '../components/CoreLayout';
-import { useNavigate } from 'react-router';
-import { type Seat } from '@/components/booking/SeatCard';
 import {
   BookingModal,
   type BookingDetails,
@@ -11,57 +10,16 @@ import {
 import { getSeatAvailability } from '@/lib/api/seatBooking';
 import type { SeatAvailabilityResponse } from '@swivel-portal/types';
 import { notifications } from '@mantine/notifications';
+import { MyBookingsModal } from '../components/booking/MyBookingsModal';
+import { AllBookingsModal } from '../components/booking/AllBookingsModal';
+import { useUser } from '@/lib/UserContext';
 
-const mockSeats: Seat[] = [
-  {
-    id: '1',
-    name: 'Seat 1',
-    floor: 'Office',
-    tags: ['Near Window'],
-    status: 'available',
-    distance: '15m from you',
-    amenities: ['Monitor', 'USB-C Dock'],
-  },
-  {
-    id: '2',
-    name: 'Seat 2',
-    floor: 'Office',
-    tags: ['Quiet Zone'],
-    status: 'available',
-    distance: '18m from you',
-    amenities: ['Monitor'],
-  },
-  {
-    id: '3',
-    name: 'Seat 3',
-    floor: 'Office',
-    tags: ['Near Window'],
-    status: 'booked',
-    distance: '20m from you',
-    amenities: ['Monitor'],
-  },
-  {
-    id: '4',
-    name: 'Seat 4',
-    floor: 'Office',
-    tags: ['Standing Desk'],
-    status: 'available',
-    distance: '25m from you',
-    amenities: ['Dual Monitor', 'USB-C Dock'],
-  },
-  {
-    id: '5',
-    name: 'Seat 5',
-    floor: 'Office',
-    tags: ['Near Window'],
-    status: 'pending',
-    distance: '30m from you',
-    amenities: ['Monitor'],
-  },
-];
 const SeatBooking = () => {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [selectedSeat, setSelectedSeat] = useState<Seat | null>(null);
+  // const navigate = useNavigate();
+  const [myBookingsOpen, setMyBookingsOpen] = useState(false);
+  const [allBookingsOpen, setAllBookingsOpen] = useState(false);
+  const { user } = useUser();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [availability, setAvailability] =
     useState<SeatAvailabilityResponse | null>(null);
@@ -95,10 +53,8 @@ const SeatBooking = () => {
     fetchAvailability();
   }, [selectedDate]);
 
-  const handleReserve = (seatId: string) => {
-    const seat = mockSeats.find((s) => s.id === seatId);
-    if (seat && selectedDate) {
-      setSelectedSeat(seat);
+  const handleReserve = () => {
+    if (selectedDate) {
       setIsModalOpen(true);
     }
   };
@@ -106,10 +62,9 @@ const SeatBooking = () => {
   const handleConfirmBooking = async (details: BookingDetails) => {
     notifications.show({
       title: 'Booking Confirmed',
-      message: `${selectedSeat?.name} reserved for ${details.startTime} - ${details.endTime}`,
+      message: `Seat reserved for ${details.startTime} - ${details.endTime}`,
     });
     setIsModalOpen(false);
-    setSelectedSeat(null);
 
     // Refetch availability to update the counts
     if (selectedDate) {
@@ -135,7 +90,29 @@ const SeatBooking = () => {
     <CoreLayout>
       <Group align="center" mb="md">
         <Title order={2}>Seat Booking</Title>
+        <Button variant="outline" onClick={() => setMyBookingsOpen(true)}>
+          My bookings
+        </Button>
+        {user?.isAdmin && (
+          <Button
+            variant="outline"
+            color="indigo"
+            onClick={() => setAllBookingsOpen(true)}
+          >
+            View all bookings
+          </Button>
+        )}
       </Group>
+      <MyBookingsModal
+        opened={myBookingsOpen}
+        onClose={() => setMyBookingsOpen(false)}
+      />
+      {user?.isAdmin && (
+        <AllBookingsModal
+          opened={allBookingsOpen}
+          onClose={() => setAllBookingsOpen(false)}
+        />
+      )}
       {!selectedDate ? (
         <Paper
           p="xl"
@@ -198,8 +175,7 @@ const SeatBooking = () => {
           <Group mt="md" grow>
             <Button
               onClick={() => {
-                const firstAvailable = mockSeats[0];
-                if (firstAvailable) handleReserve(firstAvailable.id);
+                handleReserve();
               }}
               disabled={isLoading || availableSeatsCount === 0}
             >
@@ -219,9 +195,7 @@ const SeatBooking = () => {
         isOpen={isModalOpen}
         onClose={() => {
           setIsModalOpen(false);
-          setSelectedSeat(null);
         }}
-        seat={selectedSeat}
         selectedDate={selectedDate ? new Date(selectedDate) : new Date()}
         onConfirm={handleConfirmBooking}
       />
