@@ -43,7 +43,6 @@ export async function getSeatAvailability(
  * Create a new seat booking
  */
 export interface CreateBookingRequest {
-  seatId: string;
   date: string; // YYYY-MM-DD format
   duration: string; // e.g., "1 hour", "Half day", "Full day"
   lunchOption?: string;

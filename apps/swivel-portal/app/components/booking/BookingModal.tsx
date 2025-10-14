@@ -4,12 +4,12 @@ import { Group, Text, Modal } from '@mantine/core';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Calendar, Clock, MapPin, AlertCircle, Utensils } from 'lucide-react';
 import { format } from 'date-fns';
 import type { Seat } from './SeatCard';
 import { createBooking } from '../../lib/api/seatBooking';
+import { AxiosError } from 'axios';
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -78,7 +78,6 @@ export function BookingModal({
 
       // Compose booking payload
       const payload = {
-        seatId: seat.id,
         date: dateStr,
         duration: getDuration(),
         lunchOption: lunch || undefined,
@@ -104,9 +103,7 @@ export function BookingModal({
       setNotes('');
     } catch (err: unknown) {
       const errMsg =
-        err && typeof err === 'object' && 'message' in err
-          ? (err as { message: string }).message
-          : 'Booking failed';
+        ((err as AxiosError).response?.data as any)?.error || 'Booking failed';
       setError(errMsg);
     } finally {
       setIsSubmitting(false);
@@ -319,6 +316,12 @@ export function BookingModal({
           </div> */}
         {/* </div> */}
 
+        {/* Success/Error Messages */}
+        {message && (
+          <div className="mt-2 text-green-600 text-sm">{message}</div>
+        )}
+        {error && <div className="mt-2 text-red-600 text-sm">{error}</div>}
+
         <Group mt="md" justify="flex-end">
           <Button
             variant="outline"
@@ -337,11 +340,6 @@ export function BookingModal({
             {isSubmitting ? 'Confirming...' : 'Confirm Booking'}
           </Button>
         </Group>
-        {/* Success/Error Messages */}
-        {message && (
-          <div className="mt-2 text-green-600 text-sm">{message}</div>
-        )}
-        {error && <div className="mt-2 text-red-600 text-sm">{error}</div>}
       </div>
     </Modal>
   );
