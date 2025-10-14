@@ -2,4 +2,5 @@
 build
 public/build
 .env
+.env.production
 .react-router

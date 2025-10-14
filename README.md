@@ -51,24 +51,41 @@ You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx 
 This is the overall project structure and dependency flow:
 ![alt text](assets/project-graph.png)
 
+## Environment Variables
+
+Before running or deploying, copy `.env.sample` to `.env` in the `apps/swivel-portal/` and `infra/` and fill in the required values.
+
 ## Deployment
 
-This project is deployed via AWS CDK. Setup AWS credentials before running below.
+This project is deployed via AWS CDK. Setup AWS credentials and environment variables before running below.
 
-- To validate CDK config
+### Validate CDK config
 
-  ```
-  cd infra
-  cdk synth
-  ```
+```sh
+cd infra
+cdk synth
+```
 
-- To deploy
-  ```
-  cd infra
-  cdk deploy
-  ```
-  Deployment architecture:
-  ![alt text](assets/deployment-diagram.png)
+### Deploy using scripts
+
+You can deploy the API and frontend using the provided scripts. Each script accepts an optional environment mode argument (`dev` or `production`). Default is `dev`.
+
+**Deploy API:**
+
+```sh
+./scripts/deploy-api.sh [dev|production]
+```
+
+**Deploy Frontend:**
+
+```sh
+./scripts/deploy-frontend.sh [dev|production]
+```
+
+These scripts will build the appropriate project and deploy using AWS CDK, passing the environment mode to both Nx and CDK.
+
+Deployment architecture:
+![alt text](assets/deployment-diagram.png)
 
 ## Semantic Commit Message Enforcement
 

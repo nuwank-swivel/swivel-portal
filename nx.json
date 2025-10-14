@@ -73,6 +73,13 @@
       "cache": true,
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"]
+    },
+    "@nx/vite:build": {
+      "configurations": {
+        "production": {
+          "mode": "production"
+        }
+      }
     }
   },
   "generators": {

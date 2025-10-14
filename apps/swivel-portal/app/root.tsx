@@ -49,7 +49,7 @@ const msalConfig: Configuration = {
     authority: `https://login.microsoftonline.com/${
       import.meta.env.VITE_AZURE_TENANT_ID
     }`,
-    redirectUri: 'http://localhost:4200/auth',
+    redirectUri: import.meta.env.VITE_AZURE_REDIRECT_URL,
   },
   cache: {
     cacheLocation: 'localStorage', // Persist tokens across sessions
@@ -89,6 +89,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        <meta name="custom" content={import.meta.env.VITE_AZURE_REDIRECT_URL} />
       </head>
       <body>
         <QueryClientProvider client={queryClient}>
