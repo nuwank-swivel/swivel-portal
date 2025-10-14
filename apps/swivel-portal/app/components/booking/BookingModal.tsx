@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser } from '../../lib/UserContext';
 import { Group, Text, Modal } from '@mantine/core';
 import { Button } from '@/components/ui/button';
@@ -51,6 +51,20 @@ export function BookingModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Reset state when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setStartTime('09:00');
+      setEndTime('17:00');
+      setSelectedPreset(null);
+      setLunch('');
+      setNotes('');
+      setIsSubmitting(false);
+      setMessage(null);
+      setError(null);
+    }
+  }, [isOpen]);
 
   const handlePreset = (label: string, hours: number) => {
     const start = parseInt(startTime.split(':')[0]);
