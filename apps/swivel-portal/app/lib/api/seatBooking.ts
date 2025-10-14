@@ -1,3 +1,13 @@
+/**
+ * Admin: Get all bookings for a specific date
+ */
+export async function getAllBookingsForDate(date: string) {
+  const response = await api.get<{ bookings: any[] }>(
+    '/api/seatbooking/bookings',
+    { params: { date } }
+  );
+  return response.data.bookings;
+}
 import api from '../axios';
 import { SeatAvailabilityResponse, Booking } from '@swivel-portal/types';
 

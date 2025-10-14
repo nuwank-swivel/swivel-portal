@@ -3,8 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 interface IUser extends Document {
   _id: string;
   azureAdId: string;
-  firstName: string;
-  lastName: string;
+  name: string;
   email: string;
   password: string;
   createdAt: Date;

@@ -6,6 +6,48 @@ import { Booking } from '../models/Booking.js';
 
 export class BookingRepository implements IBookingRepository<BookingType> {
   /**
+   * Find all bookings for a specific date (admin use)
+   * Returns user name, duration type, and meal type for each booking
+   */
+  async findAllBookingsByDate(date: string): Promise<
+    Array<{
+      userId: string;
+      userName: string;
+      durationType: string;
+      lunchOption?: string;
+    }>
+  > {
+    try {
+      // Use aggregation to join with User collection
+      const bookings = await Booking.aggregate([
+        { $match: { bookingDate: date, canceledAt: null } },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'userId',
+            foreignField: 'azureAdId',
+            as: 'user',
+          },
+        },
+        { $unwind: '$user' },
+        {
+          $project: {
+            userId: 1,
+            userName: {
+              $ifNull: ['$user.name', ''],
+            },
+            durationType: 1,
+            lunchOption: 1,
+          },
+        },
+      ]);
+      return bookings;
+    } catch (error) {
+      console.log('Error finding all bookings by date:', error);
+      return [];
+    }
+  }
+  /**
    * Find upcoming (future, not canceled) bookings for a user
    * @param userId - The user identifier
    * @param fromDate - Only bookings on or after this date (YYYY-MM-DD)
@@ -54,7 +96,7 @@ export class BookingRepository implements IBookingRepository<BookingType> {
     try {
       // If canceledAt is provided as a string, convert to Date
       if (item.canceledAt && typeof item.canceledAt === 'string') {
-        item.canceledAt = new Date(item.canceledAt) as any;
+        item.canceledAt = new Date(item.canceledAt) as Date;
       }
       const booking = await Booking.findByIdAndUpdate(id, item, {
         new: true,

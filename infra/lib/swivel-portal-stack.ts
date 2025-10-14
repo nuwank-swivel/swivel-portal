@@ -123,6 +123,28 @@ export class SwivelPortalStack extends cdk.Stack {
       }
     );
 
+    // Lambda function for GET /api/seatbooking/bookings (admin)
+    const getAllBookingsLambda = new lambda.Function(
+      this,
+      'GetAllBookingsLambda',
+      {
+        code: lambda.Code.fromAsset(
+          path.join(
+            __dirname,
+            '../../apps/swivel-portal-api/dist/seat-bookings/getAllBookings.js.zip'
+          )
+        ),
+        handler: 'getAllBookings.handler',
+        runtime: lambda.Runtime.NODEJS_22_X,
+        environment: {
+          DB_USERNAME: process.env.DB_USERNAME || '',
+          DB_PASSWORD: process.env.DB_PASSWORD || '',
+        },
+        layers: [sharedLayer],
+        timeout: cdk.Duration.seconds(10),
+      }
+    );
+
     // Lambda function for DELETE /api/seatbooking/bookings/{id}
     const cancelBookingLambda = new lambda.Function(
       this,
@@ -244,6 +266,15 @@ export class SwivelPortalStack extends cdk.Stack {
     bookingsResource.addMethod(
       'POST',
       new apigateway.LambdaIntegration(createBookingLambda, { proxy: true }),
+      {
+        authorizer: apiAuthorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
+      }
+    );
+    // GET /api/seatbooking/bookings (admin)
+    bookingsResource.addMethod(
+      'GET',
+      new apigateway.LambdaIntegration(getAllBookingsLambda, { proxy: true }),
       {
         authorizer: apiAuthorizer,
         authorizationType: apigateway.AuthorizationType.CUSTOM,

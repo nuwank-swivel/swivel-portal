@@ -11,11 +11,15 @@ import { getSeatAvailability } from '@/lib/api/seatBooking';
 import type { SeatAvailabilityResponse } from '@swivel-portal/types';
 import { notifications } from '@mantine/notifications';
 import { MyBookingsModal } from '../components/booking/MyBookingsModal';
+import { AllBookingsModal } from '../components/booking/AllBookingsModal';
+import { useUser } from '@/lib/UserContext';
 
 const SeatBooking = () => {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   // const navigate = useNavigate();
   const [myBookingsOpen, setMyBookingsOpen] = useState(false);
+  const [allBookingsOpen, setAllBookingsOpen] = useState(false);
+  const { user } = useUser();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [availability, setAvailability] =
     useState<SeatAvailabilityResponse | null>(null);
@@ -89,11 +93,26 @@ const SeatBooking = () => {
         <Button variant="outline" onClick={() => setMyBookingsOpen(true)}>
           My bookings
         </Button>
+        {user?.isAdmin && (
+          <Button
+            variant="outline"
+            color="indigo"
+            onClick={() => setAllBookingsOpen(true)}
+          >
+            View all bookings
+          </Button>
+        )}
       </Group>
       <MyBookingsModal
         opened={myBookingsOpen}
         onClose={() => setMyBookingsOpen(false)}
       />
+      {user?.isAdmin && (
+        <AllBookingsModal
+          opened={allBookingsOpen}
+          onClose={() => setAllBookingsOpen(false)}
+        />
+      )}
       {!selectedDate ? (
         <Paper
           p="xl"
