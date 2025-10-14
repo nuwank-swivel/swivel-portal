@@ -2,6 +2,24 @@ import { IBookingRepository, Booking as BookingType } from '@swivel-portal/types
 import { Booking } from '../models/Booking.js';
 
 export class BookingRepository implements IBookingRepository<BookingType> {
+  /**
+   * Find upcoming (future, not canceled) bookings for a user
+   * @param userId - The user identifier
+   * @param fromDate - Only bookings on or after this date (YYYY-MM-DD)
+   */
+  async findUserUpcomingBookings(userId: string, fromDate: string): Promise<BookingType[]> {
+    try {
+      const bookings = await Booking.find({
+        userId,
+        bookingDate: { $gte: fromDate },
+        canceledAt: null
+      }).sort({ bookingDate: 1 }).exec();
+      return bookings.map(b => b.toObject() as BookingType);
+    } catch (error) {
+      console.log('Error finding user upcoming bookings:', error);
+      return [];
+    }
+  }
     async getById(id: string): Promise<BookingType | null> {
     try {
       const booking = await Booking.findById(id).exec();
@@ -23,6 +41,10 @@ export class BookingRepository implements IBookingRepository<BookingType> {
 
   async update(id: string, item: Partial<BookingType>): Promise<BookingType | null> {
     try {
+      // If canceledAt is provided as a string, convert to Date
+      if (item.canceledAt && typeof item.canceledAt === 'string') {
+        item.canceledAt = new Date(item.canceledAt) as any;
+      }
       const booking = await Booking.findByIdAndUpdate(id, item, { new: true }).exec();
       if (!booking) {
         return null;
