@@ -1,5 +1,6 @@
 import { useIsAuthenticated, useMsal } from '@azure/msal-react';
-import { Button } from '@/components/ui/button';
+import { Button, Paper, Title, Center, Loader } from '@mantine/core';
+import CoreLayout from '../components/CoreLayout';
 import { useCallback, useState } from 'react';
 import { useUser, User } from '../lib/UserContext';
 import api, { setIdToken } from '../lib/axios';
@@ -36,17 +37,28 @@ export default function Login() {
   }, [authenticated, instance, navigate, setUser]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="mb-4 text-3xl font-bold">Sign In</h1>
-        <Button
-          disabled={isLoading}
-          onClick={handleLogin}
-          className="w-96 h-12 text-lg"
+    <CoreLayout>
+      <Center style={{ minHeight: '60vh' }}>
+        <Paper
+          p="xl"
+          radius="md"
+          withBorder
+          style={{ minWidth: 340, textAlign: 'center' }}
         >
-          {isLoading ? 'Signing in...' : 'Sign in with Swivel account'}
-        </Button>
-      </div>
-    </div>
+          <Title order={2} mb="md">
+            Sign In
+          </Title>
+          <Button
+            fullWidth
+            size="lg"
+            disabled={isLoading}
+            onClick={handleLogin}
+          >
+            {isLoading ? <Loader size="sm" mr={8} /> : null}
+            {isLoading ? 'Signing in...' : 'Sign in with Swivel account'}
+          </Button>
+        </Paper>
+      </Center>
+    </CoreLayout>
   );
 }

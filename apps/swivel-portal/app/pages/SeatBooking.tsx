@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Calendar } from '@/components/ui/calendar';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { Button, Group, Text, Title, Paper, Loader } from '@mantine/core';
+import { DatePicker } from '@mantine/dates';
+import CoreLayout from '../components/CoreLayout';
 import { useNavigate } from 'react-router';
 import { type Seat } from '@/components/booking/SeatCard';
 import {
   BookingModal,
   type BookingDetails,
 } from '@/components/booking/BookingModal';
-import { toast } from 'sonner';
 import { getSeatAvailability } from '@/lib/api/seatBooking';
 import type { SeatAvailabilityResponse } from '@swivel-portal/types';
+import { notifications } from '@mantine/notifications';
 
 const mockSeats: Seat[] = [
   {
@@ -59,10 +59,8 @@ const mockSeats: Seat[] = [
     amenities: ['Monitor'],
   },
 ];
-
-export default function SeatBooking() {
-  const navigate = useNavigate();
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+const SeatBooking = () => {
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedSeat, setSelectedSeat] = useState<Seat | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [availability, setAvailability] =
@@ -77,30 +75,23 @@ export default function SeatBooking() {
       setError(null);
       return;
     }
-
     const fetchAvailability = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        // Format date as YYYY-MM-DD in local timezone (not UTC)
-        const year = selectedDate.getFullYear();
-        const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
-        const day = String(selectedDate.getDate()).padStart(2, '0');
+        const date = new Date(selectedDate);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
         const dateStr = `${year}-${month}-${day}`;
-
         const data = await getSeatAvailability(dateStr);
         setAvailability(data);
       } catch (err) {
-        console.error('Error fetching seat availability:', err);
         setError('Failed to load seat availability. Please try again.');
-        toast.error('Failed to load availability', {
-          description: 'Please try selecting a different date.',
-        });
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchAvailability();
   }, [selectedDate]);
 
@@ -113,19 +104,20 @@ export default function SeatBooking() {
   };
 
   const handleConfirmBooking = async (details: BookingDetails) => {
-    toast.success('Booking Confirmed', {
-      description: `${selectedSeat?.name} reserved for ${details.startTime} - ${details.endTime}`,
-      duration: 5000,
+    notifications.show({
+      title: 'Booking Confirmed',
+      message: `${selectedSeat?.name} reserved for ${details.startTime} - ${details.endTime}`,
     });
     setIsModalOpen(false);
     setSelectedSeat(null);
-    
+
     // Refetch availability to update the counts
     if (selectedDate) {
       try {
-        const year = selectedDate.getFullYear();
-        const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
-        const day = String(selectedDate.getDate()).padStart(2, '0');
+        const date = new Date(selectedDate);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
         const dateStr = `${year}-${month}-${day}`;
 
         const data = await getSeatAvailability(dateStr);
@@ -140,119 +132,89 @@ export default function SeatBooking() {
   const availableSeatsCount = availability?.availableSeats ?? 0;
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
+    <CoreLayout>
+      <Group align="center" mb="md">
+        <Title order={2}>Seat Booking</Title>
+      </Group>
+      {!selectedDate ? (
+        <Paper
+          p="xl"
+          radius="md"
+          withBorder
+          style={{ maxWidth: 400, margin: '0 auto', textAlign: 'center' }}
+          className="flex flex-col align-center justify-center"
+        >
+          <Title order={4} mb="md">
+            Choose a date to book a seat
+          </Title>
+          <DatePicker
+            value={selectedDate}
+            onChange={setSelectedDate}
+            minDate={new Date()}
+            style={{ margin: '0 auto' }}
+          />
+        </Paper>
+      ) : (
+        <Paper
+          p="xl"
+          radius="md"
+          withBorder
+          style={{ maxWidth: 400, margin: '0 auto', textAlign: 'center' }}
+        >
+          <Text fw={600} mb={4}>
+            {new Date(selectedDate).toLocaleDateString('en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            })}
+          </Text>
+          {isLoading ? (
+            <Loader size="lg" />
+          ) : error ? (
+            <Text color="red" size="sm">
+              {error}
+            </Text>
+          ) : (
+            <>
+              <Title order={1} mb={2}>
+                {availableSeatsCount}
+              </Title>
+              <Text size="sm" c="dimmed">
+                {availableSeatsCount === 1
+                  ? 'seat available'
+                  : 'seats available'}
+              </Text>
+              {availability && (
+                <Text size="xs" c="dimmed" mt={2}>
+                  {availability.bookingsCount} of{' '}
+                  {availability.overrideSeatCount ??
+                    availability.defaultSeatCount}{' '}
+                  seats booked
+                </Text>
+              )}
+            </>
+          )}
+          <Group mt="md" grow>
             <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate('/')}
-              aria-label="Back to dashboard"
+              onClick={() => {
+                const firstAvailable = mockSeats[0];
+                if (firstAvailable) handleReserve(firstAvailable.id);
+              }}
+              disabled={isLoading || availableSeatsCount === 0}
             >
-              <ArrowLeft className="h-5 w-5" />
+              {isLoading
+                ? 'Loading...'
+                : availableSeatsCount === 0
+                ? 'Fully Booked'
+                : 'Book a Seat'}
             </Button>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">
-                Seat Booking
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Select a date to view available seats
-              </p>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-8">
-        {!selectedDate ? (
-          <div className="flex flex-col items-center justify-center min-h-[60vh]">
-            <h2 className="text-xl font-semibold text-foreground mb-6">
-              Choose a date to book a seat
-            </h2>
-            <div className="bg-card border border-border rounded-lg p-6 shadow-lg">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={setSelectedDate}
-                disabled={(date) => date < new Date()}
-                initialFocus
-                className="pointer-events-auto"
-              />
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center min-h-[60vh]">
-            <div className="text-center space-y-6 max-w-md">
-              <div>
-                <h2 className="text-lg font-semibold text-foreground mb-2">
-                  {selectedDate.toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
-                </h2>
-                {isLoading ? (
-                  <div className="text-6xl font-bold text-muted-foreground mb-2">
-                    ...
-                  </div>
-                ) : error ? (
-                  <div className="text-sm text-destructive mb-2">{error}</div>
-                ) : (
-                  <>
-                    <div className="text-6xl font-bold text-primary mb-2">
-                      {availableSeatsCount}
-                    </div>
-                    <p className="text-muted-foreground">
-                      {availableSeatsCount === 1
-                        ? 'seat available'
-                        : 'seats available'}
-                    </p>
-                    {availability && (
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {availability.bookingsCount} of{' '}
-                        {availability.overrideSeatCount ??
-                          availability.defaultSeatCount}{' '}
-                        seats booked
-                      </p>
-                    )}
-                  </>
-                )}
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button
-                  size="lg"
-                  onClick={() => {
-                    const firstAvailable = mockSeats[0];
-                    if (firstAvailable) {
-                      handleReserve(firstAvailable.id);
-                    }
-                  }}
-                  disabled={isLoading || availableSeatsCount === 0}
-                  className="min-w-[200px]"
-                >
-                  {isLoading
-                    ? 'Loading...'
-                    : availableSeatsCount === 0
-                    ? 'Fully Booked'
-                    : 'Book a Seat'}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={() => setSelectedDate(undefined)}
-                  aria-label="Change date"
-                >
-                  Change Date
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-      </main>
-
+            <Button variant="outline" onClick={() => setSelectedDate(null)}>
+              Change Date
+            </Button>
+          </Group>
+        </Paper>
+      )}
       <BookingModal
         isOpen={isModalOpen}
         onClose={() => {
@@ -260,9 +222,11 @@ export default function SeatBooking() {
           setSelectedSeat(null);
         }}
         seat={selectedSeat}
-        selectedDate={selectedDate || new Date()}
+        selectedDate={selectedDate ? new Date(selectedDate) : new Date()}
         onConfirm={handleConfirmBooking}
       />
-    </div>
+    </CoreLayout>
   );
-}
+};
+
+export default SeatBooking;
