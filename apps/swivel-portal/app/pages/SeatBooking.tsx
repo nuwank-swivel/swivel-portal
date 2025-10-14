@@ -88,20 +88,22 @@ const SeatBooking = () => {
 
   return (
     <CoreLayout>
-      <Group align="center" mb="md">
+      <Group align="center" justify="space-between" mb="md">
         <Title order={2}>Seat Booking</Title>
-        <Button variant="outline" onClick={() => setMyBookingsOpen(true)}>
-          My bookings
-        </Button>
-        {user?.isAdmin && (
-          <Button
-            variant="outline"
-            color="indigo"
-            onClick={() => setAllBookingsOpen(true)}
-          >
-            View all bookings
+        <Group>
+          {user?.isAdmin && (
+            <Button
+              variant="outline"
+              color="indigo"
+              onClick={() => setAllBookingsOpen(true)}
+            >
+              View all bookings
+            </Button>
+          )}
+          <Button variant="outline" onClick={() => setMyBookingsOpen(true)}>
+            My bookings
           </Button>
-        )}
+        </Group>
       </Group>
       <MyBookingsModal
         opened={myBookingsOpen}

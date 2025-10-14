@@ -37,28 +37,23 @@ export default function Login() {
   }, [authenticated, instance, navigate, setUser]);
 
   return (
-    <CoreLayout>
-      <Center style={{ minHeight: '60vh' }}>
-        <Paper
-          p="xl"
-          radius="md"
-          withBorder
-          style={{ minWidth: 340, textAlign: 'center' }}
-        >
-          <Title order={2} mb="md">
-            Sign In
-          </Title>
-          <Button
-            fullWidth
-            size="lg"
-            disabled={isLoading}
-            onClick={handleLogin}
-          >
-            {isLoading ? <Loader size="sm" mr={8} /> : null}
-            {isLoading ? 'Signing in...' : 'Sign in with Swivel account'}
-          </Button>
-        </Paper>
-      </Center>
-    </CoreLayout>
+    // <CoreLayout>
+    <Center style={{ minHeight: '60vh' }}>
+      <Paper
+        p="xl"
+        radius="md"
+        withBorder
+        style={{ minWidth: 340, textAlign: 'center' }}
+      >
+        <Title order={2} mb="md">
+          Swivel Portal
+        </Title>
+        <Button fullWidth size="lg" disabled={isLoading} onClick={handleLogin}>
+          {isLoading ? <Loader size="sm" mr={8} /> : null}
+          {isLoading ? 'Signing in...' : 'Sign in with Swivel account'}
+        </Button>
+      </Paper>
+    </Center>
+    // </CoreLayout>
   );
 }

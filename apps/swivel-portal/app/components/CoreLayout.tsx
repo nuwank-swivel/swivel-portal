@@ -36,7 +36,8 @@ export default function CoreLayout({ children }: CoreLayoutProps) {
               </Badge>
             ) : null}
           </Group>
-          <UserAvatarMenu />
+
+          {user && <UserAvatarMenu />}
         </Group>
       </AppShell.Header>
       {/* Sidebar removed as per requirements */}
