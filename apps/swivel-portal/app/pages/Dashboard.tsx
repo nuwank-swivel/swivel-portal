@@ -46,36 +46,9 @@ export default function Dashboard() {
   return (
     <CoreLayout>
       <div style={{ marginBottom: 32 }}>
-        <h1
-          style={{
-            fontSize: 28,
-            fontWeight: 700,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-          }}
-        >
-          Swivel Portal
-          {user?.isAdmin && (
-            <span
-              style={{
-                padding: '2px 6px',
-                fontSize: 12,
-                fontWeight: 600,
-                borderRadius: 4,
-                background: '#FEF3C7',
-                color: '#92400E',
-                border: '1px solid #FDE68A',
-                marginLeft: 8,
-              }}
-            >
-              Admin
-            </span>
-          )}
-        </h1>
-        <p style={{ color: '#6B7280', marginTop: 4 }}>
-          Welcome back! Select a tool to get started.
-        </p>
+        <h3 style={{ color: '#6B7280', marginTop: 4 }}>
+          Welcome back, {user?.name}! Select a tool to get started.
+        </h3>
       </div>
       <div
         style={{
@@ -92,6 +65,8 @@ export default function Dashboard() {
               p="lg"
               style={{
                 cursor: tool.path !== '#' ? 'pointer' : 'default',
+                opacity: tool.path !== '#' ? 1 : 0.6,
+                filter: tool.path !== '#' ? 'none' : 'grayscale(1)',
                 transition: 'box-shadow 0.2s',
                 boxShadow: '0 1px 4px 0 rgba(0,0,0,0.04)',
               }}

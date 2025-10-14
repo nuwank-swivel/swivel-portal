@@ -60,7 +60,6 @@ const mockSeats: Seat[] = [
   },
 ];
 const SeatBooking = () => {
-  const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedSeat, setSelectedSeat] = useState<Seat | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -135,9 +134,6 @@ const SeatBooking = () => {
   return (
     <CoreLayout>
       <Group align="center" mb="md">
-        <Button variant="subtle" onClick={() => navigate('/')}>
-          Back to dashboard
-        </Button>
         <Title order={2}>Seat Booking</Title>
       </Group>
       {!selectedDate ? (
@@ -146,6 +142,7 @@ const SeatBooking = () => {
           radius="md"
           withBorder
           style={{ maxWidth: 400, margin: '0 auto', textAlign: 'center' }}
+          className="flex flex-col align-center justify-center"
         >
           <Title order={4} mb="md">
             Choose a date to book a seat

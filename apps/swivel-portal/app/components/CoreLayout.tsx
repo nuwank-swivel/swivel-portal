@@ -1,52 +1,45 @@
-import {
-  AppShell,
-  Group,
-  Burger,
-  NavLink,
-  useMantineTheme,
-} from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
+import { AppShell, Group, Badge } from '@mantine/core';
+
 import { ReactNode } from 'react';
-import { useNavigate } from 'react-router';
-import LogoutButton from './LogoutButton';
+import { useLocation } from 'react-router';
+import UserAvatarMenu from './UserAvatarMenu';
+import BackButton from './ui/BackButton';
+import { useUser } from '@/lib/UserContext';
 
 interface CoreLayoutProps {
   children: ReactNode;
 }
 
 export default function CoreLayout({ children }: CoreLayoutProps) {
-  const [opened, { toggle }] = useDisclosure(false);
-  const theme = useMantineTheme();
-  const navigate = useNavigate();
+  // Removed Burger, so disclosure state is not needed
+  // Removed theme as it is no longer used
+  // Removed navigate as sidebar is gone
+  const location = useLocation();
+  const { user } = useUser();
 
   return (
     <AppShell
       header={{ height: 60 }}
-      navbar={{ width: 220, breakpoint: 'sm', collapsed: { mobile: !opened } }}
+      // Removed navbar prop
       padding="md"
     >
       <AppShell.Header>
         <Group h="100%" px="md" justify="space-between">
           <Group>
-            <Burger
-              opened={opened}
-              onClick={toggle}
-              hiddenFrom="sm"
-              size="sm"
-            />
+            {/* Burger button removed as per requirements */}
+            {location.pathname !== '/' &&
+              location.pathname !== '/dashboard' && <BackButton />}
             <span style={{ fontWeight: 700, fontSize: 22 }}>Swivel Portal</span>
+            {user?.isAdmin ? (
+              <Badge size="sm" color="indigo">
+                Admin
+              </Badge>
+            ) : null}
           </Group>
-          <LogoutButton />
+          <UserAvatarMenu />
         </Group>
       </AppShell.Header>
-      <AppShell.Navbar p="md">
-        <NavLink label="Dashboard" onClick={() => navigate('/')} />
-        <NavLink
-          label="Seat Booking"
-          onClick={() => navigate('/seat-booking')}
-        />
-        {/* Add more navigation links as needed */}
-      </AppShell.Navbar>
+      {/* Sidebar removed as per requirements */}
       <AppShell.Main>{children}</AppShell.Main>
     </AppShell>
   );
