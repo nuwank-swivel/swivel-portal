@@ -1,5 +1,6 @@
 export interface User {
   _id?: string;
+  userId?: string;
   azureAdId: string;
   name?: string;
   email: string;
