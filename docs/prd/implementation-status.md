@@ -10,12 +10,11 @@
 
 ## Backend
 
-- **Project Setup**: Not Started (Serverless Framework for Lambda)
-- **Database**: Not Started (MongoDB schema design pending)
+- **Project Setup**: Not Started (AWS CDK for Lambda)
+- **Database**: Not Started (DynamoDB single-table design pending)
 - **API Endpoints**: Not Started
 - **Authentication**: Not Started (Token validation logic pending)
 
 ## Overall Status
 
-The frontend UI is largely complete, providing a solid foundation. The immediate priority is to build out the backend infrastructure, including the database schema and core API endpoints, and then integrate it with the frontend, starting with authentication.
-
+The frontend UI is largely complete, providing a solid foundation. The immediate priority is to build out the backend infrastructure, including the DynamoDB table design and core API endpoints, and then integrate it with the frontend, starting with authentication.

@@ -6,7 +6,7 @@
 - Review existing frontend project setup (Vite, ShadcnUI)
 - Review and finalize core UI components (calendar, modals, layouts)
 - Set up backend serverless project
-- Design MongoDB schema and set up Mongoose models
+- Design DynamoDB single-table schema and set up ElectroDB models
 - Implement basic API endpoints for CRUD operations
 
 ## Milestone 2: Authentication & Core Logic (2 Weeks)

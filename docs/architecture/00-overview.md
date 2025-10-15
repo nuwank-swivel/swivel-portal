@@ -6,7 +6,7 @@ The Company Portal PWA is designed as a modern, secure, and scalable web applica
 
 - **Frontend**: React 18+ PWA with TypeScript and Vite
 - **Backend**: AWS Lambda with TypeScript
-- **Database**: MongoDB Atlas
+- **Database**: AWS DynamoDB
 - **Authentication**: Azure AD (Microsoft 365)
 - **Hosting**: AWS Lambda & API Gateway
 - **CI/CD**: Azure DevOps Pipelines

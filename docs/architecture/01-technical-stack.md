@@ -25,7 +25,7 @@
 - **Framework**: AWS CDK for deployment
 - **API Gateway**: Amazon API Gateway for routing and exposure
 - **Authentication**: Custom Lambda Authorizer for Azure AD token validation
-- **Data Access**: Mongoose ODM or the native MongoDB Node.js driver
+- **Data Access**: ElectroDB with AWS DynamoDB
 - **Testing**: Jest or Vitest
 - **Code Quality**:
   - ESLint with TypeScript rules
@@ -34,15 +34,15 @@
 
 ## 2.3 Database
 
-- **Type**: MongoDB
-- **Hosting**: MongoDB Atlas (or self-hosted)
-- **Schema**: Flexible schema with defined collections for core entities
+- **Type**: AWS DynamoDB
+- **Data Modeling**: ElectroDB (single-table design)
+- **Schema**: Single-table design with composite keys for efficient access patterns
 
 ## 2.4 Infrastructure
 
 - **Compute**: AWS Lambda for serverless functions
 - **API**: Amazon API Gateway
-- **Database**: MongoDB Atlas
+- **Database**: AWS DynamoDB
 - **Identity**: Azure AD
 - **Monitoring**: Amazon CloudWatch
 - **CDN**: Amazon CloudFront (for static assets)

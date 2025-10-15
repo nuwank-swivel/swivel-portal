@@ -20,8 +20,19 @@ The project has been migrated to an Nx monorepo to unify the development of the 
 - **Runtime**: AWS Lambda with TypeScript, managed within the Nx monorepo.
 - **API Gateway**: Amazon API Gateway for defining and exposing RESTful endpoints.
 - **Authentication**: Azure AD integration for secure authentication.
-- **Data Access**: Mongoose for interacting with the MongoDB database, with the logic encapsulated in the `dal` library.
+- **Data Access**: ElectroDB for interacting with DynamoDB, with the logic encapsulated in the `dal` library.
 - **Logging**: Structured logging is implemented using Amazon CloudWatch.
+
+...
+
+## 5.2 Database Design
+
+- **Database**: AWS DynamoDB with single-table design.
+- **Entity Types**:
+  - Users: Stores user profile information with PK="USER#${azureAdId}".
+  - SeatConfiguration: Defines global settings with PK="CONFIG#SEATS".
+  - DaySeatOverrides: Manages exceptions with PK="OVERRIDE#${date}".
+  - Bookings: Tracks reservations with PK="DATE#${bookingDate}" and GSI1 for user queries.
 
 ## 5.2 Database Design
 

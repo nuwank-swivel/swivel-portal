@@ -4,7 +4,7 @@
 
 - Frontend: React, Vite, ShadcnUI, Tailwind CSS
 - Backend: Node.js/TypeScript on AWS Lambda
-- Database: MongoDB Atlas
+- Database: AWS DynamoDB with ElectroDB
 - Authentication: Azure AD with MSAL.js
 
 ## 14.2 Key Integrations
@@ -15,4 +15,3 @@
 ## 14.3 Mockups & Designs
 
 - Link to Figma designs: [URL]
-

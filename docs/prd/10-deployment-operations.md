@@ -4,7 +4,7 @@
 
 - **Frontend**: AWS S3/CloudFront for hosting the React application.
 - **Backend**: AWS Lambda with Amazon API Gateway for serverless functions.
-- **Database**: MongoDB Atlas for the database.
+- **Database**: AWS DynamoDB with single-table design.
 - **Infrastructure as Code**: AWS CDK for defining and managing all cloud resources.
 - **CI/CD**: GitHub Actions with Nx Cloud for efficient monorepo builds.
 
@@ -16,5 +16,5 @@
 
 ## 10.3 Backup & Recovery
 
-- **Database**: Automated backups and point-in-time recovery are handled by MongoDB Atlas.
+- **Database**: DynamoDB Point-in-time Recovery (PITR) for continuous backups.
 - **Infrastructure**: The use of AWS CDK for infrastructure-as-code facilitates disaster recovery and environment replication.

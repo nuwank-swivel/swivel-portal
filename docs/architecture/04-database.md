@@ -1,57 +1,101 @@
 # 5. Database Design
 
-## 5.1 Data Model (MongoDB)
+## 5.1 Data Model (DynamoDB Single-Table Design)
 
-Instead of a relational schema, we will use a collection-based NoSQL model in MongoDB.
+The application uses a single-table design in DynamoDB, leveraging composite keys and secondary indexes for efficient access patterns. We use ElectroDB as our data modeling library.
 
-- **`users` collection**:
-  - `_id`: ObjectId (Primary Key)
-  - `azureAdId`: String (Indexed, Unique) - The Azure AD Object ID.
-  - `email`: String
-  - `name`: String
-  - `department`: String (Optional)
-  - `isAdmin`: Boolean
-  - `firstLogin`: Date
-  - `lastLogin`: Date
-  - `createdAt`: Date
+### Primary Table Structure
 
-- **`seatConfigurations` collection**:
-  - `_id`: ObjectId
-  - `defaultSeatCount`: Number
-  - `lastModified`: Date
-  - `modifiedBy`: ObjectId (references `users._id`)
+```typescript
+// Example composite key structure
+{
+  PK: string,    // Partition key - Entity type prefix with ID
+  SK: string,    // Sort key - Varies by entity type
+  GSI1PK: string, // For date-based queries
+  GSI1SK: string, // For filtering date-based results
+  // Entity-specific attributes follow
+}
+```
 
-- **`daySeatOverrides` collection**:
-  - `_id`: ObjectId
-  - `date`: ISODate (e.g., "2025-10-28T00:00:00.000Z")
-  - `seatCount`: Number
-  - `createdAt`: Date
-  - `createdBy`: ObjectId (references `users._id`)
+### Entity Patterns
 
-- **`bookings` collection**:
-  - `_id`: ObjectId
-  - `userId`: ObjectId (references `users._id`)
-  - `bookingDate`: ISODate
-  - `startTime`: String (e.g., "09:00")
-  - `endTime`: String (e.g., "17:00")
-  - `lunchOption`: String (e.g., "veg")
-  - `createdAt`: Date
+- **Users**:
 
-- **`lunchOptions` collection**:
-  - `_id`: ObjectId
-  - `name`: String (e.g., "veg", "fish")
-  - `description`: String (e.g., "Vegetarian")
-  - `createdAt`: Date
-  - `createdBy`: ObjectId (references `users._id`)
+  ```typescript
+  {
+    PK: "USER#${azureAdId}",
+    SK: "PROFILE#${azureAdId}",
+    email: string,
+    name: string,
+    department?: string,
+    isAdmin: boolean,
+    firstLogin: string, // ISO date
+    lastLogin: string,  // ISO date
+    createdAt: string   // ISO date
+  }
+  ```
+
+- **Seat Configurations**:
+
+  ```typescript
+  {
+    PK: "CONFIG#SEATS",
+    SK: "CURRENT",
+    defaultSeatCount: number,
+    lastModified: string,
+    modifiedBy: string  // Azure AD ID
+  }
+  ```
+
+- **Day Seat Overrides**:
+
+  ```typescript
+  {
+    PK: "OVERRIDE#${date}",  // YYYY-MM-DD
+    SK: "SEATS",
+    seatCount: number,
+    createdAt: string,
+    createdBy: string   // Azure AD ID
+  }
+  ```
+
+- **Bookings**:
+
+  ```typescript
+  {
+    PK: "DATE#${bookingDate}",  // YYYY-MM-DD
+    SK: "USER#${azureAdId}",
+    GSI1PK: "USER#${azureAdId}",
+    GSI1SK: "BOOKING#${bookingDate}",
+    startTime: string,
+    endTime: string,
+    lunchOption: string,
+    createdAt: string
+  }
+  ```
+
+- **Lunch Options**:
+
+  ```typescript
+  {
+    PK: "LUNCH#${name}",
+    SK: "OPTION",
+    description: string,
+    createdAt: string,
+    createdBy: string   // Azure AD ID
+  }
+  ```
 
 ## 5.2 User Synchronization Flow
 
 1.  **Initial Authentication**:
+
     - User logs in via MSAL.js in the frontend.
     - Frontend obtains an Azure AD access token.
     - Frontend sends the token to the backend API (e.g., `/api/auth/login`).
 
 2.  **User Creation/Update (Backend)**:
+
     - The backend Lambda function receives the token.
     - It uses a library like `passport-azure-ad` to validate the token against Azure AD's configuration.
     - Upon successful validation, the backend extracts user info from the token payload (Azure AD Object ID, email, name, etc.).
@@ -72,8 +116,39 @@ Instead of a relational schema, we will use a collection-based NoSQL model in Mo
 
 ## 5.3 Data Access Layer
 
-- **ODM**: Mongoose is used for data modeling, schema validation, and queries.
-- **Pattern**: A repository-like pattern can be implemented with services that encapsulate Mongoose models.
-- **Transactions**: For multi-document operations, MongoDB transactions will be used to ensure atomicity.
-- **Asynchronous Operations**: All database operations are asynchronous, using async/await.
-- **Indexing**: Proper indexes are created on fields like `azureAdId` and `bookingDate` to optimize query performance.
+- **Data Modeling**: ElectroDB is used for data modeling, schema validation, and queries
+- **Pattern**: Repository pattern with ElectroDB services that handle entity operations
+- **Transactions**: DynamoDB transactions for atomic operations across multiple items
+- **Access Patterns**: Optimized through composite keys and Global Secondary Indexes (GSIs)
+- **Query Efficiency**: Single-table design with careful key composition for optimal read/write performance
+- **Cost Optimization**: Proper capacity planning and auto-scaling configurations
+
+### Key Access Patterns
+
+1. Get user by Azure AD ID
+
+   ```typescript
+   PK = USER#${azureAdId}
+   SK = PROFILE#${azureAdId}
+   ```
+
+2. Get all bookings for a date
+
+   ```typescript
+   PK = DATE#${date}
+   SK begins_with USER#
+   ```
+
+3. Get user's bookings for a date range
+
+   ```typescript
+   GSI1PK = USER#${azureAdId}
+   GSI1SK between BOOKING#${startDate} and BOOKING#${endDate}
+   ```
+
+4. Get seat configuration and overrides
+
+   ```typescript
+   PK = CONFIG#SEATS or OVERRIDE#${date}
+   SK = CURRENT or SEATS
+   ```

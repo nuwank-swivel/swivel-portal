@@ -41,12 +41,12 @@
 ### Backend
 
 - AWS Lambda with Node.js/TypeScript
-- MongoDB Atlas
-- Transactional data integrity
-- Caching for performance optimization
+- AWS DynamoDB with ElectroDB
+- Data integrity with DynamoDB transactions
+- DAX for performance optimization
 
 ### Database
 
-- Normalized schema for users, bookings, and configurations
-- Efficient querying for availability checks
-- Concurrency handling for booking conflicts
+- Single-table design for users, bookings, and configurations
+- Efficient querying with GSIs for availability checks
+- Optimistic locking for booking conflicts
