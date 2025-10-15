@@ -4,63 +4,76 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 
 import * as path from 'path';
+import { StackProps } from '../types';
 
 export class SwivelPortalStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
+    const envSuffix = props?.envName ? `-${props.envName}` : '';
 
     // Lambda Layer from infra/layers/layer.zip
     const sharedLayer = new lambda.LayerVersion(
       this,
-      'SwivelPortalSharedLayer',
+      `SwivelPortalSharedLayer${envSuffix}`,
       {
         code: lambda.Code.fromAsset(
           path.join(__dirname, '../layers/layer.zip')
         ),
         compatibleRuntimes: [lambda.Runtime.NODEJS_22_X],
-        description: 'Shared layer for Swivel Portal Lambdas',
+        description: `Shared layer for Swivel Portal Lambdas${envSuffix}`,
+        layerVersionName: `SwivelPortalSharedLayer${envSuffix}`,
       }
     );
 
     // Lambda function for /auth/login
-    const loginLambda = new lambda.Function(this, 'AuthLoginLambda', {
-      code: lambda.Code.fromAsset(
-        path.join(
-          __dirname,
-          '../../apps/swivel-portal-api/dist/auth/login.js.zip'
-        )
-      ),
-      handler: 'login.handler',
-      runtime: lambda.Runtime.NODEJS_22_X,
-      environment: {
-        DB_USERNAME: process.env.DB_USERNAME || '',
-        DB_PASSWORD: process.env.DB_PASSWORD || '',
-        ADMIN_GROUP_ID: process.env.ADMIN_GROUP_ID || '',
-      },
-      layers: [sharedLayer],
-      timeout: cdk.Duration.seconds(10),
-    });
+    const loginLambda = new lambda.Function(
+      this,
+      `AuthLoginLambda${envSuffix}`,
+      {
+        code: lambda.Code.fromAsset(
+          path.join(
+            __dirname,
+            '../../apps/swivel-portal-api/dist/auth/login.js.zip'
+          )
+        ),
+        handler: 'login.handler',
+        runtime: lambda.Runtime.NODEJS_22_X,
+        functionName: `AuthLoginLambda${envSuffix}`,
+        environment: {
+          DB_USERNAME: process.env.DB_USERNAME || '',
+          DB_PASSWORD: process.env.DB_PASSWORD || '',
+          ADMIN_GROUP_ID: process.env.ADMIN_GROUP_ID || '',
+        },
+        layers: [sharedLayer],
+        timeout: cdk.Duration.seconds(10),
+      }
+    );
 
     // Lambda function for custom authorizer
-    const authorizerLambda = new lambda.Function(this, 'ApiAuthorizerLambda', {
-      code: lambda.Code.fromAsset(
-        path.join(
-          __dirname,
-          '../../apps/swivel-portal-api/dist/auth/authorizor.js.zip'
-        )
-      ),
-      handler: 'authorizor.handler',
-      runtime: lambda.Runtime.NODEJS_22_X,
-      environment: {
-        MS_ENTRA_PUBLIC_KEY: process.env.MS_ENTRA_PUBLIC_KEY || '',
-        ADMIN_GROUP_ID: process.env.ADMIN_GROUP_ID || '',
-      },
-    });
+    const authorizerLambda = new lambda.Function(
+      this,
+      `ApiAuthorizerLambda${envSuffix}`,
+      {
+        code: lambda.Code.fromAsset(
+          path.join(
+            __dirname,
+            '../../apps/swivel-portal-api/dist/auth/authorizor.js.zip'
+          )
+        ),
+        handler: 'authorizor.handler',
+        runtime: lambda.Runtime.NODEJS_22_X,
+        functionName: `ApiAuthorizerLambda${envSuffix}`,
+        environment: {
+          MS_ENTRA_PUBLIC_KEY: process.env.MS_ENTRA_PUBLIC_KEY || '',
+          ADMIN_GROUP_ID: process.env.ADMIN_GROUP_ID || '',
+        },
+      }
+    );
 
     // Lambda function for seat availability
     const seatAvailabilityLambda = new lambda.Function(
       this,
-      'SeatAvailabilityLambda',
+      `SeatAvailabilityLambda${envSuffix}`,
       {
         code: lambda.Code.fromAsset(
           path.join(
@@ -70,6 +83,7 @@ export class SwivelPortalStack extends cdk.Stack {
         ),
         handler: 'getAvailability.handler',
         runtime: lambda.Runtime.NODEJS_22_X,
+        functionName: `SeatAvailabilityLambda${envSuffix}`,
         environment: {
           DB_USERNAME: process.env.DB_USERNAME || '',
           DB_PASSWORD: process.env.DB_PASSWORD || '',
@@ -82,7 +96,7 @@ export class SwivelPortalStack extends cdk.Stack {
     // Lambda function for creating bookings
     const createBookingLambda = new lambda.Function(
       this,
-      'CreateBookingLambda',
+      `CreateBookingLambda${envSuffix}`,
       {
         code: lambda.Code.fromAsset(
           path.join(
@@ -92,6 +106,7 @@ export class SwivelPortalStack extends cdk.Stack {
         ),
         handler: 'seatBookings.handler',
         runtime: lambda.Runtime.NODEJS_22_X,
+        functionName: `CreateBookingLambda${envSuffix}`,
         environment: {
           DB_USERNAME: process.env.DB_USERNAME || '',
           DB_PASSWORD: process.env.DB_PASSWORD || '',
@@ -104,7 +119,7 @@ export class SwivelPortalStack extends cdk.Stack {
     // Lambda function for GET /api/seatbooking/bookings/me
     const getMyBookingsLambda = new lambda.Function(
       this,
-      'GetMyBookingsLambda',
+      `GetMyBookingsLambda${envSuffix}`,
       {
         code: lambda.Code.fromAsset(
           path.join(
@@ -114,6 +129,7 @@ export class SwivelPortalStack extends cdk.Stack {
         ),
         handler: 'getMyBookings.handler',
         runtime: lambda.Runtime.NODEJS_22_X,
+        functionName: `GetMyBookingsLambda${envSuffix}`,
         environment: {
           DB_USERNAME: process.env.DB_USERNAME || '',
           DB_PASSWORD: process.env.DB_PASSWORD || '',
@@ -126,7 +142,7 @@ export class SwivelPortalStack extends cdk.Stack {
     // Lambda function for GET /api/seatbooking/bookings (admin)
     const getAllBookingsLambda = new lambda.Function(
       this,
-      'GetAllBookingsLambda',
+      `GetAllBookingsLambda${envSuffix}`,
       {
         code: lambda.Code.fromAsset(
           path.join(
@@ -136,6 +152,7 @@ export class SwivelPortalStack extends cdk.Stack {
         ),
         handler: 'getAllBookings.handler',
         runtime: lambda.Runtime.NODEJS_22_X,
+        functionName: `GetAllBookingsLambda${envSuffix}`,
         environment: {
           DB_USERNAME: process.env.DB_USERNAME || '',
           DB_PASSWORD: process.env.DB_PASSWORD || '',
@@ -148,7 +165,7 @@ export class SwivelPortalStack extends cdk.Stack {
     // Lambda function for DELETE /api/seatbooking/bookings/{id}
     const cancelBookingLambda = new lambda.Function(
       this,
-      'CancelBookingLambda',
+      `CancelBookingLambda${envSuffix}`,
       {
         code: lambda.Code.fromAsset(
           path.join(
@@ -158,6 +175,7 @@ export class SwivelPortalStack extends cdk.Stack {
         ),
         handler: 'cancelBooking.handler',
         runtime: lambda.Runtime.NODEJS_22_X,
+        functionName: `CancelBookingLambda${envSuffix}`,
         environment: {
           DB_USERNAME: process.env.DB_USERNAME || '',
           DB_PASSWORD: process.env.DB_PASSWORD || '',
@@ -170,7 +188,7 @@ export class SwivelPortalStack extends cdk.Stack {
     // API Gateway Lambda Authorizer
     const apiAuthorizer = new apigateway.RequestAuthorizer(
       this,
-      'ApiGatewayAuthorizer',
+      `ApiGatewayAuthorizer${envSuffix}`,
       {
         handler: authorizerLambda,
         identitySources: [apigateway.IdentitySource.header('Authorization')],
@@ -179,11 +197,11 @@ export class SwivelPortalStack extends cdk.Stack {
     );
 
     // API Gateway
-    const api = new apigateway.RestApi(this, 'SwivelPortalApi', {
-      restApiName: 'Swivel Portal Service',
-      description: 'API Gateway for Swivel Portal',
+    const api = new apigateway.RestApi(this, `SwivelPortalApi${envSuffix}`, {
+      restApiName: `Swivel Portal Service${envSuffix}`,
+      description: `API Gateway for Swivel Portal${envSuffix}`,
       deployOptions: {
-        stageName: 'dev',
+        stageName: props?.envName ?? 'dev',
       },
       defaultCorsPreflightOptions: {
         allowOrigins: apigateway.Cors.ALL_ORIGINS,
@@ -193,7 +211,7 @@ export class SwivelPortalStack extends cdk.Stack {
     });
 
     // Add CORS headers to Gateway Responses (for authorizer failures)
-    api.addGatewayResponse('Unauthorized', {
+    api.addGatewayResponse(`Unauthorized`, {
       type: apigateway.ResponseType.UNAUTHORIZED,
       statusCode: '401',
       responseHeaders: {
@@ -203,7 +221,7 @@ export class SwivelPortalStack extends cdk.Stack {
       },
     });
 
-    api.addGatewayResponse('AccessDenied', {
+    api.addGatewayResponse(`AccessDenied`, {
       type: apigateway.ResponseType.ACCESS_DENIED,
       statusCode: '403',
       responseHeaders: {
@@ -213,7 +231,7 @@ export class SwivelPortalStack extends cdk.Stack {
       },
     });
 
-    api.addGatewayResponse('Default4xx', {
+    api.addGatewayResponse(`Default4xx`, {
       type: apigateway.ResponseType.DEFAULT_4XX,
       responseHeaders: {
         'Access-Control-Allow-Origin': "'*'",
@@ -222,7 +240,7 @@ export class SwivelPortalStack extends cdk.Stack {
       },
     });
 
-    api.addGatewayResponse('Default5xx', {
+    api.addGatewayResponse(`Default5xx`, {
       type: apigateway.ResponseType.DEFAULT_5XX,
       responseHeaders: {
         'Access-Control-Allow-Origin': "'*'",
@@ -232,9 +250,9 @@ export class SwivelPortalStack extends cdk.Stack {
     });
 
     // /auth resource
-    const authResource = api.root.addResource('auth');
+    const authResource = api.root.addResource(`auth`);
     // /auth/login resource
-    const loginResource = authResource.addResource('login');
+    const loginResource = authResource.addResource(`login`);
     loginResource.addMethod(
       'POST',
       new apigateway.LambdaIntegration(loginLambda, { proxy: true }),
@@ -245,13 +263,13 @@ export class SwivelPortalStack extends cdk.Stack {
     );
 
     // /api resource
-    const apiResource = api.root.addResource('api');
+    const apiResource = api.root.addResource(`api`);
     // /api/seatbooking resource
-    const seatBookingResource = apiResource.addResource('seatbooking');
+    const seatBookingResource = apiResource.addResource(`seatbooking`);
 
     // /api/seatbooking/availability resource (GET)
     const availabilityResource =
-      seatBookingResource.addResource('availability');
+      seatBookingResource.addResource(`availability`);
     availabilityResource.addMethod(
       'GET',
       new apigateway.LambdaIntegration(seatAvailabilityLambda, { proxy: true }),
@@ -262,7 +280,7 @@ export class SwivelPortalStack extends cdk.Stack {
     );
 
     // /api/seatbooking/bookings resource (POST, GET /me)
-    const bookingsResource = seatBookingResource.addResource('bookings');
+    const bookingsResource = seatBookingResource.addResource(`bookings`);
     bookingsResource.addMethod(
       'POST',
       new apigateway.LambdaIntegration(createBookingLambda, { proxy: true }),
@@ -281,7 +299,7 @@ export class SwivelPortalStack extends cdk.Stack {
       }
     );
     // /api/seatbooking/bookings/me (GET)
-    const myBookingsResource = bookingsResource.addResource('me');
+    const myBookingsResource = bookingsResource.addResource(`me`);
     myBookingsResource.addMethod(
       'GET',
       new apigateway.LambdaIntegration(getMyBookingsLambda, { proxy: true }),
@@ -291,7 +309,7 @@ export class SwivelPortalStack extends cdk.Stack {
       }
     );
     // /api/seatbooking/bookings/{id} (DELETE)
-    const deleteBookingResource = bookingsResource.addResource('{id}');
+    const deleteBookingResource = bookingsResource.addResource(`{id}`);
     deleteBookingResource.addMethod(
       'DELETE',
       new apigateway.LambdaIntegration(cancelBookingLambda, { proxy: true }),

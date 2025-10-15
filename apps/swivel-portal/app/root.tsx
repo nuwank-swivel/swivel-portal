@@ -13,16 +13,12 @@ import '@mantine/notifications/styles.css';
 import '@mantine/dates/styles.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import './index.css';
-import { Configuration, PublicClientApplication } from '@azure/msal-browser';
 import { MsalProvider } from '@azure/msal-react';
 import { useEffect, useMemo, useState } from 'react';
 import { UserProvider } from './lib/UserContext';
 import { theme } from './theme';
-import {
-  ColorSchemeScript,
-  MantineProvider,
-  mantineHtmlProps,
-} from '@mantine/core';
+import { MantineProvider, mantineHtmlProps } from '@mantine/core';
+import { getMSALInstance } from './config/msal.client';
 
 export const meta: MetaFunction = () => [
   {
@@ -43,28 +39,11 @@ export const links: LinksFunction = () => [
   },
 ];
 
-const msalConfig: Configuration = {
-  auth: {
-    clientId: import.meta.env.VITE_AZURE_AD_CLIENT_ID ?? '', // TODO: Replace with actual client ID
-    authority: `https://login.microsoftonline.com/${
-      import.meta.env.VITE_AZURE_TENANT_ID
-    }`,
-    redirectUri: import.meta.env.VITE_AZURE_REDIRECT_URL,
-  },
-  cache: {
-    cacheLocation: 'localStorage', // Persist tokens across sessions
-    storeAuthStateInCookie: false,
-  },
-};
-
 export function Layout({ children }: { children: React.ReactNode }) {
   const [initialized, setInitialized] = useState(false);
   const queryClient = new QueryClient();
 
-  const msalInstance = useMemo(
-    () => new PublicClientApplication(msalConfig),
-    []
-  );
+  const msalInstance = useMemo(() => getMSALInstance && getMSALInstance(), []);
 
   useEffect(() => {
     const initializeMsal = async () => {
@@ -77,7 +56,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         console.error('MSAL initialization error:', error);
       }
     };
-    if (!initialized) {
+    if (!initialized && msalInstance) {
       initializeMsal();
     }
   }, [initialized, msalInstance]);
@@ -89,17 +68,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
-        <meta name="custom" content={import.meta.env.VITE_AZURE_REDIRECT_URL} />
       </head>
       <body>
         <QueryClientProvider client={queryClient}>
           <MantineProvider theme={theme}>
-            <MsalProvider instance={msalInstance}>
-              <UserProvider>
-                <Toaster />
-                {initialized ? children : null}
-              </UserProvider>
-            </MsalProvider>
+            {msalInstance && (
+              <MsalProvider instance={msalInstance}>
+                <UserProvider>
+                  <Toaster />
+                  {initialized ? children : null}
+                </UserProvider>
+              </MsalProvider>
+            )}
           </MantineProvider>
           <ScrollRestoration />
           <Scripts />

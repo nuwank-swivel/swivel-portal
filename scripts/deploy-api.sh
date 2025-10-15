@@ -18,5 +18,5 @@ nx build swivel-portal-api --configuration=$ENV_MODE --tui false --skipNxCache
 ./scripts/zip-api-functions.sh
 
 cd ./infra
-npx cdk deploy SwivelPortalStack --context env=$ENV_MODE
+npx cdk deploy SwivelPortalStack-$ENV_MODE --context env=$ENV_MODE
 

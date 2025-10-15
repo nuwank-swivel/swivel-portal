@@ -5,48 +5,59 @@ import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as path from 'path';
 import { CfnOriginAccessControl } from 'aws-cdk-lib/aws-cloudfront';
+import { StackProps } from '../types';
 
 export class SwivelPortalFrontendStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
+    const envSuffix = props?.envName ? `-${props.envName}` : '';
 
     // S3 bucket for static site hosting (private, no website hosting)
-    const siteBucket = new s3.Bucket(this, 'SwivelPortalSiteBucket', {
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      autoDeleteObjects: true,
-    });
+    const siteBucket = new s3.Bucket(
+      this,
+      `SwivelPortalSiteBucket${envSuffix}`,
+      {
+        blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+        autoDeleteObjects: true,
+      }
+    );
 
     // Create Origin Access Control (OAC) for CloudFront to access S3 securely
-    const oac = new CfnOriginAccessControl(this, 'SwivelPortalOAC', {
-      originAccessControlConfig: {
-        name: 'SwivelPortalOAC',
-        originAccessControlOriginType: 's3',
-        signingBehavior: 'always',
-        signingProtocol: 'sigv4',
-        description: 'OAC for CloudFront to access S3 bucket',
-      },
-    });
+    const oac = new CfnOriginAccessControl(
+      this,
+      `SwivelPortalOAC${envSuffix}`,
+      {
+        originAccessControlConfig: {
+          name: `SwivelPortalOAC${envSuffix}`,
+          originAccessControlOriginType: 's3',
+          signingBehavior: 'always',
+          signingProtocol: 'sigv4',
+          description: `OAC for CloudFront to access S3 bucket${envSuffix}`,
+        },
+      }
+    );
 
     // CloudFront L1 distribution with OAC and no OAI
     const s3OriginId = 'S3Origin';
     const cfnDistribution = new cloudfront.CfnDistribution(
       this,
-      'SwivelPortalDistribution',
+      `SwivelPortalDistribution${envSuffix}`,
       {
         distributionConfig: {
           enabled: true,
           defaultRootObject: 'index.html',
+          comment: `SwivelPortalDistribution${envSuffix}`,
           origins: [
             {
-              id: s3OriginId,
+              id: `${s3OriginId}${envSuffix}`,
               domainName: siteBucket.bucketRegionalDomainName,
               originAccessControlId: oac.ref,
               s3OriginConfig: {},
             },
           ],
           defaultCacheBehavior: {
-            targetOriginId: s3OriginId,
+            targetOriginId: `${s3OriginId}${envSuffix}`,
             viewerProtocolPolicy: 'redirect-to-https',
             allowedMethods: ['GET', 'HEAD', 'OPTIONS'],
             cachedMethods: ['GET', 'HEAD'],
@@ -93,7 +104,7 @@ export class SwivelPortalFrontendStack extends cdk.Stack {
 
     // Deploy React build output to S3
 
-    new s3deploy.BucketDeployment(this, 'DeploySwivelPortalSite', {
+    new s3deploy.BucketDeployment(this, `DeploySwivelPortalSite${envSuffix}`, {
       sources: [
         s3deploy.Source.asset(
           path.join(__dirname, '../../apps/swivel-portal/build/client')
@@ -105,7 +116,7 @@ export class SwivelPortalFrontendStack extends cdk.Stack {
     });
 
     // Output the CloudFront URL
-    new cdk.CfnOutput(this, 'CloudFrontURL', {
+    new cdk.CfnOutput(this, `CloudFrontURL${envSuffix}`, {
       value: cdk.Fn.join('', ['https://', cfnDistribution.attrDomainName]),
       description: 'The CloudFront distribution URL for the React app',
     });

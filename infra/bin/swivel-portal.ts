@@ -8,12 +8,24 @@ import { SwivelPortalFrontendStack } from '../lib/swivel-portal-frontend-stack';
 
 const app = new cdk.App();
 
-const env = { account: '845719591791', region: 'us-east-1' };
+const env = { account: '845719591791', region: 'ap-south-1' };
 
-new SwivelPortalStack(app, 'SwivelPortalStack', {
+new SwivelPortalStack(app, 'SwivelPortalStack-dev', {
   env,
+  envName: 'dev',
 });
 
-new SwivelPortalFrontendStack(app, 'SwivelPortalFrontendStack', {
+new SwivelPortalStack(app, 'SwivelPortalStack-production', {
   env,
+  envName: 'prod',
+});
+
+new SwivelPortalFrontendStack(app, 'SwivelPortalFrontendStack-dev', {
+  env,
+  envName: 'dev',
+});
+
+new SwivelPortalFrontendStack(app, 'SwivelPortalFrontendStack-production', {
+  env,
+  envName: 'prod',
 });
