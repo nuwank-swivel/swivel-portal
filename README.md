@@ -1,55 +1,69 @@
 # SwivelPortal
 
-## Run tasks
+SwivelPortal is a Microsoft Teams Tab app developed for the internal usage of SwivelGroup. This project is setup as Nx Monorepo project. please refer to Nx documentation to get familiar with it - [Nx Docs](https://nx.dev/).
 
-To run the dev server for your app, use:
+## Microsoft Entra ID setup
 
-```sh
-npx nx serve swivel-portal
-```
+Swivel Portal app authenticates with Microsoft Entra ID through Microsoft Teams. To enable this SSO should be enabled. Two Microsoft Entra ID apps are already setup in the Azure portal for prod and development. Follow this [guide](https://learn.microsoft.com/en-us/microsoftteams/platform/tabs/how-to/authentication/tab-sso-overview) to configure apps in the future.
 
-To create a production bundle:
+These Microsoft Entra ID apps are already registered.
 
-```sh
-npx nx build swivel-portal
-```
+- `swivel-portal-client` - for production usage
+- `swivel-portal-dev` - for dev usage
 
-To see all available targets to run for a project, run:
-
-```sh
-npx nx show project swivel-portal
-```
-
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
-
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Add new projects/libs
-
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
-
-Use the plugin's generator to create new projects.
-
-To generate a new application, use:
-
-```sh
-npx nx g @nx/react:app demo
-```
-
-To generate a new library, use:
-
-```sh
-npx nx g @nx/react:lib mylib
-```
-
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
-
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+Admin access for users in Swivel Portal is provided via Microsoft Entra ID Groups. The `swivel-portal-admin-group` group is already created and adding users to this group will make them admins. This group is added to the above Entra ID apps and their `Token Configuration` is configured to return this group in the JWT token received when authenticated. This group is read by the backend to identify users as admins.
 
 ## Development
 
+Before starting development the project dependencies should be installed. Run the below command in the project root to install dependencies.
+
+```sh
+npm install
+```
+
 This is the overall project structure and dependency flow:
 ![alt text](assets/project-graph.png)
+
+### Frontend
+
+SwivelPortal frontend (`apps/swivel-portal`) is a React 19 application built with Vite. [Mantine](https://mantine.dev/) is used as the UI library. This app initialize and communicate with Microsoft Teams through `@microsoft/teams-js` library.
+
+These commands are available for this app,
+
+```sh
+## build
+nx build swivel-portal --configuration=<dev | production>
+
+## dev server
+nx dev swivel-portal
+```
+
+Since this is a Microsoft Teams app, the [Microsoft 365 Agents Toolkit] (https://learn.microsoft.com/en-us/microsoftteams/platform/toolkit/install-agents-toolkit?tabs=vscode) extension should be installed in the IDE. The `m365agents.yml` file defines the tasks performed by this toolkit. It can `provision` and `publish` the app manifest (`teamsApp/appPackage/manifest.json`) to the [Microsoft Teams Developer Portal] (https://dev.teams.microsoft.com/).
+
+During development the VSCode debugger can be used to start the app in Microsoft Teams (click `Debug in Teams (Edge)` from the debugger menu). However, to authenticate with Microsoft Teams the app needs to be served from an `HTTPS` endpoint. [Ngrok] (https://ngrok.com/) can be used to expose `localhost` as an `HTTPS` endpoint.
+
+- Install Ngrok
+- Start Ngrok(`ngrok http 4200`)
+- Copy the forwarding url from the Ngrok output
+- Add that url to the `server.allowedHosts` in `apps/swivel-portal/vite.config.ts`
+- Go the Microsoft Azure Entra ID app registration `swivel-portal-client-dev` and update the `Application ID URI` from the `Expose an API` section. [More](https://learn.microsoft.com/en-us/microsoftteams/platform/tabs/how-to/authentication/tab-sso-register-aad)
+- Update the env values in `teamsApp/env/*.env.local` with the same ngrok url.
+- Start the React app with `nx dev swivel-portal`
+- Open the `Microsoft 365 Agents Toolkit` in the IDE and click `Preview Your App` option.
+- A new browser window will be opened with Microsoft Teams and the app installation.
+- After doing changes to the React code reload the app page in Microsoft Teams to reflect the changes.
+
+Note: Ngrok url changes whenever it is restarted and the url changes should be done by repeating the same above steps.
+
+### Backend
+
+Swivel Portal API is a AWS Lambda based backend exposed through an AWS ApiGateway. The `apps/swivel-portal-api` contains these Lambda functions. Core business logic and data access logic is abstracted into separate packages in `libs/domain` and `libs/dal`. Please refer to the `docs/architecture` for more information about the code structure.
+
+```sh
+# build
+nx build swivel-portal-api --configuration=<dev | production>
+
+```
 
 ## Environment Variables
 
@@ -74,12 +88,16 @@ You can deploy the API and frontend using the provided scripts. Each script acce
 
 ```sh
 ./scripts/deploy-api.sh [dev|production]
+# OR
+npm run deploy-api [dev|production]
 ```
 
 **Deploy Frontend:**
 
 ```sh
 ./scripts/deploy-frontend.sh [dev|production]
+# OR
+npm run deploy-frontend [dev|production]
 ```
 
 These scripts will build the appropriate project and deploy using AWS CDK, passing the environment mode to both Nx and CDK.
