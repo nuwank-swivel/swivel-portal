@@ -9,7 +9,7 @@ Swivel Portal app authenticates with Microsoft Entra ID through Microsoft Teams.
 These Microsoft Entra ID apps are already registered.
 
 - `swivel-portal-client` - for production usage
-- `swivel-portal-dev` - for dev usage
+- `swivel-portal-client-dev` - for dev usage
 
 Admin access for users in Swivel Portal is provided via Microsoft Entra ID Groups. The `swivel-portal-admin-group` group is already created and adding users to this group will make them admins. This group is added to the above Entra ID apps and their `Token Configuration` is configured to return this group in the JWT token received when authenticated. This group is read by the backend to identify users as admins.
 
@@ -38,9 +38,9 @@ nx build swivel-portal --configuration=<dev | production>
 nx dev swivel-portal
 ```
 
-Since this is a Microsoft Teams app, the [Microsoft 365 Agents Toolkit] (https://learn.microsoft.com/en-us/microsoftteams/platform/toolkit/install-agents-toolkit?tabs=vscode) extension should be installed in the IDE. The `m365agents.yml` file defines the tasks performed by this toolkit. It can `provision` and `publish` the app manifest (`teamsApp/appPackage/manifest.json`) to the [Microsoft Teams Developer Portal] (https://dev.teams.microsoft.com/).
+Since this is a Microsoft Teams app, the [Microsoft 365 Agents Toolkit](https://learn.microsoft.com/en-us/microsoftteams/platform/toolkit/install-agents-toolkit?tabs=vscode) extension should be installed in the IDE. The `m365agents.yml` file defines the tasks performed by this toolkit. It can `provision` and `publish` the app manifest (`teamsApp/appPackage/manifest.json`) to the [Microsoft Teams Developer Portal](https://dev.teams.microsoft.com/).
 
-During development the VSCode debugger can be used to start the app in Microsoft Teams (click `Debug in Teams (Edge)` from the debugger menu). However, to authenticate with Microsoft Teams the app needs to be served from an `HTTPS` endpoint. [Ngrok] (https://ngrok.com/) can be used to expose `localhost` as an `HTTPS` endpoint.
+During development the VSCode debugger can be used to start the app in Microsoft Teams (click `Debug in Teams (Edge)` from the debugger menu). However, to authenticate with Microsoft Teams the app needs to be served from an `HTTPS` endpoint. [Ngrok](https://ngrok.com/) can be used to expose `localhost` as an `HTTPS` endpoint.
 
 - Install Ngrok
 - Start Ngrok(`ngrok http 4200`)
