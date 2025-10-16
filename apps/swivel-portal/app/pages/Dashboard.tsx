@@ -2,7 +2,8 @@ import { Card } from '@mantine/core';
 import { Calendar, Users, FileText, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import CoreLayout from '../components/CoreLayout';
-import { useAuthContext } from '@/lib/UseAuthContext';
+import { useUIContext } from '@/lib/UIContext';
+import { useEffect } from 'react';
 
 const tools = [
   {
@@ -41,15 +42,15 @@ const tools = [
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { user } = useAuthContext();
+  const { setCurrentModule } = useUIContext();
+
+  useEffect(() => {
+    setCurrentModule(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <CoreLayout>
-      <div style={{ marginBottom: 32 }}>
-        <h3 style={{ color: '#6B7280', marginTop: 4 }}>
-          Welcome back, {user?.name}! Select a tool to get started.
-        </h3>
-      </div>
       <div
         style={{
           display: 'grid',

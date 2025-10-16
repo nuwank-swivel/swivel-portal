@@ -15,10 +15,10 @@
   },
   "name": {
     "short": "Swivel Portal",
-    "full": "Swivel Portal"
+    "full": "Swivel Portal (${{APP_NAME_SUFFIX}})"
   },
   "description": {
-    "short": "Swivel Portal",
+    "short": "Swivel Portal (${{APP_NAME_SUFFIX}})",
     "full": "Swivel Portal for Microsoft Teams"
   },
   "accentColor": "#FFFFFF",
@@ -28,15 +28,15 @@
     {
       "entityId": "index0",
       "name": "Home",
-      "contentUrl": "https://d2binc0jh7bnak.cloudfront.net",
-      "websiteUrl": "https://d2binc0jh7bnak.cloudfront.net",
+      "contentUrl": "${{TAB_ENDPOINT}}",
+      "websiteUrl": "${{TAB_ENDPOINT}}",
       "scopes": ["personal", "groupChat", "team"]
     }
   ],
   "permissions": ["identity", "messageTeamMembers"],
   "webApplicationInfo": {
-    "id": "46295135-33dc-4754-bb72-70b7300cd47d",
-    "resource": "api://d2binc0jh7bnak.cloudfront.net/46295135-33dc-4754-bb72-70b7300cd47d"
+    "id": "${{ENTRA_APP_ID}}",
+    "resource": "${{ENTRA_APP_URI}}"
   },
-  "validDomains": ["d2binc0jh7bnak.cloudfront.net"]
+  "validDomains": ["${{TAB_DOMAIN}}"]
 }

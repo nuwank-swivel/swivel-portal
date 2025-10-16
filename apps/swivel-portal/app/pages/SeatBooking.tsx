@@ -12,7 +12,8 @@ import type { SeatAvailabilityResponse } from '@swivel-portal/types';
 import { notifications } from '@mantine/notifications';
 import { MyBookingsModal } from '../components/booking/MyBookingsModal';
 import { AllBookingsModal } from '../components/booking/AllBookingsModal';
-import { useAuthContext } from '@/lib/UseAuthContext';
+import { useAuthContext } from '@/lib/AuthContext';
+import { useUIContext } from '@/lib/UIContext';
 
 const SeatBooking = () => {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -25,6 +26,12 @@ const SeatBooking = () => {
     useState<SeatAvailabilityResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { setCurrentModule } = useUIContext();
+
+  useEffect(() => {
+    setCurrentModule('Seat Booking');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Fetch availability when date is selected
   useEffect(() => {
@@ -73,7 +80,6 @@ const SeatBooking = () => {
   return (
     <CoreLayout>
       <Group align="center" justify="space-between" mb="md">
-        <Title order={2}>Seat Booking</Title>
         <Group>
           {user?.isAdmin && (
             <Button

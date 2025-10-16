@@ -15,7 +15,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import './index.css';
 import { theme } from './theme';
 import { MantineProvider, mantineHtmlProps } from '@mantine/core';
-import { AuthProvider } from './lib/UseAuthContext';
+import { AuthProvider } from './lib/AuthContext';
+import { UIProvider } from './lib/UIContext';
 
 export const meta: MetaFunction = () => [
   {
@@ -51,8 +52,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <QueryClientProvider client={queryClient}>
           <MantineProvider theme={theme}>
             <AuthProvider>
-              <Toaster />
-              {children}
+              <UIProvider>
+                <Toaster />
+                {children}
+              </UIProvider>
             </AuthProvider>
           </MantineProvider>
           <ScrollRestoration />

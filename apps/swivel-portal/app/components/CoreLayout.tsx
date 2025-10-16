@@ -4,7 +4,8 @@ import { ReactNode } from 'react';
 import { useLocation } from 'react-router';
 import UserAvatarMenu from './UserAvatarMenu';
 import BackButton from './ui/BackButton';
-import { useAuthContext } from '@/lib/UseAuthContext';
+import { useAuthContext } from '@/lib/AuthContext';
+import { useUIContext } from '@/lib/UIContext';
 
 interface CoreLayoutProps {
   children: ReactNode;
@@ -16,6 +17,7 @@ export default function CoreLayout({ children }: CoreLayoutProps) {
   // Removed navigate as sidebar is gone
   const location = useLocation();
   const { user } = useAuthContext();
+  const { currentModule } = useUIContext();
 
   return (
     <AppShell
@@ -29,12 +31,15 @@ export default function CoreLayout({ children }: CoreLayoutProps) {
             {/* Burger button removed as per requirements */}
             {location.pathname !== '/' &&
               location.pathname !== '/dashboard' && <BackButton />}
-            <span style={{ fontWeight: 700, fontSize: 22 }}>Swivel Portal</span>
-            {user?.isAdmin ? (
-              <Badge size="sm" color="indigo">
-                Admin
-              </Badge>
-            ) : null}
+            {currentModule ? (
+              <span style={{ fontWeight: 700, fontSize: 22 }}>
+                {currentModule}
+              </span>
+            ) : (
+              <h3 style={{ color: '#6B7280', marginTop: 4 }}>
+                Welcome back, {user?.name}! Select a tool to get started.
+              </h3>
+            )}
           </Group>
 
           {user && <UserAvatarMenu />}

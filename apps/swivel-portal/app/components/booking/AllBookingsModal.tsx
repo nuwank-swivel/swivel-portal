@@ -5,7 +5,7 @@ import { DatePickerInput } from '@mantine/dates';
 import { getAllBookingsForDate } from '@/lib/api/seatBooking';
 import { Button } from '../ui/button';
 import { Sheet } from 'lucide-react';
-import { useAuthContext } from '@/lib/UseAuthContext';
+import { useAuthContext } from '@/lib/AuthContext';
 
 interface AllBookingsModalProps {
   opened: boolean;

@@ -8,7 +8,7 @@ import { Calendar, Clock, MapPin, AlertCircle, Utensils } from 'lucide-react';
 import { format } from 'date-fns';
 import { createBooking } from '../../lib/api/seatBooking';
 import { AxiosError } from 'axios';
-import { useAuthContext } from '@/lib/UseAuthContext';
+import { useAuthContext } from '@/lib/AuthContext';
 
 interface BookingModalProps {
   isOpen: boolean;
