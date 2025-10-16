@@ -1,8 +1,8 @@
 import { Card } from '@mantine/core';
 import { Calendar, Users, FileText, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router';
-import { useUser } from '../lib/UserContext';
 import CoreLayout from '../components/CoreLayout';
+import { useAuthContext } from '@/lib/UseAuthContext';
 
 const tools = [
   {
@@ -41,7 +41,7 @@ const tools = [
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user } = useAuthContext();
 
   return (
     <CoreLayout>

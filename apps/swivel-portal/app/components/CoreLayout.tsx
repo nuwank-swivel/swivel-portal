@@ -4,7 +4,7 @@ import { ReactNode } from 'react';
 import { useLocation } from 'react-router';
 import UserAvatarMenu from './UserAvatarMenu';
 import BackButton from './ui/BackButton';
-import { useUser } from '@/lib/UserContext';
+import { useAuthContext } from '@/lib/UseAuthContext';
 
 interface CoreLayoutProps {
   children: ReactNode;
@@ -15,7 +15,7 @@ export default function CoreLayout({ children }: CoreLayoutProps) {
   // Removed theme as it is no longer used
   // Removed navigate as sidebar is gone
   const location = useLocation();
-  const { user } = useUser();
+  const { user } = useAuthContext();
 
   return (
     <AppShell

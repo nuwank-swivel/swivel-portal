@@ -1,9 +1,8 @@
 import { Avatar, Menu, UnstyledButton } from '@mantine/core';
-import { useUser } from '@/lib/UserContext';
-import LogoutButton from './LogoutButton';
+import { useAuthContext } from '@/lib/UseAuthContext';
 
 export default function UserAvatarMenu() {
-  const { user } = useUser();
+  const { user } = useAuthContext();
   return (
     <Menu shadow="md" width={180} position="bottom-end">
       <Menu.Target>
@@ -16,9 +15,7 @@ export default function UserAvatarMenu() {
       <Menu.Dropdown>
         <Menu.Label>{user?.name || user?.email || 'User'}</Menu.Label>
         <Menu.Divider />
-        <Menu.Item>
-          <LogoutButton />
-        </Menu.Item>
+        <Menu.Item>{/* <LogoutButton /> */}</Menu.Item>
       </Menu.Dropdown>
     </Menu>
   );

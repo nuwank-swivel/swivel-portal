@@ -13,13 +13,9 @@ import '@mantine/notifications/styles.css';
 import '@mantine/dates/styles.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import './index.css';
-import { MsalProvider } from '@azure/msal-react';
-import { useEffect, useMemo, useState } from 'react';
-import { UserProvider } from './lib/UserContext';
 import { theme } from './theme';
 import { MantineProvider, mantineHtmlProps } from '@mantine/core';
-import { getMSALInstance } from './config/msal.client';
-import { RuntimeProvider } from './lib/UseRuntimeContext';
+import { AuthProvider } from './lib/UseAuthContext';
 
 export const meta: MetaFunction = () => [
   {
@@ -41,26 +37,7 @@ export const links: LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const [initialized, setInitialized] = useState(false);
   const queryClient = new QueryClient();
-
-  const msalInstance = useMemo(() => getMSALInstance && getMSALInstance(), []);
-
-  useEffect(() => {
-    const initializeMsal = async () => {
-      try {
-        console.log('Initializing MSAL...');
-        await msalInstance.initialize();
-        console.log('MSAL initialized successfully');
-        setInitialized(true);
-      } catch (error) {
-        console.error('MSAL initialization error:', error);
-      }
-    };
-    if (!initialized && msalInstance) {
-      initializeMsal();
-    }
-  }, [initialized, msalInstance]);
 
   return (
     <html lang="en" {...mantineHtmlProps}>
@@ -73,16 +50,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <body>
         <QueryClientProvider client={queryClient}>
           <MantineProvider theme={theme}>
-            {msalInstance && (
-              <MsalProvider instance={msalInstance}>
-                <RuntimeProvider>
-                  <UserProvider>
-                    <Toaster />
-                    {initialized ? children : null}
-                  </UserProvider>
-                </RuntimeProvider>
-              </MsalProvider>
-            )}
+            <AuthProvider>
+              <Toaster />
+              {children}
+            </AuthProvider>
           </MantineProvider>
           <ScrollRestoration />
           <Scripts />

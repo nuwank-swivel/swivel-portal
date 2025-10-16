@@ -1,15 +1,15 @@
 import React from 'react';
-import { useIsAuthenticated } from '@azure/msal-react';
 import { Navigate, useLocation } from 'react-router';
+import { useAuthContext } from '@/lib/UseAuthContext';
 
 export default function ProtectedRoute({
   children,
 }: {
   children: React.JSX.Element;
 }) {
-  const isAuthenticated = useIsAuthenticated();
+  const { user } = useAuthContext();
   const location = useLocation();
-  if (!isAuthenticated) {
+  if (user === null) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
   return children;

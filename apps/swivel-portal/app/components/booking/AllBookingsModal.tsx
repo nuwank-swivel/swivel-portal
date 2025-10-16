@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { useUser } from '@/lib/UserContext';
 import { useExportBookingsExcel } from '@/hooks/useExportBookingsExcel';
 import { Modal, Group, Loader, Text, Badge, Table } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import { getAllBookingsForDate } from '@/lib/api/seatBooking';
 import { Button } from '../ui/button';
 import { Sheet } from 'lucide-react';
+import { useAuthContext } from '@/lib/UseAuthContext';
 
 interface AllBookingsModalProps {
   opened: boolean;
@@ -20,7 +20,7 @@ interface AdminBooking {
 }
 
 export function AllBookingsModal({ opened, onClose }: AllBookingsModalProps) {
-  const { user } = useUser();
+  const { user } = useAuthContext();
   const exportBookingsExcel = useExportBookingsExcel();
   // Use a calendar dropdown for date selection
   const [date, setDate] = useState<Date | null>(new Date());

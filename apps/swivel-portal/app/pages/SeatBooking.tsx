@@ -12,14 +12,14 @@ import type { SeatAvailabilityResponse } from '@swivel-portal/types';
 import { notifications } from '@mantine/notifications';
 import { MyBookingsModal } from '../components/booking/MyBookingsModal';
 import { AllBookingsModal } from '../components/booking/AllBookingsModal';
-import { useUser } from '@/lib/UserContext';
+import { useAuthContext } from '@/lib/UseAuthContext';
 
 const SeatBooking = () => {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   // const navigate = useNavigate();
   const [myBookingsOpen, setMyBookingsOpen] = useState(false);
   const [allBookingsOpen, setAllBookingsOpen] = useState(false);
-  const { user } = useUser();
+  const { user } = useAuthContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [availability, setAvailability] =
     useState<SeatAvailabilityResponse | null>(null);
@@ -66,22 +66,6 @@ const SeatBooking = () => {
     });
     setIsModalOpen(false);
     setSelectedDate(null);
-    // Refetch availability to update the counts
-    // if (selectedDate) {
-    //   try {
-    //     const date = new Date(selectedDate);
-    //     const year = date.getFullYear();
-    //     const month = String(date.getMonth() + 1).padStart(2, '0');
-    //     const day = String(date.getDate()).padStart(2, '0');
-    //     const dateStr = `${year}-${month}-${day}`;
-
-    //     const data = await getSeatAvailability(dateStr);
-    //     setAvailability(data);
-    //   } catch (err) {
-    //     console.error('Error refreshing availability:', err);
-    //     // Don't show error toast here since booking was successful
-    //   }
-    // }
   };
 
   const availableSeatsCount = availability?.availableSeats ?? 0;

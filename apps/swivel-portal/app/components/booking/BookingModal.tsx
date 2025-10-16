@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useUser } from '../../lib/UserContext';
 import { Group, Text, Modal } from '@mantine/core';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -9,6 +8,7 @@ import { Calendar, Clock, MapPin, AlertCircle, Utensils } from 'lucide-react';
 import { format } from 'date-fns';
 import { createBooking } from '../../lib/api/seatBooking';
 import { AxiosError } from 'axios';
+import { useAuthContext } from '@/lib/UseAuthContext';
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -42,7 +42,7 @@ export function BookingModal({
   selectedDate,
   onConfirm,
 }: BookingModalProps) {
-  const { user } = useUser();
+  const { user } = useAuthContext();
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('17:00');
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);

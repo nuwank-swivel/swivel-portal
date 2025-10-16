@@ -9,6 +9,7 @@ export default defineConfig(() => ({
   server: {
     port: 4200,
     host: 'localhost',
+    allowedHosts: ['localhost', 'alva-taut-bodingly.ngrok-free.dev'],
   },
   preview: {
     port: 4300,

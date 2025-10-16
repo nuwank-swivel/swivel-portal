@@ -3,6 +3,7 @@ interface JWTClaims {
   name?: string;
   preferred_username?: string;
   roles?: string[];
+  groups?: string[];
   [key: string]: unknown;
 }
 import {
@@ -43,7 +44,7 @@ export const handler = async (
 
   const name = decoded.name;
   const email = decoded.preferred_username;
-  const roles: string[] = decoded.roles || [];
+  const roles: string[] = decoded.groups ?? decoded.roles ?? [];
 
   // Check if user is admin
   let isAdmin = false;
