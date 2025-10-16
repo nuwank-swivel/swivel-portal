@@ -19,6 +19,7 @@ import { UserProvider } from './lib/UserContext';
 import { theme } from './theme';
 import { MantineProvider, mantineHtmlProps } from '@mantine/core';
 import { getMSALInstance } from './config/msal.client';
+import { RuntimeProvider } from './lib/UseRuntimeContext';
 
 export const meta: MetaFunction = () => [
   {
@@ -74,10 +75,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <MantineProvider theme={theme}>
             {msalInstance && (
               <MsalProvider instance={msalInstance}>
-                <UserProvider>
-                  <Toaster />
-                  {initialized ? children : null}
-                </UserProvider>
+                <RuntimeProvider>
+                  <UserProvider>
+                    <Toaster />
+                    {initialized ? children : null}
+                  </UserProvider>
+                </RuntimeProvider>
               </MsalProvider>
             )}
           </MantineProvider>
