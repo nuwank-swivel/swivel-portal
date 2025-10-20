@@ -2,56 +2,89 @@
 
 ## 5.1 Data Model (MongoDB)
 
-Instead of a relational schema, we will use a collection-based NoSQL model in MongoDB.
+The data model has been updated to support new requirements as of October 2025, including recurring bookings, seat layout selection, team management, super admin, and meal booking settings.
 
 - **`users` collection**:
+
   - `_id`: ObjectId (Primary Key)
   - `azureAdId`: String (Indexed, Unique) - The Azure AD Object ID.
   - `email`: String
   - `name`: String
   - `department`: String (Optional)
   - `isAdmin`: Boolean
+  - `isSuperAdmin`: Boolean (new, set via Entra ID group)
+  - `rosterDays`: [String] (e.g., ["Monday", "Thursday"]; recurring booking days)
   - `firstLogin`: Date
   - `lastLogin`: Date
   - `createdAt`: Date
 
+- **`seatLayouts` collection** (new):
+
+  - `_id`: ObjectId
+  - `layout`: Object (seat map, e.g., array of seat objects with coordinates/status)
+  - `createdAt`: Date
+  - `createdBy`: ObjectId (references `users._id`)
+  - _Note: Typically only a single record exists, as the seat layout rarely changes and is not date-based. If the layout is updated, the record is replaced or versioned._
+
 - **`seatConfigurations` collection**:
+
   - `_id`: ObjectId
   - `defaultSeatCount`: Number
   - `lastModified`: Date
   - `modifiedBy`: ObjectId (references `users._id`)
 
 - **`daySeatOverrides` collection**:
+
   - `_id`: ObjectId
   - `date`: ISODate (e.g., "2025-10-28T00:00:00.000Z")
   - `seatCount`: Number
   - `createdAt`: Date
   - `createdBy`: ObjectId (references `users._id`)
 
-- **`bookings` collection**:
+- **`bookings` collection** (single and recurring):
+
   - `_id`: ObjectId
   - `userId`: ObjectId (references `users._id`)
-  - `bookingDate`: ISODate
+  - `type`: String ("single" or "recurring")
+  - `date`: ISODate (for single bookings)
+  - `dayOfWeek`: Number (0=Sunday, 1=Monday, ... for recurring bookings)
+  - `seatId`: String (seat identifier in layout)
   - `startTime`: String (e.g., "09:00")
   - `endTime`: String (e.g., "17:00")
-  - `lunchOption`: String (e.g., "veg")
+  - `lunchOption`: String (default meal for booking)
+  - `overrides`: Array of objects (for recurring bookings, per-date overrides)
+    - `date`: ISODate (date of override)
+    - `lunchOption`: String or null (overridden meal option for that date)
+    - ...other fields as needed (e.g., seatId, startTime, endTime)
   - `createdAt`: Date
 
+  _For recurring bookings, only one record is stored per recurrence pattern (e.g., "every Monday"), with per-date changes captured in the `overrides` array. When checking seat availability, both single bookings and recurring bookings with matching `dayOfWeek` (and any overrides for specific dates) are considered._
+
 - **`lunchOptions` collection**:
+
   - `_id`: ObjectId
   - `name`: String (e.g., "veg", "fish")
   - `description`: String (e.g., "Vegetarian")
   - `createdAt`: Date
   - `createdBy`: ObjectId (references `users._id`)
 
+- **`lunchSettings` collection** (new):
+  - `_id`: ObjectId
+  - `options`: [String] (available meal options)
+  - `notificationRecipients`: [ObjectId] (users to receive daily meal booking emails)
+  - `createdAt`: Date
+  - `createdBy`: ObjectId (references `users._id`)
+
 ## 5.2 User Synchronization Flow
 
 1.  **Initial Authentication**:
+
     - User logs in via MSAL.js in the frontend.
     - Frontend obtains an Azure AD access token.
     - Frontend sends the token to the backend API (e.g., `/api/auth/login`).
 
 2.  **User Creation/Update (Backend)**:
+
     - The backend Lambda function receives the token.
     - It uses a library like `passport-azure-ad` to validate the token against Azure AD's configuration.
     - Upon successful validation, the backend extracts user info from the token payload (Azure AD Object ID, email, name, etc.).

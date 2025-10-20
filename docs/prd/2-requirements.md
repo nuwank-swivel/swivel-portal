@@ -28,6 +28,14 @@
 - User booking management (API integration pending)
 - Admin capacity management (API integration pending)
 
+### New Requirements (October 2025)
+
+- **Recurring Bookings / Roaster Support:** Employees can set pre-defined days (e.g., every Monday and Thursday) for recurring seat bookings. These days are always booked for them automatically. Employees can still book extra days as needed.
+- **Seat Layout Selection:** Users can view a visual seat layout for each date, select an available seat, and see their seat and other booked seats highlighted. The booking modal will store the selected seat.
+- **Booking Updates:** Users can update their bookings, including changing or removing meal options.
+- **Super Admin Role:** Super admin users are managed via Entra ID group, similar to admin users.
+- **Meal Booking Settings:** Super admins can change meal booking settings and specify users to receive automated daily emails with meal booking details.
+
 ## 2.2 Technical Requirements
 
 ### Frontend

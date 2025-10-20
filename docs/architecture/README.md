@@ -20,7 +20,30 @@ This directory contains the technical architecture documentation for the Company
 13. [Risk Mitigation](13-risks.md)
 14. [Success Metrics](14-metrics.md)
 
-**Project**: Company Portal PWA (Seat Booking PoC)  
-**Date**: 2025-10-07  
-**Status**: In Progress  
+**Project**: Company Portal PWA (Seat Booking PoC)
+**Date**: 2025-10-20 (updated)
+**Status**: In Progress
 **Author**: Architecture Team
+
+---
+
+## October 2025 Requirements Update
+
+The following new requirements have been incorporated:
+
+- Recurring bookings / roster support
+- Visual seat layout and seat selection
+- Booking updates (including meal options)
+- Super admin role (Entra ID group)
+  // ...existing code...
+- Meal booking settings and notifications
+
+**Architecture Update Checklist:**
+
+- [x] Update database schema for recurring bookings (roster days per user)
+- [x] Add seat layout model and seat assignment logic
+- [x] Support booking updates (including meal options)
+- [x] Add super admin role and permissions (Entra ID group integration)
+- [x] Add meal booking settings and notification logic
+- [x] Update API endpoints and backend logic for all above
+- [x] Update technical architecture and diagrams as needed
