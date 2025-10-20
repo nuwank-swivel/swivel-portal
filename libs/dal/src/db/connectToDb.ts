@@ -11,7 +11,9 @@ export const connectToDb = async () => {
       )}`;
 
       client = await mongoose.connect(
-        `mongodb+srv://${auth}@swivel-portal-cluster.dug9ase.mongodb.net/?retryWrites=true&w=majority&appName=swivel-portal-cluster`
+        `mongodb+srv://${auth}@swivel-portal-cluster.dug9ase.mongodb.net/${
+          process.env.DB_NAME ?? ''
+        }?retryWrites=true&w=majority&appName=swivel-portal-cluster`
       );
       console.log('==> db client created');
     } else {

@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-import * as dotenv from 'dotenv';
-dotenv.config();
 import * as cdk from 'aws-cdk-lib';
 
 import { SwivelPortalStack } from '../lib/swivel-portal-stack';
