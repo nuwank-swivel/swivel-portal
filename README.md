@@ -2,6 +2,10 @@
 
 SwivelPortal is a Microsoft Teams Tab app developed for the internal usage of SwivelGroup. This project is setup as Nx Monorepo project. please refer to Nx documentation to get familiar with it - [Nx Docs](https://nx.dev/).
 
+## BMAD
+
+This app is developed with the [BMAD method](https://github.com/bmad-code-org/BMAD-METHOD) and most of the code is written via `dev` agents with LLMS. Please follow this the BMAD process to keep the docs updated.
+
 ## Microsoft Entra ID setup
 
 Swivel Portal app authenticates with Microsoft Entra ID through Microsoft Teams. To enable this SSO should be enabled. Two Microsoft Entra ID apps are already setup in the Azure portal for prod and development. Follow this [guide](https://learn.microsoft.com/en-us/microsoftteams/platform/tabs/how-to/authentication/tab-sso-overview) to configure apps in the future.

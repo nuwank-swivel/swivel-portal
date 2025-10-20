@@ -2,12 +2,12 @@
 
 ## 2.1 Frontend Stack
 
-- **Framework**: React 18.2.0 with TypeScript 5.2
+- **Framework**: React 19 with TypeScript 5.x
 - **Monorepo**: Nx (Nrwl Extensions)
 - **Build Tool**: Nx
-- **UI Framework**: ShadcnUI (React) with Tailwind CSS
+- **UI Framework**: Mantine (React) with Tailwind CSS
 - **State Management**: React Context + Hooks
-- **Authentication**: MSAL.js 3.0 for Azure AD
+- **Authentication**: Microsoft Entra ID (Azure AD) SSO via Microsoft Teams (no direct MSAL.js usage)
 - **HTTP Client**: Axios with interceptors
 - **Testing**: Vitest + React Testing Library
 - **Package Manager**: Bun (for improved performance)
@@ -16,6 +16,8 @@
   - Prettier
   - Husky for pre-commit hooks
   - lint-staged for staged files
+
+> **Note:** The frontend is only accessible as a Microsoft Teams Tab. It cannot be accessed as a standalone web or PWA app. All authentication is handled by Teams SSO and Microsoft Entra ID.
 
 ## 2.2 Backend Stack
 
