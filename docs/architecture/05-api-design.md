@@ -1,6 +1,5 @@
 # 6. API Design
 
-
 ## 6.1 RESTful Endpoints (Updated October 2025)
 
 ### Booking Model
@@ -8,6 +7,7 @@
 All bookings (single and recurring) are stored in the same collection. Recurring bookings use a `type: "recurring"` field and a `dayOfWeek` property. Per-date overrides (e.g., meal option changes, skips) are stored in an `overrides` array within the booking record.
 
 Sample booking record:
+
 ```json
 {
   "_id": "ObjectId(...)",
