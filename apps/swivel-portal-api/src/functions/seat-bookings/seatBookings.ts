@@ -1,77 +1,36 @@
-import {
-  APIGatewayProxyEvent,
-  APIGatewayProxyResult,
-  Context,
-} from 'aws-lambda';
 import { connectToDb } from '@swivel-portal/dal';
 import { bookSeat } from '@swivel-portal/domain';
+import { defineLambda } from '../../lambda/defineLambda';
+import { Booking, HttpError } from '@swivel-portal/types';
+import {
+  authMiddleware,
+  ExtrasWithUser,
+} from '../../middleware/authMiddleware';
 
-export const handler = async (
-  event: APIGatewayProxyEvent,
-  context: Context
-): Promise<APIGatewayProxyResult> => {
-  const corsHeaders = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type,Authorization',
-  };
+interface BookSeatBody {
+  date: string;
+  duration: string;
+  lunchOption?: string;
+}
 
-  if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
-      body: JSON.stringify({ error: 'Method Not Allowed' }),
-      headers: corsHeaders,
-    };
-  }
+export const handler = defineLambda<
+  BookSeatBody,
+  never,
+  never,
+  { message: string; booking: Booking },
+  ExtrasWithUser
+>({
+  log: true,
+  middlewares: [authMiddleware],
+  handler: async ({ body, extras }) => {
+    const userId = extras.user.azureAdId;
+    const { date, duration, lunchOption } = body || {};
 
-  // Extract user from authorizer context
-  const userId = event.requestContext.authorizer?.azureAdId as string;
-  if (!userId) {
-    return {
-      statusCode: 401,
-      body: JSON.stringify({ error: 'Unauthorized: missing user id' }),
-      headers: corsHeaders,
-    };
-  }
-
-  // Parse and validate request body
-  let body: any = {};
-  try {
-    body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
-  } catch {
-    return {
-      statusCode: 400,
-      body: JSON.stringify({ error: 'Invalid JSON body' }),
-      headers: corsHeaders,
-    };
-  }
-  const { date, duration, lunchOption } = body || {};
-  if (!date || !duration) {
-    return {
-      statusCode: 400,
-      body: JSON.stringify({ error: 'Missing required fields' }),
-      headers: corsHeaders,
-    };
-  }
-
-  try {
+    if (!date || !duration) {
+      throw new HttpError(400, 'Missing required fields');
+    }
     await connectToDb();
     const booking = await bookSeat({ userId, date, duration, lunchOption });
-    return {
-      statusCode: 201,
-      body: JSON.stringify({ message: 'Booking created', booking }),
-      headers: corsHeaders,
-    };
-  } catch (error: unknown) {
-    const errMsg =
-      error && typeof error === 'object' && 'message' in error
-        ? (error as { message: string }).message
-        : 'Booking failed';
-    return {
-      statusCode: 400,
-      body: JSON.stringify({ error: errMsg }),
-      headers: corsHeaders,
-    };
-  }
-};
+    return { message: 'Booking created', booking };
+  },
+});

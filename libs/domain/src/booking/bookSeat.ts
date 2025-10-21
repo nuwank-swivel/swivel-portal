@@ -1,5 +1,7 @@
 import { RepositoryContext } from '@swivel-portal/dal';
 import { Booking } from '@swivel-portal/types';
+import { HttpError } from '@swivel-portal/types';
+import { StatusCodes } from 'http-status-codes';
 
 /**
  * Maps duration strings to standard duration types
@@ -34,13 +36,16 @@ export async function bookSeat(params: {
   const user = await RepositoryContext.userRepository.getByAzureAdId(userId);
 
   if (!user) {
-    throw new Error('User not found');
+    throw new HttpError(StatusCodes.NOT_FOUND, 'User not found');
   }
 
   // Validate date format
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
   if (!dateRegex.test(date)) {
-    throw new Error('Invalid date format. Expected YYYY-MM-DD');
+    throw new HttpError(
+      StatusCodes.BAD_REQUEST,
+      'Invalid date format. Expected YYYY-MM-DD'
+    );
   }
 
   // Validate date is not in the past
@@ -49,7 +54,10 @@ export async function bookSeat(params: {
   const bookingDate = new Date(date);
   bookingDate.setHours(0, 0, 0, 0);
   if (bookingDate < today) {
-    throw new Error('Booking date cannot be in the past');
+    throw new HttpError(
+      StatusCodes.BAD_REQUEST,
+      'Booking date cannot be in the past'
+    );
   }
 
   // Check if user already has a booking for this date
@@ -59,7 +67,10 @@ export async function bookSeat(params: {
       date
     );
   if (hasBooking) {
-    throw new Error('You already have a booking for this date');
+    throw new HttpError(
+      StatusCodes.CONFLICT,
+      'You already have a booking for this date'
+    );
   }
 
   // Get the max seat capacity for the date
@@ -75,7 +86,10 @@ export async function bookSeat(params: {
   const totalBookings =
     await RepositoryContext.bookingRepository.countBookingsByDate(date);
   if (totalBookings >= effectiveSeatCount) {
-    throw new Error('No seats available for the selected date');
+    throw new HttpError(
+      StatusCodes.CONFLICT,
+      'No seats available for the selected date'
+    );
   }
 
   const durationType = mapDurationToEnum(duration);

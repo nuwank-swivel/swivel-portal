@@ -1,67 +1,31 @@
-import {
-  APIGatewayProxyEvent,
-  APIGatewayProxyResult,
-  Context,
-} from 'aws-lambda';
 import { connectToDb } from '@swivel-portal/dal';
 import { getAllBookingsForDate } from '@swivel-portal/domain';
+import { defineLambda } from '../../lambda/defineLambda';
+import { Booking, HttpError } from '@swivel-portal/types';
+import {
+  authMiddleware,
+  ExtrasWithUser,
+} from '../../middleware/authMiddleware';
 
-export const handler = async (
-  event: APIGatewayProxyEvent,
-  context: Context
-): Promise<APIGatewayProxyResult> => {
-  const corsHeaders = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type,Authorization',
-  };
-
-  if (event.httpMethod !== 'GET') {
-    return {
-      statusCode: 405,
-      body: JSON.stringify({ error: 'Method Not Allowed' }),
-      headers: corsHeaders,
-    };
-  }
-
-  // Extract user from authorizer context
-  const isAdmin = event.requestContext.authorizer?.isAdmin;
-  if (!isAdmin) {
-    return {
-      statusCode: 403,
-      body: JSON.stringify({ error: 'Forbidden: admin access required' }),
-      headers: corsHeaders,
-    };
-  }
-
-  // Get date from query string
-  const date = event.queryStringParameters?.date;
-  if (!date) {
-    return {
-      statusCode: 400,
-      body: JSON.stringify({ error: 'Missing date parameter' }),
-      headers: corsHeaders,
-    };
-  }
-
-  try {
+export const handler = defineLambda<
+  never,
+  { date?: string },
+  never,
+  { bookings: Booking[] },
+  ExtrasWithUser
+>({
+  log: true,
+  middlewares: [authMiddleware],
+  handler: async ({ query, extras }) => {
+    if (!extras.user.isAdmin) {
+      throw new HttpError(403, 'Forbidden: admin access required');
+    }
+    const date = query.date;
+    if (!date) {
+      throw new HttpError(400, 'Missing date parameter');
+    }
     await connectToDb();
     const bookings = await getAllBookingsForDate(date);
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ bookings }),
-      headers: corsHeaders,
-    };
-  } catch (error) {
-    const errMsg =
-      error && typeof error === 'object' && 'message' in error
-        ? (error as { message: string }).message
-        : 'Failed to fetch bookings';
-    return {
-      statusCode: 400,
-      body: JSON.stringify({ error: errMsg }),
-      headers: corsHeaders,
-    };
-  }
-};
+    return { bookings };
+  },
+});

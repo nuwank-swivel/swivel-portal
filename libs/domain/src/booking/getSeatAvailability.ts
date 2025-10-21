@@ -1,26 +1,23 @@
 import { RepositoryContext } from '@swivel-portal/dal';
-import { SeatAvailabilityResponse } from '@swivel-portal/types';
+import { HttpError, SeatAvailabilityResponse } from '@swivel-portal/types';
+import { StatusCodes } from 'http-status-codes';
 
 export async function getSeatAvailability(date: string) {
   // Validate date parameter
   if (!date) {
-    return {
-      statusCode: 400,
-      body: JSON.stringify({
-        error: 'Missing required parameter: date',
-      }),
-    };
+    throw new HttpError(
+      StatusCodes.BAD_REQUEST,
+      'Missing required parameter: date'
+    );
   }
 
   // Validate date format (YYYY-MM-DD)
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
   if (!dateRegex.test(date)) {
-    return {
-      statusCode: 400,
-      body: JSON.stringify({
-        error: 'Invalid date format. Expected YYYY-MM-DD',
-      }),
-    };
+    throw new HttpError(
+      StatusCodes.BAD_REQUEST,
+      'Invalid date format. Expected YYYY-MM-DD'
+    );
   }
 
   try {
@@ -49,18 +46,12 @@ export async function getSeatAvailability(date: string) {
       availableSeats,
     };
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify(response),
-    };
+    return response;
   } catch (error) {
     console.error('Error getting seat availability:', error);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({
-        error: 'Failed to retrieve seat availability',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      }),
-    };
+    throw new HttpError(
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      'Failed to retrieve seat availability'
+    );
   }
 }

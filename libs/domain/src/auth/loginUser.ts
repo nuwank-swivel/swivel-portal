@@ -6,7 +6,7 @@ export async function loginUser(
   name: string,
   email: string,
   isAdmin: boolean
-) {
+): Promise<User> {
   let user = await RepositoryContext.userRepository.getByAzureAdId(azureAdId);
   if (!user) {
     const newUser: User = { azureAdId, name, email, isAdmin };
@@ -19,10 +19,5 @@ export async function loginUser(
       // await userRepo.update(azureAdId, { isAdmin });
     }
   }
-  return {
-    statusCode: 200,
-    body: JSON.stringify({
-      user,
-    }),
-  };
+  return { ...user, _id: user._id.toString() };
 }
