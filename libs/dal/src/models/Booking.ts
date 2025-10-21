@@ -7,6 +7,7 @@ import {
   Index,
 } from 'typeorm';
 import { ObjectId } from 'mongodb';
+
 @Entity('bookings')
 @Index(['bookingDate', 'userId'])
 export class Booking {

@@ -11,12 +11,30 @@ export class BookingRepository
   }
 
   async findAllBookingsByDate(date: string): Promise<Array<Booking>> {
-    const bookings = await this.repository.find({
-      where: { bookingDate: date, canceledAt: null },
-      relations: {
-        user: true,
-      },
-    });
+    const bookings = await this.repository
+      .aggregate([
+        { $match: { bookingDate: date, canceledAt: null } },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'userId',
+            foreignField: 'azureAdId',
+            as: 'user',
+          },
+        },
+        { $unwind: '$user' },
+        {
+          $project: {
+            userId: 1,
+            userName: {
+              $ifNull: ['$user.name', ''],
+            },
+            durationType: 1,
+            lunchOption: 1,
+          },
+        },
+      ])
+      .toArray();
 
     return bookings;
   }
