@@ -1,4 +1,4 @@
-import { UserRepository } from '@swivel-portal/dal';
+import { RepositoryContext } from '@swivel-portal/dal';
 import { User } from '@swivel-portal/types';
 
 export async function loginUser(
@@ -7,11 +7,10 @@ export async function loginUser(
   email: string,
   isAdmin: boolean
 ) {
-  const userRepo = new UserRepository();
-  let user = await userRepo.getByAzureAdId(azureAdId);
+  let user = await RepositoryContext.userRepository.getByAzureAdId(azureAdId);
   if (!user) {
     const newUser: User = { azureAdId, name, email, isAdmin };
-    user = await userRepo.create(newUser);
+    user = await RepositoryContext.userRepository.create(newUser);
   } else {
     // Update isAdmin if changed
     if (user.isAdmin !== isAdmin) {

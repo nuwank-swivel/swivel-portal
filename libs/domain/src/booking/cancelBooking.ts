@@ -1,4 +1,4 @@
-import { BookingRepository } from '@swivel-portal/dal';
+import { RepositoryContext } from '@swivel-portal/dal';
 
 /**
  * Cancel a booking if owned by user and not in the past
@@ -7,8 +7,7 @@ import { BookingRepository } from '@swivel-portal/dal';
  * @throws Error if not allowed
  */
 export async function cancelBooking(bookingId: string, userId: string) {
-  const repo = new BookingRepository();
-  const booking = await repo.getById(bookingId);
+  const booking = await RepositoryContext.bookingRepository.getById(bookingId);
 
   if (!booking) {
     throw new Error('Booking not found');
@@ -23,7 +22,9 @@ export async function cancelBooking(bookingId: string, userId: string) {
     throw new Error('Cannot cancel past bookings');
   }
 
-  const updated = await repo.update(bookingId, { canceledAt: new Date() });
+  const updated = await RepositoryContext.bookingRepository.update(bookingId, {
+    canceledAt: new Date(),
+  });
   if (!updated) {
     throw new Error('Failed to cancel booking');
   }

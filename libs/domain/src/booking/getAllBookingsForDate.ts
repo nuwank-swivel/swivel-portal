@@ -1,4 +1,4 @@
-import { BookingRepository } from '@swivel-portal/dal';
+import { RepositoryContext } from '@swivel-portal/dal';
 import { Booking } from '@swivel-portal/types';
 
 /**
@@ -6,8 +6,9 @@ import { Booking } from '@swivel-portal/types';
  * Returns user name, duration type, and meal type for each booking
  */
 export async function getAllBookingsForDate(date: string): Promise<Booking[]> {
-  const repo = new BookingRepository();
-  return (await repo.findAllBookingsByDate(date)).map((b) => ({
+  return (
+    await RepositoryContext.bookingRepository.findAllBookingsByDate(date)
+  ).map((b) => ({
     ...b,
     _id: b._id?.toString(),
   }));

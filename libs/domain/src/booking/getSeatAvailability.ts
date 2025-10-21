@@ -1,8 +1,4 @@
-import { 
-  BookingRepository, 
-  SeatConfigurationRepository, 
-  DaySeatOverrideRepository 
-} from '@swivel-portal/dal';
+import { RepositoryContext } from '@swivel-portal/dal';
 import { SeatAvailabilityResponse } from '@swivel-portal/types';
 
 export async function getSeatAvailability(date: string) {
@@ -28,20 +24,19 @@ export async function getSeatAvailability(date: string) {
   }
 
   try {
-    const configRepo = new SeatConfigurationRepository();
-    const overrideRepo = new DaySeatOverrideRepository();
-    const bookingRepo = new BookingRepository();
-
     // Get default seat configuration
-    const config = await configRepo.getDefaultConfig();
+    const config =
+      await RepositoryContext.seatConfigurationRepository.getDefaultConfig();
     const defaultSeatCount = config?.defaultSeatCount ?? 50; // Default to 50 if not configured
 
     // Check for date-specific override
-    const override = await overrideRepo.getByDate(date);
+    const override =
+      await RepositoryContext.daySeatOverrideRepository.getByDate(date);
     const effectiveSeatCount = override?.seatCount ?? defaultSeatCount;
 
     // Count bookings for the date
-    const bookingsCount = await bookingRepo.countBookingsByDate(date);
+    const bookingsCount =
+      await RepositoryContext.bookingRepository.countBookingsByDate(date);
 
     // Calculate available seats
     const availableSeats = Math.max(0, effectiveSeatCount - bookingsCount);
@@ -69,4 +64,3 @@ export async function getSeatAvailability(date: string) {
     };
   }
 }
-

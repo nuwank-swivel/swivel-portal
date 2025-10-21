@@ -1,9 +1,4 @@
-import {
-  BookingRepository,
-  SeatConfigurationRepository,
-  DaySeatOverrideRepository,
-  UserRepository,
-} from '@swivel-portal/dal';
+import { RepositoryContext } from '@swivel-portal/dal';
 import { Booking } from '@swivel-portal/types';
 
 /**
@@ -35,12 +30,8 @@ export async function bookSeat(params: {
   lunchOption?: string;
 }): Promise<Booking> {
   const { userId, date, duration, lunchOption } = params;
-  const userRepo = new UserRepository();
-  const bookingRepo = new BookingRepository();
-  const configRepo = new SeatConfigurationRepository();
-  const overrideRepo = new DaySeatOverrideRepository();
 
-  const user = await userRepo.getByAzureAdId(userId);
+  const user = await RepositoryContext.userRepository.getByAzureAdId(userId);
 
   if (!user) {
     throw new Error('User not found');
@@ -62,26 +53,34 @@ export async function bookSeat(params: {
   }
 
   // Check if user already has a booking for this date
-  const hasBooking = await bookingRepo.hasUserBookingOnDate(userId, date);
+  const hasBooking =
+    await RepositoryContext.bookingRepository.hasUserBookingOnDate(
+      userId,
+      date
+    );
   if (hasBooking) {
     throw new Error('You already have a booking for this date');
   }
 
   // Get the max seat capacity for the date
-  const config = await configRepo.getDefaultConfig();
+  const config =
+    await RepositoryContext.seatConfigurationRepository.getDefaultConfig();
   const defaultSeatCount = config?.defaultSeatCount ?? 50;
-  const override = await overrideRepo.getByDate(date);
+  const override = await RepositoryContext.daySeatOverrideRepository.getByDate(
+    date
+  );
   const effectiveSeatCount = override?.seatCount ?? defaultSeatCount;
 
   // Check if seats are available
-  const totalBookings = await bookingRepo.countBookingsByDate(date);
+  const totalBookings =
+    await RepositoryContext.bookingRepository.countBookingsByDate(date);
   if (totalBookings >= effectiveSeatCount) {
     throw new Error('No seats available for the selected date');
   }
 
   const durationType = mapDurationToEnum(duration);
 
-  const booking = await bookingRepo.create({
+  const booking = await RepositoryContext.bookingRepository.create({
     userId,
     bookingDate: date,
     durationType,

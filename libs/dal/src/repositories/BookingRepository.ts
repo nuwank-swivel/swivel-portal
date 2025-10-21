@@ -55,7 +55,8 @@ export class BookingRepository
 
   async countBookingsByDate(date: string): Promise<number> {
     return this.repository.count({
-      where: { bookingDate: date, canceledAt: null },
+      bookingDate: date,
+      canceledAt: null,
     });
   }
 
@@ -64,7 +65,9 @@ export class BookingRepository
     bookingDate: string
   ): Promise<boolean> {
     const count = await this.repository.count({
-      where: { userId, bookingDate, canceledAt: null },
+      userId,
+      bookingDate,
+      canceledAt: null,
     });
     return count > 0;
   }

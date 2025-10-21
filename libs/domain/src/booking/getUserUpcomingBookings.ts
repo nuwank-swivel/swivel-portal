@@ -1,4 +1,4 @@
-import { BookingRepository } from '@swivel-portal/dal';
+import { RepositoryContext } from '@swivel-portal/dal';
 import { Booking } from '@swivel-portal/types';
 
 /**
@@ -10,8 +10,12 @@ export async function getUserUpcomingBookings(
   userId: string,
   fromDate: string
 ): Promise<Booking[]> {
-  const repo = new BookingRepository();
-  return (await repo.findUserUpcomingBookings(userId, fromDate)).map((b) => ({
+  return (
+    await RepositoryContext.bookingRepository.findUserUpcomingBookings(
+      userId,
+      fromDate
+    )
+  ).map((b) => ({
     ...b,
     _id: b._id?.toString(),
   }));
