@@ -24,6 +24,12 @@ export interface SeatConfiguration {
   defaultSeatCount: number;
   lastModified?: Date;
   modifiedBy?: string;
+  tables: Table[];
+}
+
+export interface Table {
+  name: string;
+  seats: Array<{ id: string; side: string; index: number }>;
 }
 
 export interface DaySeatOverride {

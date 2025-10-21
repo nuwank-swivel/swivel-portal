@@ -185,6 +185,28 @@ export class SwivelPortalStack extends BaseStack {
       }
     );
 
+    // Lambda function for GET /api/seatbooking/layout
+    const getSeatLayoutLambda = new lambda.Function(
+      this,
+      `GetSeatLayoutLambda${this.envSuffix}`,
+      {
+        code: lambda.Code.fromAsset(
+          path.join(
+            __dirname,
+            '../../apps/swivel-portal-api/dist/seat-bookings/getSeatLayout.js.zip'
+          )
+        ),
+        handler: 'getSeatLayout.handler',
+        runtime: lambda.Runtime.NODEJS_22_X,
+        functionName: `GetSeatLayoutLambda${this.envSuffix}`,
+        environment: {
+          ...DB_ENV,
+        },
+        layers: [sharedLayer],
+        timeout: cdk.Duration.seconds(10),
+      }
+    );
+
     // API Gateway Lambda Authorizer
     const apiAuthorizer = new apigateway.RequestAuthorizer(
       this,
@@ -317,6 +339,17 @@ export class SwivelPortalStack extends BaseStack {
     deleteBookingResource.addMethod(
       'DELETE',
       new apigateway.LambdaIntegration(cancelBookingLambda, { proxy: true }),
+      {
+        authorizer: apiAuthorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
+      }
+    );
+
+    // /api/seatbooking/layout resource (GET)
+    const layoutResource = seatBookingResource.addResource('layout');
+    layoutResource.addMethod(
+      'GET',
+      new apigateway.LambdaIntegration(getSeatLayoutLambda, { proxy: true }),
       {
         authorizer: apiAuthorizer,
         authorizationType: apigateway.AuthorizationType.CUSTOM,

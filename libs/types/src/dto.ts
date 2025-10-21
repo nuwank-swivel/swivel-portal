@@ -5,4 +5,3 @@ export interface SeatAvailabilityResponse {
   bookingsCount: number;
   availableSeats: number;
 }
-

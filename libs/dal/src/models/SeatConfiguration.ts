@@ -15,6 +15,16 @@ export class SeatConfiguration {
   @Column()
   defaultSeatCount!: number;
 
+  @Column({ type: 'json' })
+  tables!: Array<{
+    name: string;
+    seats: Array<{
+      id: string;
+      side: string;
+      index: number;
+    }>;
+  }>;
+
   @Column({ nullable: true })
   modifiedBy?: string;
 
