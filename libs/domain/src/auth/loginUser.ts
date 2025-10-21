@@ -8,7 +8,7 @@ export async function loginUser(
   isAdmin: boolean
 ) {
   const userRepo = new UserRepository();
-  let user = await userRepo.getById(azureAdId);
+  let user = await userRepo.getByAzureAdId(azureAdId);
   if (!user) {
     const newUser: User = { azureAdId, name, email, isAdmin };
     user = await userRepo.create(newUser);

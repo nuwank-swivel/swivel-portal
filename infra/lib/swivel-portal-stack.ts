@@ -14,6 +14,7 @@ export class SwivelPortalStack extends BaseStack {
       DB_USERNAME: process.env.DB_USERNAME || '',
       DB_PASSWORD: process.env.DB_PASSWORD || '',
       DB_NAME: process.env.DB_NAME || '',
+      DB_URL: process.env.DB_URL || '',
     };
 
     // Lambda Layer from infra/layers/layer.zip
