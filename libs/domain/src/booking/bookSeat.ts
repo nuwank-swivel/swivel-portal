@@ -2,6 +2,7 @@ import {
   BookingRepository,
   SeatConfigurationRepository,
   DaySeatOverrideRepository,
+  UserRepository,
 } from '@swivel-portal/dal';
 import { Booking } from '@swivel-portal/types';
 
@@ -34,9 +35,16 @@ export async function bookSeat(params: {
   lunchOption?: string;
 }): Promise<Booking> {
   const { userId, date, duration, lunchOption } = params;
+  const userRepo = new UserRepository();
   const bookingRepo = new BookingRepository();
   const configRepo = new SeatConfigurationRepository();
   const overrideRepo = new DaySeatOverrideRepository();
+
+  const user = await userRepo.getByAzureAdId(userId);
+
+  if (!user) {
+    throw new Error('User not found');
+  }
 
   // Validate date format
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
@@ -72,11 +80,13 @@ export async function bookSeat(params: {
   }
 
   const durationType = mapDurationToEnum(duration);
-  return await bookingRepo.create({
+
+  const booking = await bookingRepo.create({
     userId,
     bookingDate: date,
     durationType,
     duration,
     lunchOption,
   });
+  return { ...booking, _id: booking._id?.toString() };
 }

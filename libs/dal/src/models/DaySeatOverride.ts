@@ -1,35 +1,27 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import {
+  Entity,
+  ObjectIdColumn,
+  Column,
+  CreateDateColumn,
+  Index,
+} from 'typeorm';
+import { ObjectId } from 'mongodb';
 
-interface IDaySeatOverride extends Document {
-  date: string;
-  seatCount: number;
-  createdAt: Date;
+@Entity('daySeatOverrides')
+@Index(['date'], { unique: true })
+export class DaySeatOverride {
+  @ObjectIdColumn()
+  _id!: ObjectId;
+
+  @Column()
+  date!: string;
+
+  @Column()
+  seatCount!: number;
+
+  @Column({ nullable: true })
   createdBy?: string;
+
+  @CreateDateColumn()
+  createdAt!: Date;
 }
-
-const DaySeatOverrideSchema: Schema = new Schema(
-  {
-    date: {
-      type: String,
-      required: true,
-      unique: true,
-      index: true,
-    },
-    seatCount: {
-      type: Number,
-      required: true,
-    },
-    createdBy: {
-      type: String,
-    },
-  },
-  {
-    timestamps: true,
-  }
-);
-
-export const DaySeatOverride = mongoose.model<IDaySeatOverride>(
-  'DaySeatOverride',
-  DaySeatOverrideSchema
-);
-
