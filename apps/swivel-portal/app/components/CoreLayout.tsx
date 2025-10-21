@@ -7,6 +7,8 @@ import BackButton from './ui/BackButton';
 import { useAuthContext } from '@/lib/AuthContext';
 import { useUIContext } from '@/lib/UIContext';
 
+declare const __APP_VERSION__: string;
+
 interface CoreLayoutProps {
   children: ReactNode;
 }
@@ -42,7 +44,15 @@ export default function CoreLayout({ children }: CoreLayoutProps) {
             )}
           </Group>
 
-          {user && <UserAvatarMenu />}
+          <Group>
+            <Badge color="gray" variant="light" size="xs">
+              v
+              {typeof __APP_VERSION__ !== 'undefined'
+                ? __APP_VERSION__
+                : '0.0.0'}
+            </Badge>
+            {user && <UserAvatarMenu />}
+          </Group>
         </Group>
       </AppShell.Header>
       {/* Sidebar removed as per requirements */}

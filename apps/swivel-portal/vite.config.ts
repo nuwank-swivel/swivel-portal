@@ -3,6 +3,8 @@ import { defineConfig } from 'vite';
 import { reactRouter } from '@react-router/dev/vite';
 import path from 'path';
 import basicSsl from '@vitejs/plugin-basic-ssl';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const pkg = require('./package.json');
 
 export default defineConfig(() => ({
   root: __dirname,
@@ -33,6 +35,9 @@ export default defineConfig(() => ({
     commonjsOptions: {
       transformMixedEsModules: true,
     },
+  },
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version ?? '0.0.0'),
   },
   test: {
     name: '@swivel-portal/swivel-portal',
