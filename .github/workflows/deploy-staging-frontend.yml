@@ -55,5 +55,4 @@ jobs:
       - name: Deploy frontend to Staging
         run: |
           cd infra
-          npx cdk bootstrap
           npx cdk deploy  SwivelPortalFrontendStack-staging  --require-approval never --parameters tag=${{ github.event.inputs.tag }} --app "npx ts-node --prefer-ts-exts bin/swivel-portal-frontend.ts"
