@@ -21,7 +21,7 @@ export class BaseRepository<T extends { _id?: ObjectId }> {
     return result;
   }
 
-  async update(id: string, item: Partial<T>): Promise<T | null> {
+  async update(id: string, item: Omit<Partial<T>, '_id'>): Promise<T | null> {
     await this.repository.update(
       { _id: new ObjectId(id) } as FindOptionsWhere<T>,
       item as QueryDeepPartialEntity<T>

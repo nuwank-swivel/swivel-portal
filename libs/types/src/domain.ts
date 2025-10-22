@@ -40,3 +40,14 @@ export interface DaySeatOverride {
   createdAt?: Date;
   createdBy?: string;
 }
+
+export interface Team {
+  _id?: string;
+  name: string;
+  color: string; // hex code
+  ownerId: string; // admin user who created the team
+  memberIds: string[];
+  deleted?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
