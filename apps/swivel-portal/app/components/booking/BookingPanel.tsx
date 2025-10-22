@@ -1,9 +1,17 @@
 import { useState } from 'react';
-import { Paper, Title, Button, Group, Text, Select, Chip } from '@mantine/core';
+import {
+  Paper,
+  Title,
+  Button,
+  Group,
+  Text,
+  Select,
+  Alert,
+} from '@mantine/core';
 import { Grid } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import { Calendar, Clock, Utensils, AlertCircle } from 'lucide-react';
-import { createBooking } from '@/lib/api/seatBooking';
+import { CreateBookingRequest } from '@/lib/api/seatBooking';
 
 const timePresets = [
   { label: 'Half day', duration: 4 },
@@ -18,18 +26,27 @@ export function BookingPanel({
   selectedDate,
   setSelectedDate,
   selectedSeatId,
+  onConfirm,
+  confirming,
+  success,
+  error,
+  myBookedSeatId,
+  onCancelBooking,
 }: {
   selectedDate: string | null;
   setSelectedDate: (date: string | null) => void;
   selectedSeatId: string | null;
+  onConfirm: (details: CreateBookingRequest, resetState: () => void) => void;
+  confirming: boolean;
+  success?: string | null;
+  error?: string | null;
+  myBookedSeatId?: string;
+  onCancelBooking?: () => void;
 }) {
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('17:00');
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
-  const [lunch, setLunch] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [lunch, setLunch] = useState<string | null>(null);
 
   const handlePreset = (label: string, hours: number) => {
     const start = parseInt(startTime.split(':')[0]);
@@ -38,32 +55,25 @@ export function BookingPanel({
     setSelectedPreset(label);
   };
 
-  const handleConfirm = async () => {
-    setIsSubmitting(true);
-    setMessage(null);
-    setError(null);
-    try {
-      if (!selectedDate) throw new Error('Date required');
-      if (!selectedSeatId) throw new Error('Seat selection required');
-      const dateObj = new Date(selectedDate);
-      const year = dateObj.getFullYear();
-      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-      const day = String(dateObj.getDate()).padStart(2, '0');
-      const dateStr = `${year}-${month}-${day}`;
-      const payload = {
-        date: dateStr,
-        duration: getDuration(),
-        seatId: selectedSeatId,
-        lunchOption: lunch || undefined,
-      };
-      await createBooking(payload);
-      setMessage('Booking confirmed!');
-      setLunch('');
-    } catch (err: any) {
-      setError(err?.message || 'Booking failed');
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleConfirm = () => {
+    if (!selectedDate || !selectedSeatId) return;
+    const dateObj = new Date(selectedDate);
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
+    const payload: CreateBookingRequest = {
+      date: dateStr,
+      duration: getDuration(),
+      seatId: selectedSeatId,
+      lunchOption: lunch || undefined,
+    };
+    onConfirm(payload, () => {
+      setLunch(null);
+      setSelectedPreset(null);
+      setStartTime('09:00');
+      setEndTime('17:00');
+    });
   };
 
   const getDuration = () => {
@@ -98,6 +108,27 @@ export function BookingPanel({
       <Title order={4} mb="md">
         Create Booking
       </Title>
+      {myBookedSeatId && (
+        <Alert
+          color="red"
+          title="You already have a booking for this date."
+          mb="md"
+        >
+          <Group justify="space-between" align="center">
+            <Text size="sm">Do you want to cancel your existing booking?</Text>
+            {onCancelBooking && (
+              <Button
+                color="red"
+                size="xs"
+                variant="outline"
+                onClick={onCancelBooking}
+              >
+                Cancel Booking
+              </Button>
+            )}
+          </Group>
+        </Alert>
+      )}
       <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
         <DatePickerInput
           label={getSectionTitle(<Calendar size={16} />, 'Select a date')}
@@ -179,16 +210,16 @@ export function BookingPanel({
             data={['Veg', 'Fish', 'Chicken', 'Egg', 'Seafood'].map(
               (option) => ({ value: option.toLowerCase(), label: option })
             )}
-            value={lunch || null}
+            value={lunch}
             onChange={(val) => setLunch(val ?? '')}
             placeholder="Select meal option"
             clearable
             size="sm"
           />
           {/* Success/Error Messages */}
-          {message && (
+          {success && (
             <Text color="green" size="sm">
-              {message}
+              {success}
             </Text>
           )}
           {error && (
@@ -203,13 +234,10 @@ export function BookingPanel({
         fullWidth
         onClick={handleConfirm}
         disabled={
-          isSubmitting ||
-          startTime >= endTime ||
-          !selectedDate ||
-          !selectedSeatId
+          confirming || startTime >= endTime || !selectedDate || !selectedSeatId
         }
       >
-        {isSubmitting ? 'Confirming...' : 'Confirm Booking'}
+        {confirming ? 'Confirming...' : 'Confirm Booking'}
       </Button>
     </Paper>
   );

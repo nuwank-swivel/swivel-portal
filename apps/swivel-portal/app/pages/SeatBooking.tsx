@@ -4,74 +4,95 @@ import { Grid } from '@mantine/core';
 import { FloorLayout } from '@/components/booking/floorLayout/FloorLayout';
 import CoreLayout from '../components/CoreLayout';
 import {
-  BookingModal,
-  type BookingDetails,
-} from '@/components/booking/BookingModal';
-import { getSeatAvailability } from '@/lib/api/seatBooking';
+  CreateBookingRequest,
+  getSeatAvailability,
+} from '@/lib/api/seatBooking';
 import type { SeatAvailabilityResponse } from '@swivel-portal/types';
-import { notifications } from '@mantine/notifications';
+import { useBookingConfirmation } from '../hooks/useBookingConfirmation';
 import { MyBookingsModal } from '../components/booking/MyBookingsModal';
 import { AllBookingsModal } from '../components/booking/AllBookingsModal';
 import { useAuthContext } from '@/lib/AuthContext';
 import { useUIContext } from '@/lib/UIContext';
 import { BookingPanel } from '@/components/booking/BookingPanel';
 import moment from 'moment';
+import { useCancelBooking } from '../hooks/useCancelBooking';
 
 const tomorrow = () => moment().add(1, 'day').format('YYYY-MM-DD');
 
 const SeatBooking = () => {
   const [selectedDate, setSelectedDate] = useState<string | null>(tomorrow);
   const [selectedSeatId, setSelectedSeatId] = useState<string | null>(null);
-  // const navigate = useNavigate();
   const [myBookingsOpen, setMyBookingsOpen] = useState(false);
   const [allBookingsOpen, setAllBookingsOpen] = useState(false);
   const { user } = useAuthContext();
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [availability, setAvailability] =
     useState<SeatAvailabilityResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { setCurrentModule } = useUIContext();
 
+  const { CancelDialog, cancelBooking } = useCancelBooking();
+
+  // Booking confirmation hook
+  const {
+    confirming,
+    success,
+    error: bookingError,
+    confirmBooking,
+    clearMessages,
+  } = useBookingConfirmation();
+
   useEffect(() => {
     setCurrentModule('Seat Booking');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Fetch availability when date is selected
-  useEffect(() => {
+  const fetchAvailability = async () => {
     if (!selectedDate) {
       setAvailability(null);
       setError(null);
       return;
     }
-    const fetchAvailability = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const dateStr = selectedDate;
-        const data = await getSeatAvailability(dateStr);
-        setAvailability(data);
-        setSelectedSeatId(null); // Clear seat selection when date changes
-      } catch (err) {
-        setError('Failed to load seat availability. Please try again.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    setIsLoading(true);
+    setError(null);
+    try {
+      const dateStr = selectedDate;
+      const data = await getSeatAvailability(dateStr);
+      setAvailability(data);
+      setSelectedSeatId(null); // Clear seat selection when date changes
+    } catch (err) {
+      setError('Failed to load seat availability. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch availability when date is selected
+  useEffect(() => {
+    clearMessages();
     fetchAvailability();
   }, [selectedDate]);
 
-  const handleConfirmBooking = async (details: BookingDetails) => {
-    notifications.show({
-      title: 'Booking Confirmed',
-      message: `Seat reserved for ${details.startTime} - ${details.endTime}`,
-      color: 'green',
+  const handleConfirmBooking = async (
+    details: CreateBookingRequest,
+    resetPanelState: () => void
+  ) => {
+    await confirmBooking(details, () => {
+      resetBookingState();
+      resetPanelState();
     });
-    setIsModalOpen(false);
-    // Reset to tomorrow and clear seat selection
+  };
+
+  const handleCancelBooking = async () => {
+    if (!availability?.myBooking) return;
+    cancelBooking(availability.myBooking.bookingId);
+  };
+
+  // Helper to reset booking state
+  const resetBookingState = () => {
     setSelectedDate(tomorrow());
     setSelectedSeatId(null);
+    fetchAvailability();
   };
 
   return (
@@ -110,6 +131,12 @@ const SeatBooking = () => {
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
             selectedSeatId={selectedSeatId}
+            onConfirm={handleConfirmBooking}
+            confirming={confirming}
+            success={success}
+            error={bookingError}
+            myBookedSeatId={availability?.myBooking?.seatId}
+            onCancelBooking={handleCancelBooking}
           />
         </Grid.Col>
         <Grid.Col span={8}>
@@ -117,6 +144,7 @@ const SeatBooking = () => {
             selectedSeatId={selectedSeatId}
             setSelectedSeatId={setSelectedSeatId}
             bookedSeatIds={availability?.bookedSeatIds ?? []}
+            myBookedSeatId={availability?.myBooking?.seatId}
             seatAvailabilityLoading={isLoading}
           />
         </Grid.Col>
@@ -130,6 +158,7 @@ const SeatBooking = () => {
         // selectedSeatId={selectedSeatId}
         onConfirm={handleConfirmBooking}
       /> */}
+      <CancelDialog onSuccess={resetBookingState} />
     </CoreLayout>
   );
 };

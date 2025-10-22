@@ -5,4 +5,8 @@ export interface SeatAvailabilityResponse {
   bookingsCount: number;
   availableSeats: number;
   bookedSeatIds: string[];
+  myBooking?: {
+    bookingId: string;
+    seatId: string;
+  };
 }
