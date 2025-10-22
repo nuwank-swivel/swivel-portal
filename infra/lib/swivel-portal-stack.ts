@@ -355,5 +355,128 @@ export class SwivelPortalStack extends BaseStack {
         authorizationType: apigateway.AuthorizationType.CUSTOM,
       }
     );
+    // --- TEAM Lambda Functions ---
+    const createTeamLambda = new lambda.Function(
+      this,
+      `CreateTeamLambda${this.envSuffix}`,
+      {
+        code: lambda.Code.fromAsset(
+          path.join(
+            __dirname,
+            '../../apps/swivel-portal-api/dist/teams/createTeam.js.zip'
+          )
+        ),
+        handler: 'createTeam.handler',
+        runtime: lambda.Runtime.NODEJS_22_X,
+        functionName: `CreateTeamLambda${this.envSuffix}`,
+        environment: {
+          ...DB_ENV,
+        },
+        layers: [sharedLayer],
+        timeout: cdk.Duration.seconds(10),
+      }
+    );
+
+    const listTeamsLambda = new lambda.Function(
+      this,
+      `ListTeamsLambda${this.envSuffix}`,
+      {
+        code: lambda.Code.fromAsset(
+          path.join(
+            __dirname,
+            '../../apps/swivel-portal-api/dist/teams/listTeams.js.zip'
+          )
+        ),
+        handler: 'listTeams.handler',
+        runtime: lambda.Runtime.NODEJS_22_X,
+        functionName: `ListTeamsLambda${this.envSuffix}`,
+        environment: {
+          ...DB_ENV,
+        },
+        layers: [sharedLayer],
+        timeout: cdk.Duration.seconds(10),
+      }
+    );
+
+    const updateTeamLambda = new lambda.Function(
+      this,
+      `UpdateTeamLambda${this.envSuffix}`,
+      {
+        code: lambda.Code.fromAsset(
+          path.join(
+            __dirname,
+            '../../apps/swivel-portal-api/dist/teams/updateTeam.js.zip'
+          )
+        ),
+        handler: 'updateTeam.handler',
+        runtime: lambda.Runtime.NODEJS_22_X,
+        functionName: `UpdateTeamLambda${this.envSuffix}`,
+        environment: {
+          ...DB_ENV,
+        },
+        layers: [sharedLayer],
+        timeout: cdk.Duration.seconds(10),
+      }
+    );
+
+    const deleteTeamLambda = new lambda.Function(
+      this,
+      `DeleteTeamLambda${this.envSuffix}`,
+      {
+        code: lambda.Code.fromAsset(
+          path.join(
+            __dirname,
+            '../../apps/swivel-portal-api/dist/teams/deleteTeam.js.zip'
+          )
+        ),
+        handler: 'deleteTeam.handler',
+        runtime: lambda.Runtime.NODEJS_22_X,
+        functionName: `DeleteTeamLambda${this.envSuffix}`,
+        environment: {
+          ...DB_ENV,
+        },
+        layers: [sharedLayer],
+        timeout: cdk.Duration.seconds(10),
+      }
+    );
+
+    // --- TEAM API Gateway Resources ---
+    const teamResource = apiResource.addResource('team');
+    // POST /api/team (create)
+    teamResource.addMethod(
+      'POST',
+      new apigateway.LambdaIntegration(createTeamLambda, { proxy: true }),
+      {
+        authorizer: apiAuthorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
+      }
+    );
+    // GET /api/team (list)
+    teamResource.addMethod(
+      'GET',
+      new apigateway.LambdaIntegration(listTeamsLambda, { proxy: true }),
+      {
+        authorizer: apiAuthorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
+      }
+    );
+    // PUT /api/team (update)
+    teamResource.addMethod(
+      'PUT',
+      new apigateway.LambdaIntegration(updateTeamLambda, { proxy: true }),
+      {
+        authorizer: apiAuthorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
+      }
+    );
+    // DELETE /api/team (delete)
+    teamResource.addMethod(
+      'DELETE',
+      new apigateway.LambdaIntegration(deleteTeamLambda, { proxy: true }),
+      {
+        authorizer: apiAuthorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
+      }
+    );
   }
 }
