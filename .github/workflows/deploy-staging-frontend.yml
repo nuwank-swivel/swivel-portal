@@ -54,4 +54,5 @@ jobs:
       - name: Deploy frontend to Staging
         run: |
           cd infra
+          cdk bootstrap
           cdk deploy SwivelPortalFrontendStack-staging --require-approval never --parameters tag=${{ github.event.inputs.tag }}
