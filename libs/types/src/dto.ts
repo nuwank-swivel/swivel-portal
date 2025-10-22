@@ -4,4 +4,5 @@ export interface SeatAvailabilityResponse {
   overrideSeatCount?: number;
   bookingsCount: number;
   availableSeats: number;
+  bookedSeatIds: string[];
 }

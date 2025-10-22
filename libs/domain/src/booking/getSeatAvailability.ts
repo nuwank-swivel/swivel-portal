@@ -31,9 +31,11 @@ export async function getSeatAvailability(date: string) {
       await RepositoryContext.daySeatOverrideRepository.getByDate(date);
     const effectiveSeatCount = override?.seatCount ?? defaultSeatCount;
 
-    // Count bookings for the date
-    const bookingsCount =
-      await RepositoryContext.bookingRepository.countBookingsByDate(date);
+    // Get all bookings for the date
+    const bookings =
+      await RepositoryContext.bookingRepository.findAllBookingsByDate(date);
+    const bookingsCount = bookings.length;
+    const bookedSeatIds = bookings.map((b) => b.seatId);
 
     // Calculate available seats
     const availableSeats = Math.max(0, effectiveSeatCount - bookingsCount);
@@ -44,6 +46,7 @@ export async function getSeatAvailability(date: string) {
       overrideSeatCount: override?.seatCount,
       bookingsCount,
       availableSeats,
+      bookedSeatIds,
     };
 
     return response;

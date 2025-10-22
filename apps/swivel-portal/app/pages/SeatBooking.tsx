@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
-// import { useNavigate } from 'react-router';
-import { Button, Group, Text, Title, Paper, Loader } from '@mantine/core';
+import { Button, Group } from '@mantine/core';
 import { Grid } from '@mantine/core';
-import { DatePickerInput } from '@mantine/dates';
 import { FloorLayout } from '@/components/booking/floorLayout/FloorLayout';
 import CoreLayout from '../components/CoreLayout';
 import {
@@ -17,9 +15,13 @@ import { AllBookingsModal } from '../components/booking/AllBookingsModal';
 import { useAuthContext } from '@/lib/AuthContext';
 import { useUIContext } from '@/lib/UIContext';
 import { BookingPanel } from '@/components/booking/BookingPanel';
+import moment from 'moment';
+
+const tomorrow = () => moment().add(1, 'day').format('YYYY-MM-DD');
 
 const SeatBooking = () => {
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(tomorrow);
+  const [selectedSeatId, setSelectedSeatId] = useState<string | null>(null);
   // const navigate = useNavigate();
   const [myBookingsOpen, setMyBookingsOpen] = useState(false);
   const [allBookingsOpen, setAllBookingsOpen] = useState(false);
@@ -47,13 +49,10 @@ const SeatBooking = () => {
       setIsLoading(true);
       setError(null);
       try {
-        const date = new Date(selectedDate);
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const dateStr = `${year}-${month}-${day}`;
+        const dateStr = selectedDate;
         const data = await getSeatAvailability(dateStr);
         setAvailability(data);
+        setSelectedSeatId(null); // Clear seat selection when date changes
       } catch (err) {
         setError('Failed to load seat availability. Please try again.');
       } finally {
@@ -63,22 +62,16 @@ const SeatBooking = () => {
     fetchAvailability();
   }, [selectedDate]);
 
-  const handleReserve = () => {
-    if (selectedDate) {
-      setIsModalOpen(true);
-    }
-  };
-
   const handleConfirmBooking = async (details: BookingDetails) => {
     notifications.show({
       title: 'Booking Confirmed',
       message: `Seat reserved for ${details.startTime} - ${details.endTime}`,
     });
     setIsModalOpen(false);
-    setSelectedDate(null);
+    // Reset to tomorrow and clear seat selection
+    setSelectedDate(tomorrow);
+    setSelectedSeatId(null);
   };
-
-  const availableSeatsCount = availability?.availableSeats ?? 0;
 
   return (
     <CoreLayout>
@@ -115,10 +108,15 @@ const SeatBooking = () => {
           <BookingPanel
             selectedDate={selectedDate}
             setSelectedDate={setSelectedDate}
+            selectedSeatId={selectedSeatId}
           />
         </Grid.Col>
         <Grid.Col span={8}>
-          <FloorLayout />
+          <FloorLayout
+            selectedSeatId={selectedSeatId}
+            setSelectedSeatId={setSelectedSeatId}
+            bookedSeatIds={availability?.bookedSeatIds ?? []}
+          />
         </Grid.Col>
       </Grid>
       <BookingModal
@@ -127,6 +125,7 @@ const SeatBooking = () => {
           setIsModalOpen(false);
         }}
         selectedDate={selectedDate ? new Date(selectedDate) : new Date()}
+        // selectedSeatId={selectedSeatId}
         onConfirm={handleConfirmBooking}
       />
     </CoreLayout>

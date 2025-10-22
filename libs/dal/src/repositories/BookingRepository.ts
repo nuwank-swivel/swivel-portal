@@ -31,6 +31,7 @@ export class BookingRepository
             },
             durationType: 1,
             lunchOption: 1,
+            seatId: 1,
           },
         },
       ])

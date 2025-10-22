@@ -74,6 +74,7 @@ export async function getSeatAvailability(
 export interface CreateBookingRequest {
   date: string; // YYYY-MM-DD format
   duration: string; // e.g., "1 hour", "Half day", "Full day"
+  seatId: string;
   lunchOption?: string;
 }
 

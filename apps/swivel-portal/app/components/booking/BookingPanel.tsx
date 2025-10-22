@@ -17,9 +17,11 @@ const timeSlots = Array.from(
 export function BookingPanel({
   selectedDate,
   setSelectedDate,
+  selectedSeatId,
 }: {
   selectedDate: string | null;
   setSelectedDate: (date: string | null) => void;
+  selectedSeatId: string | null;
 }) {
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('17:00');
@@ -42,6 +44,7 @@ export function BookingPanel({
     setError(null);
     try {
       if (!selectedDate) throw new Error('Date required');
+      if (!selectedSeatId) throw new Error('Seat selection required');
       const dateObj = new Date(selectedDate);
       const year = dateObj.getFullYear();
       const month = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -50,6 +53,7 @@ export function BookingPanel({
       const payload = {
         date: dateStr,
         duration: getDuration(),
+        seatId: selectedSeatId,
         lunchOption: lunch || undefined,
       };
       await createBooking(payload);
@@ -198,7 +202,12 @@ export function BookingPanel({
         mt="lg"
         fullWidth
         onClick={handleConfirm}
-        disabled={isSubmitting || startTime >= endTime || !selectedDate}
+        disabled={
+          isSubmitting ||
+          startTime >= endTime ||
+          !selectedDate ||
+          !selectedSeatId
+        }
       >
         {isSubmitting ? 'Confirming...' : 'Confirm Booking'}
       </Button>

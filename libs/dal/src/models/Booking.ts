@@ -21,6 +21,9 @@ export class Booking {
   bookingDate!: string; // YYYY-MM-DD format
 
   @Column()
+  seatId!: string;
+
+  @Column()
   durationType!: 'hour' | 'half-day' | 'full-day';
 
   @Column({ nullable: true })

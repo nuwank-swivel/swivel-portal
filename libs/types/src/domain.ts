@@ -10,6 +10,7 @@ export interface Booking {
   _id?: string;
   userId: string;
   bookingDate: string; // YYYY-MM-DD format
+  seatId: string;
   durationType: 'hour' | 'half-day' | 'full-day';
   duration?: string; // Alias for durationType (create-booking compatibility)
   lunchOption?: string;
