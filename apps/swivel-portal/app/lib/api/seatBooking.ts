@@ -2,6 +2,24 @@ import api from '../axios';
 import { SeatAvailabilityResponse, Booking } from '@swivel-portal/types';
 
 /**
+ * Fetch seat layout from backend
+ */
+export async function getSeatLayout(): Promise<{
+  tables: Array<{
+    name: string;
+    seats: Array<{ id: string; side: string; index: number }>;
+  }>;
+}> {
+  const response = await api.get<{
+    tables: Array<{
+      name: string;
+      seats: Array<{ id: string; side: string; index: number }>;
+    }>;
+  }>('/api/seatbooking/layout');
+  return response.data;
+}
+
+/**
  * Admin: Get all bookings for a specific date
  */
 export async function getAllBookingsForDate(date: string) {

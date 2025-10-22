@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 // import { useNavigate } from 'react-router';
 import { Button, Group, Text, Title, Paper, Loader } from '@mantine/core';
-import { DatePicker } from '@mantine/dates';
+import { Grid } from '@mantine/core';
+import { DatePickerInput } from '@mantine/dates';
+import { FloorLayout } from '@/components/booking/floorLayout/FloorLayout';
 import CoreLayout from '../components/CoreLayout';
 import {
   BookingModal,
@@ -14,6 +16,7 @@ import { MyBookingsModal } from '../components/booking/MyBookingsModal';
 import { AllBookingsModal } from '../components/booking/AllBookingsModal';
 import { useAuthContext } from '@/lib/AuthContext';
 import { useUIContext } from '@/lib/UIContext';
+import { BookingPanel } from '@/components/booking/BookingPanel';
 
 const SeatBooking = () => {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -105,84 +108,19 @@ const SeatBooking = () => {
           onClose={() => setAllBookingsOpen(false)}
         />
       )}
-      {!selectedDate ? (
-        <Paper
-          p="xl"
-          radius="md"
-          withBorder
-          style={{ maxWidth: 400, margin: '0 auto', textAlign: 'center' }}
-          className="flex flex-col align-center justify-center"
-        >
-          <Title order={4} mb="md">
-            Choose a date to book a seat
-          </Title>
-          <DatePicker
-            value={selectedDate}
-            onChange={setSelectedDate}
-            minDate={new Date()}
-            style={{ margin: '0 auto' }}
+
+      {/* Use Mantine Grid for two-column layout */}
+      <Grid gutter="xl">
+        <Grid.Col span={4}>
+          <BookingPanel
+            selectedDate={selectedDate}
+            setSelectedDate={setSelectedDate}
           />
-        </Paper>
-      ) : (
-        <Paper
-          p="xl"
-          radius="md"
-          withBorder
-          style={{ maxWidth: 400, margin: '0 auto', textAlign: 'center' }}
-        >
-          <Text fw={600} mb={4}>
-            {new Date(selectedDate).toLocaleDateString('en-US', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
-          </Text>
-          {isLoading ? (
-            <Loader size="lg" />
-          ) : error ? (
-            <Text color="red" size="sm">
-              {error}
-            </Text>
-          ) : (
-            <>
-              <Title order={1} mb={2}>
-                {availableSeatsCount}
-              </Title>
-              <Text size="sm" c="dimmed">
-                {availableSeatsCount === 1
-                  ? 'seat available'
-                  : 'seats available'}
-              </Text>
-              {availability && (
-                <Text size="xs" c="dimmed" mt={2}>
-                  {availability.bookingsCount} of{' '}
-                  {availability.overrideSeatCount ??
-                    availability.defaultSeatCount}{' '}
-                  seats booked
-                </Text>
-              )}
-            </>
-          )}
-          <Group mt="md" grow>
-            <Button
-              onClick={() => {
-                handleReserve();
-              }}
-              disabled={isLoading || availableSeatsCount === 0}
-            >
-              {isLoading
-                ? 'Loading...'
-                : availableSeatsCount === 0
-                ? 'Fully Booked'
-                : 'Book a Seat'}
-            </Button>
-            <Button variant="outline" onClick={() => setSelectedDate(null)}>
-              Change Date
-            </Button>
-          </Group>
-        </Paper>
-      )}
+        </Grid.Col>
+        <Grid.Col span={8}>
+          <FloorLayout />
+        </Grid.Col>
+      </Grid>
       <BookingModal
         isOpen={isModalOpen}
         onClose={() => {
