@@ -4,16 +4,20 @@ import { getSeatLayout } from '@/lib/api/seatBooking';
 import { Table } from '@swivel-portal/types';
 import { useState, useEffect } from 'react';
 
+import { Skeleton } from '@mantine/core';
+
 function TableLayout({
   table,
   selectedSeatId,
   setSelectedSeatId,
   bookedSeatIds,
+  seatAvailabilityLoading,
 }: {
   table: Table;
   selectedSeatId: string | null;
   setSelectedSeatId: (id: string) => void;
   bookedSeatIds: string[];
+  seatAvailabilityLoading: boolean;
 }) {
   const renderSeats = (side: string) =>
     table.seats
@@ -22,30 +26,37 @@ function TableLayout({
         const isSelected = seat.id === selectedSeatId;
         const isBooked = bookedSeatIds.includes(seat.id);
         return (
-          <Tooltip
+          <Skeleton
             key={seat.id}
-            label={isBooked ? 'Seat is booked' : 'Available'}
+            visible={seatAvailabilityLoading}
+            width={35}
+            height={36}
+            style={{
+              borderRadius: side === 'A' ? '8px 0px 0px 8px' : '0 8px 8px 0px',
+            }}
           >
-            <Paper
-              px={12}
-              py={8}
-              radius="xs"
-              className={`border-2 cursor-pointer${
-                isBooked ? ' bg-red-300 border-red-400' : ''
-              }${isSelected ? ' bg-blue-200 border-blue-600' : ''}`}
-              style={{
-                display: 'inline-block',
-                minWidth: 28,
-                textAlign: 'center',
-                borderRadius:
-                  side === 'A' ? '8px 0px 0px 8px' : '0 8px 8px 0px',
-                opacity: isBooked ? 0.6 : 1,
-              }}
-              onClick={() => !isBooked && setSelectedSeatId(seat.id)}
-            >
-              <Text size="xs">{seat.index}</Text>
-            </Paper>
-          </Tooltip>
+            <Tooltip label={isBooked ? 'Seat is booked' : 'Available'}>
+              <Paper
+                px={12}
+                py={8}
+                w={35}
+                radius="xs"
+                className={`border-2 cursor-pointer${
+                  isBooked ? ' bg-red-300 border-red-400' : ''
+                }${isSelected ? ' bg-blue-200 border-blue-600' : ''}`}
+                style={{
+                  display: 'inline-block',
+                  textAlign: 'center',
+                  borderRadius:
+                    side === 'A' ? '8px 0px 0px 8px' : '0 8px 8px 0px',
+                  opacity: isBooked ? 0.6 : 1,
+                }}
+                onClick={() => !isBooked && setSelectedSeatId(seat.id)}
+              >
+                <Text size="xs">{seat.index}</Text>
+              </Paper>
+            </Tooltip>
+          </Skeleton>
         );
       });
 
@@ -68,10 +79,12 @@ export function FloorLayout({
   selectedSeatId,
   setSelectedSeatId,
   bookedSeatIds,
+  seatAvailabilityLoading,
 }: {
   selectedSeatId: string | null;
   setSelectedSeatId: (id: string) => void;
   bookedSeatIds: string[];
+  seatAvailabilityLoading: boolean;
 }) {
   const [tables, setTables] = useState<Array<Table> | null>(null);
   const [loading, setLoading] = useState(true);
@@ -115,6 +128,7 @@ export function FloorLayout({
                 selectedSeatId={selectedSeatId}
                 setSelectedSeatId={setSelectedSeatId}
                 bookedSeatIds={bookedSeatIds}
+                seatAvailabilityLoading={seatAvailabilityLoading}
               />
             ))}
           </Group>

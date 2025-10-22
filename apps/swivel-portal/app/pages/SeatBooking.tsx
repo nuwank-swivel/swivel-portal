@@ -66,10 +66,11 @@ const SeatBooking = () => {
     notifications.show({
       title: 'Booking Confirmed',
       message: `Seat reserved for ${details.startTime} - ${details.endTime}`,
+      color: 'green',
     });
     setIsModalOpen(false);
     // Reset to tomorrow and clear seat selection
-    setSelectedDate(tomorrow);
+    setSelectedDate(tomorrow());
     setSelectedSeatId(null);
   };
 
@@ -116,10 +117,11 @@ const SeatBooking = () => {
             selectedSeatId={selectedSeatId}
             setSelectedSeatId={setSelectedSeatId}
             bookedSeatIds={availability?.bookedSeatIds ?? []}
+            seatAvailabilityLoading={isLoading}
           />
         </Grid.Col>
       </Grid>
-      <BookingModal
+      {/* <BookingModal
         isOpen={isModalOpen}
         onClose={() => {
           setIsModalOpen(false);
@@ -127,7 +129,7 @@ const SeatBooking = () => {
         selectedDate={selectedDate ? new Date(selectedDate) : new Date()}
         // selectedSeatId={selectedSeatId}
         onConfirm={handleConfirmBooking}
-      />
+      /> */}
     </CoreLayout>
   );
 };
