@@ -10,6 +10,7 @@ export interface Booking {
   _id?: string;
   userId: string;
   bookingDate: string; // YYYY-MM-DD format
+  seatId: string;
   durationType: 'hour' | 'half-day' | 'full-day';
   duration?: string; // Alias for durationType (create-booking compatibility)
   lunchOption?: string;
@@ -24,6 +25,12 @@ export interface SeatConfiguration {
   defaultSeatCount: number;
   lastModified?: Date;
   modifiedBy?: string;
+  tables: Table[];
+}
+
+export interface Table {
+  name: string;
+  seats: Array<{ id: string; side: string; index: number }>;
 }
 
 export interface DaySeatOverride {

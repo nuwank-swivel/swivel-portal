@@ -29,9 +29,27 @@ export async function bookSeat(params: {
   userId: string;
   date: string;
   duration: string;
+  seatId: string;
   lunchOption?: string;
 }): Promise<Booking> {
-  const { userId, date, duration, lunchOption } = params;
+  const { userId, date, duration, seatId, lunchOption } = params;
+  // Validate seatId
+  if (!seatId) {
+    throw new HttpError(StatusCodes.BAD_REQUEST, 'Missing seatId');
+  }
+
+  // Check if seat is already booked for this date
+  const bookingsForDate =
+    await RepositoryContext.bookingRepository.findAllBookingsByDate(date);
+  const seatBooked = bookingsForDate.some(
+    (b) => b.seatId === seatId && !b.canceledAt
+  );
+  if (seatBooked) {
+    throw new HttpError(
+      StatusCodes.CONFLICT,
+      'Seat is already booked for this date'
+    );
+  }
 
   const user = await RepositoryContext.userRepository.getByAzureAdId(userId);
 
@@ -97,6 +115,7 @@ export async function bookSeat(params: {
   const booking = await RepositoryContext.bookingRepository.create({
     userId,
     bookingDate: date,
+    seatId,
     durationType,
     duration,
     lunchOption,
