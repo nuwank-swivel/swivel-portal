@@ -16,18 +16,3 @@ new SwivelPortalStack(app, 'SwivelPortalStack-production', {
   env,
   envName: 'prod',
 });
-
-// new SwivelPortalFrontendStack(app, 'SwivelPortalFrontendStack-dev', {
-//   env,
-//   envName: 'dev',
-// });
-
-// new SwivelPortalFrontendStack(app, 'SwivelPortalFrontendStack-staging', {
-//   env,
-//   envName: 'staging',
-// });
-
-// new SwivelPortalFrontendStack(app, 'SwivelPortalFrontendStack-production', {
-//   env,
-//   envName: 'prod',
-// });
