@@ -19,10 +19,10 @@ export class Team {
   color: string; // hex code
 
   @Column()
-  ownerId: ObjectId; // admin user who created the team
+  ownerId: string; // admin user who created the team
 
   @Column('array')
-  memberIds: ObjectId[];
+  memberIds: string[];
 
   @Column({ default: false })
   deleted: boolean;

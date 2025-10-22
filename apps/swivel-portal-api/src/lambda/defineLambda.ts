@@ -55,6 +55,10 @@ export const defineLambda = <
   >
 ) => {
   return async (event: APIGatewayProxyEvent, _context: any) => {
+    if (options.log) {
+      console.log('Event:', JSON.stringify(event, null, 2));
+    }
+
     const {
       body: stringifiedBody,
       queryStringParameters,
@@ -86,6 +90,10 @@ export const defineLambda = <
         extras,
       });
 
+      if (options.log) {
+        console.log('Result:', JSON.stringify(result, null, 2));
+      }
+
       return {
         statusCode: 200,
         body: JSON.stringify(result),
@@ -98,6 +106,14 @@ export const defineLambda = <
       if (error instanceof HttpError) {
         statusCode = error.statusCode;
         message = error.message;
+      }
+
+      if (options.log) {
+        console.error('Error:', {
+          statusCode,
+          message,
+          stack: (error as Error).stack,
+        });
       }
 
       return {

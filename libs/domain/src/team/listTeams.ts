@@ -6,8 +6,8 @@ export async function listTeams(): Promise<Team[]> {
     (team) => ({
       ...team,
       _id: team._id.toString(),
-      ownerId: team.ownerId.toString(),
-      memberIds: team.memberIds?.map((id) => id.toString()),
+      owner: team.ownerId.toString(),
+      members: team.memberIds?.map((id) => id.toString()),
     })
   );
 }
