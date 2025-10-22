@@ -1,0 +1,58 @@
+name: Deploy Staging Frontend
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to deploy'
+        required: true
+        type: string
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout to tag
+        run: git checkout ${{ github.event.inputs.tag }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - name: Install AWS CDK
+        run: npm install -g aws-cdk
+
+      - name: Install dependencies (root)
+        run: npm install
+
+      - name: Install dependencies (infra)
+        run: |
+          cd infra
+          npm install
+
+      - name: Build frontend
+        run: npx nx build swivel-portal --configuration=production --skipNxCache --mode=production
+
+      - name: zip frontend build artifacts
+        run: |
+          cd apps/swivel-portal/build/client
+          zip -r ../../../../swivel-portal-ui-${{ github.event.inputs.tag }}.zip .
+          cd ../../../../
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.event.inputs.tag }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy frontend to Staging
+        run: |
+          cd infra
+          npx cdk bootstrap
+          npx cdk deploy SwivelPortalFrontendStack-staging --require-approval never --parameters tag=${{ github.event.inputs.tag }}
