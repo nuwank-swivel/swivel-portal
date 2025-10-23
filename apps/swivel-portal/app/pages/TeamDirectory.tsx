@@ -9,12 +9,19 @@ import {
   Group,
   Text,
   MultiSelect,
+  ActionIcon,
+  Grid,
+  Loader,
 } from '@mantine/core';
+import { PencilIcon, PlusCircleIcon } from 'lucide-react';
 import { getTeams, updateTeam } from '../lib/api/team';
 import { Team } from '@swivel-portal/types';
 import { createTeam } from '../lib/api/team';
+import { useUIContext } from '@/lib/UIContext';
 
 export default function TeamDirectory() {
+  const { setCurrentModule } = useUIContext();
+
   const [teams, setTeams] = React.useState<Team[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
@@ -37,6 +44,10 @@ export default function TeamDirectory() {
     { value: 'user2', label: 'User Two' },
     { value: 'user3', label: 'User Three' },
   ];
+
+  useEffect(() => {
+    setCurrentModule('Team Directory');
+  }, []);
 
   useEffect(() => {
     async function fetchTeams() {
@@ -112,13 +123,10 @@ export default function TeamDirectory() {
 
   return (
     <CoreLayout>
-      <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 24 }}>
-        Team Directory
-      </h1>
       <div>
         {loading ? (
           <Card p="lg" style={{ marginBottom: 16 }}>
-            <div>Loading teams...</div>
+            <Loader />
           </Card>
         ) : error ? (
           <Card p="lg" style={{ marginBottom: 16 }}>
@@ -129,23 +137,58 @@ export default function TeamDirectory() {
             <div style={{ fontWeight: 600 }}>No teams found.</div>
           </Card>
         ) : (
-          teams.map((team) => (
-            <Card key={team._id} p="lg" style={{ marginBottom: 16 }}>
-              <div style={{ fontWeight: 600 }}>{team.name}</div>
-              <div style={{ color: team.color }}>Color: {team.color}</div>
-              <Group mt="sm">
-                <Button
-                  size="xs"
-                  variant="light"
-                  onClick={() => openEditModal(team)}
+          <Grid gutter={24} mt={8}>
+            <Grid.Col span={3}>
+              <Button
+                p="lg"
+                w="100%"
+                style={{ position: 'relative', minHeight: 120 }}
+                onClick={() => setShowCreate(true)}
+                variant="default"
+              >
+                <PlusCircleIcon size={18} className="mr-2" /> Create Team
+              </Button>
+            </Grid.Col>
+            {teams.map((team) => (
+              <Grid.Col key={team._id} span={3}>
+                <Card
+                  p="lg"
+                  className="cursor-pointer"
+                  style={{ position: 'relative', minHeight: 120 }}
+                  withBorder
                 >
-                  Edit
-                </Button>
-              </Group>
-            </Card>
-          ))
+                  <ActionIcon
+                    variant="light"
+                    color="blue"
+                    style={{
+                      position: 'absolute',
+                      top: 12,
+                      right: 12,
+                      zIndex: 2,
+                    }}
+                    onClick={() => openEditModal(team)}
+                    aria-label="Edit team"
+                  >
+                    <PencilIcon size={18} />
+                  </ActionIcon>
+                  <Group
+                    className="flex flex-row items-center"
+                    style={{ marginBottom: 8 }}
+                  >
+                    <div
+                      className="w-6 h-6 rounded-full"
+                      style={{ backgroundColor: team.color }}
+                    ></div>
+                    <div style={{ fontWeight: 600, fontSize: 18 }}>
+                      {team.name}
+                    </div>
+                  </Group>
+                </Card>
+              </Grid.Col>
+            ))}
+          </Grid>
         )}
-        <Group style={{ marginTop: 32 }}>
+        {/* <Group style={{ marginTop: 32 }}>
           <Button
             onClick={() => setShowCreate(true)}
             variant="filled"
@@ -153,7 +196,7 @@ export default function TeamDirectory() {
           >
             + Create Team
           </Button>
-        </Group>
+        </Group> */}
         {/* Create Team Modal */}
         <Modal
           opened={showCreate}

@@ -440,6 +440,27 @@ export class SwivelPortalStack extends BaseStack {
       }
     );
 
+    const searchUserLambda = new lambda.Function(
+      this,
+      `SearchUserLambda${this.envSuffix}`,
+      {
+        code: lambda.Code.fromAsset(
+          path.join(
+            __dirname,
+            '../../apps/swivel-portal-api/dist/users/searchUsers.js.zip'
+          )
+        ),
+        handler: 'searchUsers.handler',
+        runtime: lambda.Runtime.NODEJS_22_X,
+        functionName: `SearchUserLambda${this.envSuffix}`,
+        environment: {
+          ...DB_ENV,
+        },
+        layers: [sharedLayer],
+        timeout: cdk.Duration.seconds(10),
+      }
+    );
+
     // --- TEAM API Gateway Resources ---
     const teamResource = apiResource.addResource('team');
     // POST /api/team (create)
@@ -460,6 +481,7 @@ export class SwivelPortalStack extends BaseStack {
         authorizationType: apigateway.AuthorizationType.CUSTOM,
       }
     );
+
     // PUT /api/team (update)
     teamResource.addMethod(
       'PUT',
@@ -473,6 +495,18 @@ export class SwivelPortalStack extends BaseStack {
     teamResource.addMethod(
       'DELETE',
       new apigateway.LambdaIntegration(deleteTeamLambda, { proxy: true }),
+      {
+        authorizer: apiAuthorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
+      }
+    );
+
+    // --- USER API Gateway Resources ---
+    const userResource = apiResource.addResource('user');
+    // GET /api/user
+    userResource.addMethod(
+      'GET',
+      new apigateway.LambdaIntegration(searchUserLambda, { proxy: true }),
       {
         authorizer: apiAuthorizer,
         authorizationType: apigateway.AuthorizationType.CUSTOM,
