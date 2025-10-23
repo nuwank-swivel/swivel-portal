@@ -32,6 +32,13 @@ export class Booking {
   @Column({ nullable: true })
   lunchOption?: string;
 
+  @Column({ nullable: true, type: 'json' })
+  recurring?: {
+    daysOfWeek: string[];
+    startDate: string;
+    endDate?: string;
+  };
+
   @Column({ nullable: true })
   canceledAt?: Date | null;
 
