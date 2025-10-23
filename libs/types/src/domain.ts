@@ -14,6 +14,11 @@ export interface Booking {
   durationType: 'hour' | 'half-day' | 'full-day';
   duration?: string; // Alias for durationType (create-booking compatibility)
   lunchOption?: string;
+  recurring?: {
+    daysOfWeek: string[];
+    startDate: string;
+    endDate?: string;
+  };
   createdAt?: Date;
   updatedAt?: Date;
   canceledAt?: Date | null;

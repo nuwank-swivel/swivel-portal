@@ -31,8 +31,13 @@ export async function bookSeat(params: {
   duration: string;
   seatId: string;
   lunchOption?: string;
+  recurring?: {
+    daysOfWeek: string[];
+    startDate: string;
+    endDate?: string;
+  };
 }): Promise<Booking> {
-  const { userId, date, duration, seatId, lunchOption } = params;
+  const { userId, date, duration, seatId, lunchOption, recurring } = params;
   // Validate seatId
   if (!seatId) {
     throw new HttpError(StatusCodes.BAD_REQUEST, 'Missing seatId');
@@ -119,6 +124,7 @@ export async function bookSeat(params: {
     durationType,
     duration,
     lunchOption,
+    recurring,
   });
   return { ...booking, _id: booking._id?.toString() };
 }

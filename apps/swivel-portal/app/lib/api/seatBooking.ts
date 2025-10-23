@@ -72,10 +72,17 @@ export async function getSeatAvailability(
  * Create a new seat booking
  */
 export interface CreateBookingRequest {
-  date: string; // YYYY-MM-DD format
-  duration: string; // e.g., "1 hour", "Half day", "Full day"
+  // For single booking
+  date?: string; // YYYY-MM-DD format
+  duration?: string; // e.g., "1 hour", "Half day", "Full day"
   seatId: string;
   lunchOption?: string;
+  // For recurring booking
+  recurring?: {
+    daysOfWeek: string[];
+    startDate: string;
+    endDate?: string;
+  };
 }
 
 export interface CreateBookingResponse {
@@ -86,6 +93,7 @@ export interface CreateBookingResponse {
 export async function createBooking(
   bookingData: CreateBookingRequest
 ): Promise<CreateBookingResponse> {
+  // If daysOfWeek is present, treat as recurring booking
   const response = await api.post<CreateBookingResponse>(
     '/api/seatbooking/bookings',
     bookingData
