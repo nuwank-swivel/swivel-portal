@@ -15,6 +15,13 @@ export async function updateTeam(input: UpdateTeamInput): Promise<Team | null> {
     members: input.members,
   });
   if (!updatedTeam) return null;
+  // Update users to set their teamId
+  if (input.members && input.members.length > 0) {
+    await RepositoryContext.userRepository.setTeamForUsers(
+      input.members.map((e) => e.toLowerCase()),
+      input._id
+    );
+  }
   return {
     ...updatedTeam,
     _id: updatedTeam._id.toString(),

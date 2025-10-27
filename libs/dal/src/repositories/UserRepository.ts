@@ -10,6 +10,14 @@ export class UserRepository
     super(User);
   }
 
+  async setTeamForUsers(emails: string[], teamId: string): Promise<void> {
+    // Bulk update users by email
+    await this.repository.updateMany(
+      { email: { $in: emails } },
+      { $set: { teamId } }
+    );
+  }
+
   async getByAzureAdId(azureAdId: string): Promise<User | null> {
     return this.repository.findOne({ where: { azureAdId } });
   }

@@ -4,6 +4,7 @@ export interface User {
   name?: string;
   email: string;
   isAdmin?: boolean;
+  teamId?: string;
 }
 
 export interface Booking {
@@ -23,6 +24,11 @@ export interface Booking {
   updatedAt?: Date;
   canceledAt?: Date | null;
   canceledBy?: string | null;
+  team?: {
+    name: string;
+    color: string;
+  };
+  user?: User;
 }
 
 export interface SeatConfiguration {

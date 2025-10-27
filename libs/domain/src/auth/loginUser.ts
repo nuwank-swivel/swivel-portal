@@ -9,7 +9,13 @@ export async function loginUser(
 ): Promise<User> {
   let user = await RepositoryContext.userRepository.getByAzureAdId(azureAdId);
   if (!user) {
-    const newUser: User = { azureAdId, name, email, isAdmin };
+    const newUser: User = {
+      azureAdId,
+      name,
+      email: email.toLowerCase(),
+      isAdmin,
+      teamId: undefined,
+    };
     user = await RepositoryContext.userRepository.create(newUser);
   } else {
     // Update isAdmin if changed

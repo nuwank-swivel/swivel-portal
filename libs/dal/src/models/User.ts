@@ -24,8 +24,8 @@ export class User {
   @Column({ default: false })
   isAdmin: boolean;
 
-  @Column('array')
-  teamIds: ObjectId[]; // teams the user is a member of
+  @Column({ nullable: true })
+  teamId?: string; // team the user is a member of
 
   @CreateDateColumn()
   createdAt: Date;

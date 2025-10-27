@@ -124,7 +124,7 @@ export async function bookSeat(params: {
     durationType,
     duration,
     lunchOption,
-    recurring,
+    recurring: recurring === null ? undefined : recurring,
   });
   return { ...booking, _id: booking._id?.toString() };
 }
