@@ -35,7 +35,10 @@ export async function getSeatAvailability(date: string, userId: string) {
     const bookings =
       await RepositoryContext.bookingRepository.findAllBookingsByDate(date);
     const bookingsCount = bookings.length;
-    const bookedSeatIds = bookings.map((b) => b.seatId);
+    const bookedSeats = bookings.map((b) => ({
+      ...b,
+      _id: b._id?.toString(),
+    }));
 
     // Find current user's booking for this date
     let myBooking: { bookingId: string; seatId: string } | undefined =
@@ -57,7 +60,7 @@ export async function getSeatAvailability(date: string, userId: string) {
       overrideSeatCount: override?.seatCount,
       bookingsCount,
       availableSeats,
-      bookedSeatIds,
+      bookedSeats,
       myBooking,
     };
 

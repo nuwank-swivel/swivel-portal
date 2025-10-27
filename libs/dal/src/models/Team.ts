@@ -7,25 +7,25 @@ import {
 } from 'typeorm';
 import { ObjectId } from 'mongodb';
 
-@Entity('users')
-export class User {
+@Entity('teams')
+export class Team {
   @ObjectIdColumn()
   _id: ObjectId;
-
-  @Column()
-  azureAdId: string;
 
   @Column()
   name: string;
 
   @Column()
-  email: string;
+  color: string; // hex code
+
+  @Column()
+  ownerId: string; // admin user who created the team
+
+  @Column('array')
+  members: string[];
 
   @Column({ default: false })
-  isAdmin: boolean;
-
-  @Column({ nullable: true })
-  teamId?: string; // team the user is a member of
+  deleted: boolean;
 
   @CreateDateColumn()
   createdAt: Date;

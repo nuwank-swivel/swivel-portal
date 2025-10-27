@@ -1,7 +1,15 @@
-import { Loader, Paper, Title, Group, Text, Tooltip } from '@mantine/core';
+import {
+  Loader,
+  Paper,
+  Title,
+  Group,
+  Text,
+  Tooltip,
+  Stack,
+} from '@mantine/core';
 import { getSeatLayout } from '@/lib/api/seatBooking';
 
-import { Table } from '@swivel-portal/types';
+import { Booking, Table } from '@swivel-portal/types';
 import { useState, useEffect } from 'react';
 
 import { Skeleton } from '@mantine/core';
@@ -15,14 +23,14 @@ function TableLayout({
   table,
   selectedSeatId,
   setSelectedSeatId,
-  bookedSeatIds,
+  bookedSeats,
   seatAvailabilityLoading,
   myBookedSeatId,
 }: {
   table: Table;
   selectedSeatId: string | null;
   setSelectedSeatId: (id: string) => void;
-  bookedSeatIds: string[];
+  bookedSeats: Booking[];
   seatAvailabilityLoading: boolean;
   myBookedSeatId?: string;
 }) {
@@ -31,8 +39,12 @@ function TableLayout({
       .filter((seat) => seat.side === side)
       .map((seat) => {
         const isSelected = seat.id === selectedSeatId;
-        const isBooked = bookedSeatIds.includes(seat.id);
+        const booking = bookedSeats.find((b) => b.seatId === seat.id);
+        const isBooked = !!booking;
         const isMyBooking = seat.id === myBookedSeatId;
+        const teamColor = booking?.team?.color;
+        const teamName = booking?.team?.name;
+        const userName = booking?.user?.name;
 
         return (
           <Skeleton
@@ -44,7 +56,15 @@ function TableLayout({
               borderRadius: side === 'A' ? '8px 0px 0px 8px' : '0 8px 8px 0px',
             }}
           >
-            <Tooltip label={isBooked ? 'Seat is booked' : 'Available'}>
+            <Tooltip
+              label={
+                isBooked
+                  ? `Seat is booked ${teamName ? `for ${teamName}` : ''} ${
+                      userName ? `by ${userName}` : ''
+                    }`
+                  : 'Available'
+              }
+            >
               <Paper
                 px={12}
                 py={8}
@@ -63,11 +83,27 @@ function TableLayout({
                   borderRadius:
                     side === 'A' ? '8px 0px 0px 8px' : '0 8px 8px 0px',
                   opacity: isBooked ? 0.6 : 1,
+                  position: 'relative',
                 }}
                 onClick={() =>
                   !isBooked && !myBookedSeatId && setSelectedSeatId(seat.id)
                 }
               >
+                {isBooked && teamColor && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      right: side === 'A' ? undefined : 0,
+                      left: side === 'A' ? 0 : undefined,
+                      top: 0,
+                      width: '6px',
+                      height: '100%',
+                      background: teamColor,
+                      borderRadius:
+                        side === 'A' ? '8px 0 0 8px' : '0 8px 8px 0',
+                    }}
+                  />
+                )}
                 <Text size="xs">{seat.index}</Text>
               </Paper>
             </Tooltip>
@@ -93,13 +129,13 @@ function TableLayout({
 export function FloorLayout({
   selectedSeatId,
   setSelectedSeatId,
-  bookedSeatIds,
+  bookedSeats,
   seatAvailabilityLoading,
   myBookedSeatId,
 }: {
   selectedSeatId: string | null;
   setSelectedSeatId: (id: string) => void;
-  bookedSeatIds: string[];
+  bookedSeats: import('@swivel-portal/types').Booking[];
   seatAvailabilityLoading: boolean;
   myBookedSeatId?: string;
 }) {
@@ -123,10 +159,23 @@ export function FloorLayout({
     fetchLayout();
   }, []);
 
+  // Extract unique teams from bookedSeats
+  const teamLegend = Array.from(
+    bookedSeats
+      .filter((b) => b.team && b.team.name && b.team.color)
+      .reduce((map, b) => {
+        if (!map.has(b.team?.name)) {
+          map.set(b.team?.name, b.team?.color);
+        }
+        return map;
+      }, new Map())
+      .entries()
+  );
+
   return (
     <Group justify="space-between" align="flex-start">
       <Paper p="lg" radius="md" withBorder style={{ flex: 1 }}>
-        <Group justify="space-between" align="center" mb="md">
+        <Group justify="space-between" align="start" mb="md">
           <Title order={4}>Seats</Title>
           <Group gap="xs" className="legend-section">
             <Group gap={4} align="center">
@@ -157,6 +206,26 @@ export function FloorLayout({
               <Text size="xs">My Booking</Text>
             </Group>
           </Group>
+          {teamLegend.length > 0 && (
+            <Stack gap={4}>
+              <Title order={6} mb={2} mt={0}>
+                Teams
+              </Title>
+              <Group gap={8} align="center">
+                {teamLegend.map(([name, color]) => (
+                  <Group gap={4} align="center" key={name}>
+                    <Paper
+                      w={24}
+                      h={24}
+                      radius="xs"
+                      style={{ background: color }}
+                    />
+                    <Text size="xs">{name}</Text>
+                  </Group>
+                ))}
+              </Group>
+            </Stack>
+          )}
         </Group>
         {loading ? (
           <Loader size="lg" />
@@ -173,7 +242,7 @@ export function FloorLayout({
                 table={table}
                 selectedSeatId={selectedSeatId}
                 setSelectedSeatId={setSelectedSeatId}
-                bookedSeatIds={bookedSeatIds}
+                bookedSeats={bookedSeats}
                 seatAvailabilityLoading={seatAvailabilityLoading}
                 myBookedSeatId={myBookedSeatId}
               />

@@ -35,6 +35,7 @@
 - **Booking Updates:** Users can update their bookings, including changing or removing meal options.
 - **Super Admin Role:** Super admin users are managed via Entra ID group, similar to admin users.
 - **Meal Booking Settings:** Super admins can change meal booking settings and specify users to receive automated daily emails with meal booking details.
+- **Team Management (Story 05.06)**
 
 ## 2.2 Technical Requirements
 

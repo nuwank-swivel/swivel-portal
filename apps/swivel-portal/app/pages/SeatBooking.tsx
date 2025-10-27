@@ -143,7 +143,7 @@ const SeatBooking = () => {
           <FloorLayout
             selectedSeatId={selectedSeatId}
             setSelectedSeatId={setSelectedSeatId}
-            bookedSeatIds={availability?.bookedSeatIds ?? []}
+            bookedSeats={availability?.bookedSeats ?? []}
             myBookedSeatId={availability?.myBooking?.seatId}
             seatAvailabilityLoading={isLoading}
           />

@@ -4,6 +4,7 @@ export interface User {
   name?: string;
   email: string;
   isAdmin?: boolean;
+  teamId?: string;
 }
 
 export interface Booking {
@@ -23,6 +24,11 @@ export interface Booking {
   updatedAt?: Date;
   canceledAt?: Date | null;
   canceledBy?: string | null;
+  team?: {
+    name: string;
+    color: string;
+  };
+  user?: User;
 }
 
 export interface SeatConfiguration {
@@ -44,4 +50,15 @@ export interface DaySeatOverride {
   seatCount: number;
   createdAt?: Date;
   createdBy?: string;
+}
+
+export interface Team {
+  _id?: string;
+  name: string;
+  color: string; // hex code
+  ownerId: string; // admin user who created the team
+  members: string[];
+  deleted?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }

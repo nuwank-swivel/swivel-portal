@@ -19,3 +19,7 @@
 9. As an admin, I can configure the available lunch options.
 10. As a super admin, I can manage super admin users via Entra ID group.\
 11. As a super admin, I can change meal booking settings and specify users to receive automated daily emails with meal booking details.
+
+## 3.3 Team Management
+
+1. As a user, I can access a Team Directory from the dashboard, view all teams, and (if I am an admin) create, update, or delete teams and manage team members, so that teams can be organized, managed, and referenced throughout the portal. (Story 05.06)

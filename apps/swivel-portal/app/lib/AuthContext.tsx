@@ -38,7 +38,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await teams.app.initialize();
         console.log('Teams SDK initialized');
 
-        const idToken = await teams.authentication.getAuthToken();
+        const idToken = await teams.authentication.getAuthToken({
+          claims: ['User.ReadBasic.All'],
+        });
         setIdToken(idToken);
 
         await initializeUserInfo();
