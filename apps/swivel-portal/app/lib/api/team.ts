@@ -9,7 +9,7 @@ export async function getTeams(): Promise<Team[]> {
 export async function createTeam(data: {
   name: string;
   color: string;
-  memberIds?: string[];
+  members?: string[];
 }): Promise<Team> {
   const response = await api.post<Team>('/api/team', data);
   return response.data;

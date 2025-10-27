@@ -12,7 +12,7 @@ export async function updateTeam(input: UpdateTeamInput): Promise<Team | null> {
   const updatedTeam = await RepositoryContext.teamRepository.update(input._id, {
     name: input.name,
     color: input.color,
-    memberIds: input.members,
+    members: input.members,
   });
   if (!updatedTeam) return null;
   return {

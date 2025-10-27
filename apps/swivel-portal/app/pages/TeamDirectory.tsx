@@ -13,14 +13,24 @@ import {
   Grid,
   Loader,
 } from '@mantine/core';
-import { PencilIcon, PlusCircleIcon } from 'lucide-react';
-import { getTeams, updateTeam } from '../lib/api/team';
+import { PencilIcon, PlusCircleIcon, Trash2Icon } from 'lucide-react';
+import { getTeams, updateTeam, createTeam, deleteTeam } from '../lib/api/team';
 import { Team } from '@swivel-portal/types';
-import { createTeam } from '../lib/api/team';
-import { searchUsers, UserSearchResult } from '../lib/api/user';
+import { searchUsers } from '../lib/api/user';
 import { useUIContext } from '@/lib/UIContext';
+import { useAuthContext } from '@/lib/AuthContext';
 
 export default function TeamDirectory() {
+  const { user } = useAuthContext();
+  const azureAdId = user?.azureAdId;
+
+  // Delete dialog state
+  const [deleteTeamId, setDeleteTeamId] = React.useState<string | null>(null);
+  const [deleting, setDeleting] = React.useState(false);
+  const [deleteError, setDeleteError] = React.useState('');
+  // Member search loading state
+  const [createMemberLoading, setCreateMemberLoading] = React.useState(false);
+  const [editMemberLoading, setEditMemberLoading] = React.useState(false);
   const { setCurrentModule } = useUIContext();
 
   const [teams, setTeams] = React.useState<Team[]>([]);
@@ -41,7 +51,7 @@ export default function TeamDirectory() {
 
   // Member search state
   const [createMemberOptions, setCreateMemberOptions] = React.useState<
-    UserSearchResult[]
+    { value: string; label: string }[]
   >([]);
   const [createMemberSearch, setCreateMemberSearch] = React.useState('');
   const [createSelectedMembers, setCreateSelectedMembers] = React.useState<
@@ -49,7 +59,7 @@ export default function TeamDirectory() {
   >([]);
 
   const [editMemberOptions, setEditMemberOptions] = React.useState<
-    UserSearchResult[]
+    { value: string; label: string }[]
   >([]);
   const [editMemberSearch, setEditMemberSearch] = React.useState('');
 
@@ -65,29 +75,47 @@ export default function TeamDirectory() {
     }, [...deps, delay, effect]);
   }
 
-  useDebouncedEffect(
-    () => {
-      if (createMemberSearch) {
-        searchUsers(createMemberSearch).then(setCreateMemberOptions);
-      } else {
-        setCreateMemberOptions([]);
-      }
-    },
-    [createMemberSearch],
-    350
-  );
+  const handleCreateMemberSearch = React.useCallback(() => {
+    if (createMemberSearch) {
+      setCreateMemberLoading(true);
+      searchUsers(createMemberSearch)
+        .then((results: string[]) => {
+          setCreateMemberOptions(
+            results.map((u) => ({
+              value: u,
+              label: u,
+            }))
+          );
+        })
+        .finally(() => setCreateMemberLoading(false));
+    } else {
+      setCreateMemberOptions([]);
+      setCreateMemberLoading(false);
+    }
+  }, [createMemberSearch]);
 
-  useDebouncedEffect(
-    () => {
-      if (editMemberSearch) {
-        searchUsers(editMemberSearch).then(setEditMemberOptions);
-      } else {
-        setEditMemberOptions([]);
-      }
-    },
-    [editMemberSearch],
-    350
-  );
+  useDebouncedEffect(handleCreateMemberSearch, [createMemberSearch], 350);
+
+  const handleEditMemberSearch = React.useCallback(() => {
+    if (editMemberSearch) {
+      setEditMemberLoading(true);
+      searchUsers(editMemberSearch)
+        .then((results: string[]) => {
+          setEditMemberOptions(
+            results.map((u) => ({
+              value: u,
+              label: u,
+            }))
+          );
+        })
+        .finally(() => setEditMemberLoading(false));
+    } else {
+      setEditMemberOptions([]);
+      setEditMemberLoading(false);
+    }
+  }, [editMemberSearch]);
+
+  useDebouncedEffect(handleEditMemberSearch, [editMemberSearch], 350);
 
   useEffect(() => {
     setCurrentModule('Team Directory');
@@ -121,7 +149,7 @@ export default function TeamDirectory() {
       const team = await createTeam({
         name: newName,
         color: newColor,
-        memberIds: createSelectedMembers,
+        members: createSelectedMembers,
       });
       setTeams((prev) => [...prev, team]);
       setShowCreate(false);
@@ -140,7 +168,7 @@ export default function TeamDirectory() {
     setEditTeam(team);
     setEditName(team.name);
     setEditColor(team.color);
-    setEditMembers(team.memberIds || []);
+    setEditMembers(team.members || []);
     setEditError('');
     setEditMemberSearch('');
     setEditMemberOptions([]);
@@ -157,7 +185,7 @@ export default function TeamDirectory() {
         _id: editTeam._id,
         name: editName,
         color: editColor,
-        memberIds: editMembers,
+        members: editMembers,
         ownerId: editTeam.ownerId,
       });
       setTeams((prev) =>
@@ -222,6 +250,22 @@ export default function TeamDirectory() {
                   >
                     <PencilIcon size={18} />
                   </ActionIcon>
+                  {azureAdId === team.ownerId && (
+                    <ActionIcon
+                      variant="light"
+                      color="red"
+                      style={{
+                        position: 'absolute',
+                        top: 12,
+                        right: 44,
+                        zIndex: 2,
+                      }}
+                      onClick={() => setDeleteTeamId(team._id as string)}
+                      aria-label="Delete team"
+                    >
+                      <Trash2Icon size={18} />
+                    </ActionIcon>
+                  )}
                   <Group
                     className="flex flex-row items-center"
                     style={{ marginBottom: 8 }}
@@ -234,9 +278,64 @@ export default function TeamDirectory() {
                       {team.name}
                     </div>
                   </Group>
+                  <Text size="sm" color="dimmed">
+                    {team.members?.length || 0} member
+                    {team.members?.length === 1 ? '' : 's'}
+                  </Text>
                 </Card>
               </Grid.Col>
             ))}
+            {/* Delete Team Confirmation Modal */}
+            <Modal
+              opened={!!deleteTeamId}
+              onClose={() => setDeleteTeamId(null)}
+              title="Delete Team"
+              centered
+            >
+              <div>
+                <Text mb="md">
+                  Are you sure you want to delete this team? This action cannot
+                  be undone.
+                </Text>
+                {deleteError && (
+                  <Text color="red" mb="md">
+                    {deleteError}
+                  </Text>
+                )}
+                <Group mt="md">
+                  <Button
+                    color="red"
+                    loading={deleting}
+                    onClick={async () => {
+                      if (!deleteTeamId) return;
+                      setDeleting(true);
+                      setDeleteError('');
+                      try {
+                        await deleteTeam(deleteTeamId);
+                        setTeams((prev) =>
+                          prev.filter((t) => t._id !== deleteTeamId)
+                        );
+                        setDeleteTeamId(null);
+                      } catch (err) {
+                        if (err instanceof Error) setDeleteError(err.message);
+                        else setDeleteError('Failed to delete team');
+                      } finally {
+                        setDeleting(false);
+                      }
+                    }}
+                  >
+                    Delete
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setDeleteTeamId(null)}
+                    disabled={deleting}
+                  >
+                    Cancel
+                  </Button>
+                </Group>
+              </div>
+            </Modal>
           </Grid>
         )}
         {/* <Group style={{ marginTop: 32 }}>
@@ -271,10 +370,7 @@ export default function TeamDirectory() {
             />
             <MultiSelect
               label="Members"
-              data={createMemberOptions.map((u) => ({
-                value: u._id,
-                label: u.name + ' (' + u.email + ')',
-              }))}
+              data={createMemberOptions}
               searchable
               value={createSelectedMembers}
               onChange={setCreateSelectedMembers}
@@ -282,6 +378,7 @@ export default function TeamDirectory() {
               searchValue={createMemberSearch}
               placeholder="Search and select members"
               mb="md"
+              rightSection={createMemberLoading ? <Loader size={16} /> : null}
             />
             {createError && (
               <Text color="red" mb="md">
@@ -325,10 +422,7 @@ export default function TeamDirectory() {
             />
             <MultiSelect
               label="Members"
-              data={editMemberOptions.map((u) => ({
-                value: u._id,
-                label: u.name + ' (' + u.email + ')',
-              }))}
+              data={editMemberOptions}
               searchable
               value={editMembers}
               onChange={setEditMembers}
@@ -336,6 +430,7 @@ export default function TeamDirectory() {
               searchValue={editMemberSearch}
               placeholder="Search and select members"
               mb="md"
+              rightSection={editMemberLoading ? <Loader size={16} /> : null}
             />
             {editError && (
               <Text color="red" mb="md">

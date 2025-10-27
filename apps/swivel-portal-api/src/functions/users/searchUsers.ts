@@ -15,9 +15,9 @@ export const handler = defineLambda<
 >({
   log: true,
   middlewares: [authTokenMiddleware],
-  handler: async ({ body, extras }) => {
+  handler: async ({ query: queryParams, extras }) => {
     await connectToDb();
-    const { query } = body;
+    const { query } = queryParams;
     const { authorizationToken } = extras;
     return await searchUsers(query, authorizationToken);
   },

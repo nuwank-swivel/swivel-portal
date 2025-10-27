@@ -5,6 +5,7 @@ export async function createTeam(input: {
   name: string;
   color: string;
   ownerId: string;
+  members: string[];
 }): Promise<Team> {
   const user = await RepositoryContext.userRepository.getByAzureAdId(
     input.ownerId
@@ -17,7 +18,7 @@ export async function createTeam(input: {
     name: input.name,
     color: input.color,
     ownerId: input.ownerId,
-    memberIds: [],
+    members: input.members,
     deleted: false,
   });
   return {

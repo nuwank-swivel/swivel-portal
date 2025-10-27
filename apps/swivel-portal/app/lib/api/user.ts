@@ -1,14 +1,8 @@
 import api from '../axios';
 
-export interface UserSearchResult {
-  _id: string;
-  name: string;
-  email: string;
-}
-
-export async function searchUsers(query: string): Promise<UserSearchResult[]> {
+export async function searchUsers(query: string): Promise<string[]> {
   if (!query) return [];
-  const response = await api.get<UserSearchResult[]>('/users', {
+  const response = await api.get<string[]>('/api/user', {
     params: { query },
   });
   return response.data;

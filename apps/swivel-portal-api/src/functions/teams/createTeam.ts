@@ -9,9 +9,9 @@ import { HttpError, Team } from '@swivel-portal/types';
 import { StatusCodes } from 'http-status-codes';
 
 export const handler = defineLambda<
+  { name: string; color: string; members: string[] },
   never,
   never,
-  { name: string; color: string },
   Team,
   ExtrasWithUser
 >({
@@ -24,7 +24,7 @@ export const handler = defineLambda<
       throw new Error('Forbidden');
     }
 
-    const { name, color } = body;
+    const { name, color, members } = body;
 
     if (!name || !color) {
       throw new HttpError(
@@ -37,6 +37,7 @@ export const handler = defineLambda<
       name,
       color,
       ownerId: extras.user.azureAdId,
+      members,
     });
     return team;
   },

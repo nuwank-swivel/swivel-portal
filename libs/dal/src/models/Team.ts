@@ -22,7 +22,7 @@ export class Team {
   ownerId: string; // admin user who created the team
 
   @Column('array')
-  memberIds: string[];
+  members: string[];
 
   @Column({ default: false })
   deleted: boolean;
