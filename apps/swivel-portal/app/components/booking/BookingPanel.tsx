@@ -1,13 +1,5 @@
 import { useState } from 'react';
-import {
-  Paper,
-  Title,
-  Button,
-  Group,
-  Text,
-  Select,
-  Alert,
-} from '@mantine/core';
+import { Paper, Title, Button, Group, Text, Select, Alert } from '@mantine/core';
 import { Grid } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import { Calendar, Clock, Utensils, AlertCircle } from 'lucide-react';
@@ -47,6 +39,9 @@ export function BookingPanel({
   const [endTime, setEndTime] = useState('17:00');
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
   const [lunch, setLunch] = useState<string | null>(null);
+  // Recurring booking state
+  const [recurringDays, setRecurringDays] = useState<string[]>([]);
+  const [isRecurring, setIsRecurring] = useState(false);
 
   const handlePreset = (label: string, hours: number) => {
     const start = parseInt(startTime.split(':')[0]);
@@ -67,12 +62,19 @@ export function BookingPanel({
       duration: getDuration(),
       seatId: selectedSeatId,
       lunchOption: lunch || undefined,
+      // ...isRecurring ? [
+      recurring: isRecurring ? {
+        daysOfWeek: recurringDays,
+        startDate: dateStr
+      } : undefined,
     };
     onConfirm(payload, () => {
       setLunch(null);
       setSelectedPreset(null);
       setStartTime('09:00');
       setEndTime('17:00');
+      setRecurringDays([]);
+      setIsRecurring(false);
     });
   };
 
@@ -140,6 +142,39 @@ export function BookingPanel({
           clearable={false}
         />
         <div className="space-y-6 py-4">
+          {/* Recurring Booking UI */}
+          <div className="space-y-3">
+            <Text className="text-sm font-medium flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={isRecurring}
+                onChange={e => setIsRecurring(e.target.checked)}
+                className="mr-2"
+              />
+              Recurring Booking
+            </Text>
+            {isRecurring && (
+              <Group gap={2} wrap="wrap">
+                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => (
+                  <Button
+                    key={day}
+                    variant={recurringDays.includes(day) ? 'filled' : 'outline'}
+                    size="xs"
+                    type="button"
+                    onClick={() => {
+                      setRecurringDays(prev =>
+                        prev.includes(day)
+                          ? prev.filter(d => d !== day)
+                          : [...prev, day]
+                      );
+                    }}
+                  >
+                    {day}
+                  </Button>
+                ))}
+              </Group>
+            )}
+          </div>
           {/* Time Selection */}
           {getSectionTitle(<Clock size={16} />, 'Select a time')}
 
