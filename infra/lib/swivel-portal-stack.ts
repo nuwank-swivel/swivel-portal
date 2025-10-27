@@ -17,6 +17,12 @@ export class SwivelPortalStack extends BaseStack {
       DB_URL: process.env.DB_URL || '',
     };
 
+    const MS_ENTRA_ENV = {
+      MS_ENTRA_TENANT_ID: process.env.MS_ENTRA_TENANT_ID || '',
+      MS_ENTRA_CLIENT_ID: process.env.MS_ENTRA_CLIENT_ID || '',
+      MS_ENTRA_CLIENT_SECRET: process.env.MS_ENTRA_CLIENT_SECRET || '',
+    };
+
     // Lambda Layer from infra/layers/layer.zip
     const sharedLayer = new lambda.LayerVersion(
       this,
@@ -455,6 +461,7 @@ export class SwivelPortalStack extends BaseStack {
         functionName: `SearchUserLambda${this.envSuffix}`,
         environment: {
           ...DB_ENV,
+          ...MS_ENTRA_ENV,
         },
         layers: [sharedLayer],
         timeout: cdk.Duration.seconds(10),
