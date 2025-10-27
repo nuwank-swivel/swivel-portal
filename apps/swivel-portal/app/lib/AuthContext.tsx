@@ -25,9 +25,14 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [error, setError] = useState<string | undefined>(undefined);
 
   const initializeUserInfo = async () => {
     const user = await getUserInfo();
+    if (user === null) {
+      setError('Failed to fetch user info');
+      return;
+    }
     setUser(user);
     console.log('User info initialized');
   };
@@ -46,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await initializeUserInfo();
       } catch (error) {
         console.error('Teams SDK initialization failed:', error);
+        setError(JSON.stringify(error));
       }
     };
 
@@ -54,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider value={{ user }}>
-      {user !== null ? children : <Loading />}
+      {user !== null ? children : <Loading error={error} />}
     </AuthContext.Provider>
   );
 }
