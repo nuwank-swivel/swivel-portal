@@ -12,6 +12,7 @@ import {
   ActionIcon,
   Grid,
   Loader,
+  Paper,
 } from '@mantine/core';
 import { PencilIcon, PlusCircleIcon, Trash2Icon } from 'lucide-react';
 import { getTeams, updateTeam, createTeam, deleteTeam } from '../lib/api/team';
@@ -62,6 +63,9 @@ export default function TeamDirectory() {
     { value: string; label: string }[]
   >([]);
   const [editMemberSearch, setEditMemberSearch] = React.useState('');
+
+  // Team details modal state
+  const [detailsTeam, setDetailsTeam] = React.useState<Team | null>(null);
 
   // Debounce helpers
   function useDebouncedEffect(
@@ -217,39 +221,47 @@ export default function TeamDirectory() {
           </Card>
         ) : (
           <Grid gutter={24} mt={8}>
-            <Grid.Col span={3}>
-              <Button
-                p="lg"
-                w="100%"
-                style={{ position: 'relative', minHeight: 120 }}
-                onClick={() => setShowCreate(true)}
-                variant="default"
-              >
-                <PlusCircleIcon size={18} className="mr-2" /> Create Team
-              </Button>
-            </Grid.Col>
+            {user?.isAdmin ? (
+              <Grid.Col span={3}>
+                <Button
+                  p="lg"
+                  w="100%"
+                  style={{ position: 'relative', minHeight: 120 }}
+                  onClick={() => setShowCreate(true)}
+                  variant="default"
+                >
+                  <PlusCircleIcon size={18} className="mr-2" /> Create Team
+                </Button>
+              </Grid.Col>
+            ) : null}
             {teams.map((team) => (
               <Grid.Col key={team._id} span={3}>
                 <Card
                   p="lg"
+                  onClick={() => setDetailsTeam(team)}
                   className="cursor-pointer"
                   style={{ position: 'relative', minHeight: 120 }}
                   withBorder
                 >
-                  <ActionIcon
-                    variant="light"
-                    color="blue"
-                    style={{
-                      position: 'absolute',
-                      top: 12,
-                      right: 12,
-                      zIndex: 2,
-                    }}
-                    onClick={() => openEditModal(team)}
-                    aria-label="Edit team"
-                  >
-                    <PencilIcon size={18} />
-                  </ActionIcon>
+                  {azureAdId === team.ownerId && (
+                    <ActionIcon
+                      variant="light"
+                      color="blue"
+                      style={{
+                        position: 'absolute',
+                        top: 12,
+                        right: 12,
+                        zIndex: 2,
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openEditModal(team);
+                      }}
+                      aria-label="Edit team"
+                    >
+                      <PencilIcon size={18} />
+                    </ActionIcon>
+                  )}
                   {azureAdId === team.ownerId && (
                     <ActionIcon
                       variant="light"
@@ -260,7 +272,10 @@ export default function TeamDirectory() {
                         right: 44,
                         zIndex: 2,
                       }}
-                      onClick={() => setDeleteTeamId(team._id as string)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteTeamId(team._id as string);
+                      }}
                       aria-label="Delete team"
                     >
                       <Trash2Icon size={18} />
@@ -285,6 +300,73 @@ export default function TeamDirectory() {
                 </Card>
               </Grid.Col>
             ))}
+            {/* Team Details Modal */}
+            <Modal
+              opened={!!detailsTeam}
+              onClose={() => setDetailsTeam(null)}
+              title={
+                detailsTeam ? (
+                  <Group mb="md">
+                    <div
+                      className="w-6 h-6 rounded-full"
+                      style={{ backgroundColor: detailsTeam.color }}
+                    ></div>
+                    <Text fw={600} size="lg">
+                      {detailsTeam.name}
+                    </Text>
+                  </Group>
+                ) : (
+                  ''
+                )
+              }
+              centered
+            >
+              {detailsTeam && (
+                <div>
+                  <Text mb="sm" fw={500}>
+                    Members:
+                  </Text>
+                  <ul style={{ marginBottom: 16 }}>
+                    {(detailsTeam.members || []).map((m) => (
+                      <Paper
+                        withBorder
+                        key={m}
+                        py={4}
+                        px={8}
+                        style={{ marginBottom: 4 }}
+                      >
+                        {m}
+                      </Paper>
+                    ))}
+                  </ul>
+                  {azureAdId === detailsTeam.ownerId && (
+                    <Group mt="md">
+                      <Button
+                        onClick={() => {
+                          setDetailsTeam(null);
+                          openEditModal(detailsTeam);
+                        }}
+                        color="blue"
+                        leftSection={<PencilIcon size={16} />}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          setDetailsTeam(null);
+                          setDeleteTeamId(detailsTeam._id as string);
+                        }}
+                        color="red"
+                        variant="outline"
+                        leftSection={<Trash2Icon size={16} />}
+                      >
+                        Delete
+                      </Button>
+                    </Group>
+                  )}
+                </div>
+              )}
+            </Modal>
             {/* Delete Team Confirmation Modal */}
             <Modal
               opened={!!deleteTeamId}
