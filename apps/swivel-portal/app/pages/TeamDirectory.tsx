@@ -17,6 +17,7 @@ import { PencilIcon, PlusCircleIcon } from 'lucide-react';
 import { getTeams, updateTeam } from '../lib/api/team';
 import { Team } from '@swivel-portal/types';
 import { createTeam } from '../lib/api/team';
+import { searchUsers, UserSearchResult } from '../lib/api/user';
 import { useUIContext } from '@/lib/UIContext';
 
 export default function TeamDirectory() {
@@ -38,16 +39,59 @@ export default function TeamDirectory() {
   const [editing, setEditing] = React.useState(false);
   const [editError, setEditError] = React.useState('');
 
-  // Placeholder: member options, to be integrated later
-  const memberOptions = [
-    { value: 'user1', label: 'User One' },
-    { value: 'user2', label: 'User Two' },
-    { value: 'user3', label: 'User Three' },
-  ];
+  // Member search state
+  const [createMemberOptions, setCreateMemberOptions] = React.useState<
+    UserSearchResult[]
+  >([]);
+  const [createMemberSearch, setCreateMemberSearch] = React.useState('');
+  const [createSelectedMembers, setCreateSelectedMembers] = React.useState<
+    string[]
+  >([]);
+
+  const [editMemberOptions, setEditMemberOptions] = React.useState<
+    UserSearchResult[]
+  >([]);
+  const [editMemberSearch, setEditMemberSearch] = React.useState('');
+
+  // Debounce helpers
+  function useDebouncedEffect(
+    effect: () => void,
+    deps: React.DependencyList,
+    delay: number
+  ) {
+    React.useEffect(() => {
+      const handler = setTimeout(() => effect(), delay);
+      return () => clearTimeout(handler);
+    }, [...deps, delay, effect]);
+  }
+
+  useDebouncedEffect(
+    () => {
+      if (createMemberSearch) {
+        searchUsers(createMemberSearch).then(setCreateMemberOptions);
+      } else {
+        setCreateMemberOptions([]);
+      }
+    },
+    [createMemberSearch],
+    350
+  );
+
+  useDebouncedEffect(
+    () => {
+      if (editMemberSearch) {
+        searchUsers(editMemberSearch).then(setEditMemberOptions);
+      } else {
+        setEditMemberOptions([]);
+      }
+    },
+    [editMemberSearch],
+    350
+  );
 
   useEffect(() => {
     setCurrentModule('Team Directory');
-  }, []);
+  }, [setCurrentModule]);
 
   useEffect(() => {
     async function fetchTeams() {
@@ -74,11 +118,16 @@ export default function TeamDirectory() {
     setCreating(true);
     setCreateError('');
     try {
-      const team = await createTeam({ name: newName, color: newColor });
+      const team = await createTeam({
+        name: newName,
+        color: newColor,
+        memberIds: createSelectedMembers,
+      });
       setTeams((prev) => [...prev, team]);
       setShowCreate(false);
       setNewName('');
       setNewColor('#000000');
+      setCreateSelectedMembers([]);
     } catch (err) {
       if (err instanceof Error) setCreateError(err.message);
       else setCreateError('Failed to create team');
@@ -93,6 +142,8 @@ export default function TeamDirectory() {
     setEditColor(team.color);
     setEditMembers(team.memberIds || []);
     setEditError('');
+    setEditMemberSearch('');
+    setEditMemberOptions([]);
   }
 
   async function handleEditTeam(e: React.FormEvent) {
@@ -220,13 +271,17 @@ export default function TeamDirectory() {
             />
             <MultiSelect
               label="Members"
-              data={memberOptions}
+              data={createMemberOptions.map((u) => ({
+                value: u._id,
+                label: u.name + ' (' + u.email + ')',
+              }))}
               searchable
-              value={[]}
-              // onChange={() => {}}
-              placeholder="Select members (integration later)"
+              value={createSelectedMembers}
+              onChange={setCreateSelectedMembers}
+              onSearchChange={setCreateMemberSearch}
+              searchValue={createMemberSearch}
+              placeholder="Search and select members"
               mb="md"
-              disabled
             />
             {createError && (
               <Text color="red" mb="md">
@@ -270,11 +325,16 @@ export default function TeamDirectory() {
             />
             <MultiSelect
               label="Members"
-              data={memberOptions}
+              data={editMemberOptions.map((u) => ({
+                value: u._id,
+                label: u.name + ' (' + u.email + ')',
+              }))}
               searchable
               value={editMembers}
               onChange={setEditMembers}
-              placeholder="Select members (integration later)"
+              onSearchChange={setEditMemberSearch}
+              searchValue={editMemberSearch}
+              placeholder="Search and select members"
               mb="md"
             />
             {editError && (
