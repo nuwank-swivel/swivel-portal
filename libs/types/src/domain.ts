@@ -20,6 +20,11 @@ export interface Booking {
     startDate: string;
     endDate?: string;
   };
+  overrides?: Array<{
+    date: string;
+    cancelledAt?: Date;
+    lunchOption?: string;
+  }>;
   createdAt?: Date;
   updatedAt?: Date;
   canceledAt?: Date | null;

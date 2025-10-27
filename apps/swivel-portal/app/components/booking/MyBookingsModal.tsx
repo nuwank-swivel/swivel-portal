@@ -1,18 +1,11 @@
 import { useEffect, useState } from 'react';
-import {
-  Modal,
-  Group,
-  Button,
-  Paper,
-  Loader,
-  Text,
-  Title,
-  Badge,
-} from '@mantine/core';
+import { Modal, Group, Button, Loader, Text, Badge } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { getMyBookings, cancelBooking } from '@/lib/api/seatBooking';
+import { getMyBookings } from '@/lib/api/seatBooking';
+import { useCancelBooking } from '@/hooks/useCancelBooking';
 import { Booking } from '@swivel-portal/types';
 import { notifications } from '@mantine/notifications';
+// Removed unused imports
 import { Card } from '../ui/card';
 import moment from 'moment';
 
@@ -25,10 +18,14 @@ export function MyBookingsModal({ opened, onClose }: MyBookingsModalProps) {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [cancelingId, setCancelingId] = useState<string | null>(null);
-  const [confirmId, setConfirmId] = useState<string | null>(null);
-  const [confirmOpen, { open: openConfirm, close: closeConfirm }] =
-    useDisclosure(false);
+  const {
+    CancelDialog,
+    cancelBooking,
+    loading: cancelLoading,
+  } = useCancelBooking();
+  const [selectedBookingId, setSelectedBookingId] = useState<string | null>(
+    null
+  );
 
   const fetchBookings = async () => {
     setLoading(true);
@@ -49,35 +46,16 @@ export function MyBookingsModal({ opened, onClose }: MyBookingsModalProps) {
       setBookings([]);
       setLoading(true);
       setError(null);
-      setCancelingId(null);
+      setSelectedBookingId(null);
     }
   }, [opened]);
 
-  const handleCancel = async (id: string) => {
-    setCancelingId(id);
-    try {
-      await cancelBooking(id);
-      notifications.show({
-        title: 'Booking canceled',
-        message: 'Your booking was canceled.',
-      });
-      fetchBookings();
-    } catch {
-      notifications.show({
-        title: 'Error',
-        message: 'Failed to cancel booking',
-        color: 'red',
-      });
-    } finally {
-      setCancelingId(null);
-      setConfirmId(null);
-      closeConfirm();
+  const openCancelDialog = (booking: Booking) => {
+    setSelectedBookingId(booking._id ?? null);
+    // Always pass the booking object with the correct bookingDate for this occurrence
+    if (typeof booking._id === 'string') {
+      cancelBooking(booking._id, booking);
     }
-  };
-
-  const openCancelDialog = (id: string) => {
-    setConfirmId(id);
-    openConfirm();
   };
 
   return (
@@ -92,10 +70,10 @@ export function MyBookingsModal({ opened, onClose }: MyBookingsModalProps) {
         <Text>No upcoming bookings.</Text>
       ) : (
         <div>
-          {bookings.map((booking: Booking) =>
+          {bookings.map((booking: Booking, index: number) =>
             booking._id ? (
               <Card
-                key={booking._id}
+                key={`booking._id-${index}`}
                 mb="sm"
                 radius="md"
                 className="flex flex-row justify-between items-center"
@@ -112,43 +90,24 @@ export function MyBookingsModal({ opened, onClose }: MyBookingsModalProps) {
                     <Badge color="indigo" size="sm" variant="light">
                       {booking.duration}
                     </Badge>
+                    <Badge color="green" size="sm" variant="light">
+                      {booking.lunchOption}
+                    </Badge>
                   </Group>
                 </Group>
                 <Button
                   color="red"
-                  loading={cancelingId === booking._id}
-                  onClick={() => booking._id && openCancelDialog(booking._id)}
+                  loading={cancelLoading && selectedBookingId === booking._id}
+                  onClick={() => booking._id && openCancelDialog(booking)}
                   size="xs"
                 >
                   Cancel
                 </Button>
-                {/* Confirmation Dialog */}
-                <Modal
-                  opened={confirmOpen}
-                  onClose={closeConfirm}
-                  title="Cancel Booking?"
-                  centered
-                >
-                  <Text mb="md">
-                    Are you sure you want to cancel this booking?
-                  </Text>
-                  <Group style={{ justifyContent: 'flex-end' }}>
-                    <Button variant="default" onClick={closeConfirm} size="xs">
-                      No, keep booking
-                    </Button>
-                    <Button
-                      color="red"
-                      onClick={() => confirmId && handleCancel(confirmId)}
-                      loading={!!cancelingId}
-                      size="xs"
-                    >
-                      Yes, cancel booking
-                    </Button>
-                  </Group>
-                </Modal>
               </Card>
             ) : null
           )}
+          {/* Unified Cancel Dialog */}
+          <CancelDialog onSuccess={fetchBookings} />
         </div>
       )}
     </Modal>
