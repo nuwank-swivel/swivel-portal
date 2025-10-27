@@ -1,26 +1,63 @@
-import {
-  IBookingRepository,
-  Booking as BookingType,
-} from '@swivel-portal/types';
+import { IBookingRepository } from '@swivel-portal/types';
 import { Booking } from '../models/Booking.js';
+import { BaseRepository } from './BaseRepository.js';
 
-export class BookingRepository implements IBookingRepository<BookingType> {
-  /**
-   * Find all bookings for a specific date (admin use)
-   * Returns user name, duration type, and meal type for each booking
-   */
-  async findAllBookingsByDate(date: string): Promise<
-    Array<{
-      userId: string;
-      userName: string;
-      durationType: string;
-      lunchOption?: string;
-    }>
-  > {
-    try {
-      // Use aggregation to join with User collection
-      const bookings = await Booking.aggregate([
-        { $match: { bookingDate: date, canceledAt: null } },
+export class BookingRepository
+  extends BaseRepository<Booking>
+  implements IBookingRepository<Booking>
+{
+  constructor() {
+    super(Booking);
+  }
+
+  // Helper to get all recurring bookings for a user (optionally filtered by userId)
+  private async getAllRecurringBookings(userId?: string) {
+    const match: any = {
+      recurring: { $exists: true, $ne: null },
+      canceledAt: null,
+    };
+    if (userId) match.userId = userId;
+    return this.repository
+      .aggregate([
+        { $match: match },
+        {
+          $project: {
+            userId: 1,
+            userName: { $ifNull: ['$user.name', ''] },
+            durationType: 1,
+            duration: 1,
+            lunchOption: 1,
+            seatId: 1,
+            recurring: 1,
+            bookingDate: 1,
+            overrides: 1,
+          },
+        },
+      ])
+      .toArray();
+  }
+
+  // Helper to get day of week string
+  private getDayOfWeekStr(date: string): string {
+    const jsDayOfWeek = new Date(date).getDay();
+    return [
+      'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+    ][jsDayOfWeek];
+  }
+
+  // Helper to get regular bookings for a date (optionally filtered by user)
+  private async getRegularBookings(date: string, userId?: string) {
+    const match: any = { bookingDate: date, canceledAt: null };
+    if (userId) match.userId = userId;
+    return this.repository
+      .aggregate([
+        { $match: match },
         {
           $lookup: {
             from: 'users',
@@ -30,133 +67,275 @@ export class BookingRepository implements IBookingRepository<BookingType> {
           },
         },
         { $unwind: '$user' },
+        // Convert user.teamId to ObjectId if needed
+        {
+          $addFields: {
+            'user.teamId': {
+              $cond: [
+                {
+                  $and: [
+                    { $ne: ['$user.teamId', null] },
+                    { $ne: [{ $type: '$user.teamId' }, 'objectId'] },
+                  ],
+                },
+                { $toObjectId: '$user.teamId' },
+                '$user.teamId',
+              ],
+            },
+          },
+        },
+        {
+          $lookup: {
+            from: 'teams',
+            localField: 'user.teamId',
+            foreignField: '_id',
+            as: 'team',
+            pipeline: [{ $project: { name: 1, color: 1 } }],
+          },
+        },
+        { $unwind: { path: '$team', preserveNullAndEmptyArrays: true } },
+      ])
+      .toArray();
+  }
+
+  // Helper to get recurring bookings for a date (optionally filtered by user)
+  private async getRecurringBookings(
+    date: string,
+    dayOfWeekStr: string,
+    userId?: string
+  ) {
+    const match: any = {
+      recurring: { $exists: true, $ne: null },
+      canceledAt: null,
+    };
+    if (userId) match.userId = userId;
+    return this.repository
+      .aggregate([
+        { $match: match },
+        {
+          $addFields: {
+            recurringStart: { $toDate: '$recurring.startDate' },
+            recurringEnd: {
+              $cond: [
+                { $ifNull: ['$recurring.endDate', false] },
+                { $toDate: '$recurring.endDate' },
+                null,
+              ],
+            },
+          },
+        },
+        {
+          $match: {
+            $expr: {
+              $and: [
+                { $lte: ['$recurringStart', new Date(date)] },
+                {
+                  $or: [
+                    { $eq: ['$recurringEnd', null] },
+                    { $gte: ['$recurringEnd', new Date(date)] },
+                  ],
+                },
+                {
+                  $in: [dayOfWeekStr, '$recurring.daysOfWeek'],
+                },
+              ],
+            },
+          },
+        },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'userId',
+            foreignField: 'azureAdId',
+            as: 'user',
+          },
+        },
+        { $unwind: '$user' },
+        // Convert user.teamId to ObjectId if needed
+        {
+          $addFields: {
+            'user.teamId': {
+              $cond: [
+                {
+                  $and: [
+                    { $ne: ['$user.teamId', null] },
+                    { $ne: [{ $type: '$user.teamId' }, 'objectId'] },
+                  ],
+                },
+                { $toObjectId: '$user.teamId' },
+                '$user.teamId',
+              ],
+            },
+          },
+        },
+        {
+          $lookup: {
+            from: 'teams',
+            localField: 'user.teamId',
+            foreignField: '_id',
+            as: 'team',
+            pipeline: [{ $project: { name: 1, color: 1 } }],
+          },
+        },
+        { $unwind: { path: '$team', preserveNullAndEmptyArrays: true } },
         {
           $project: {
             userId: 1,
-            userName: {
-              $ifNull: ['$user.name', ''],
-            },
+            userName: { $ifNull: ['$user.name', ''] },
             durationType: 1,
             lunchOption: 1,
+            seatId: 1,
+            recurring: 1,
+            bookingDate: 1,
+            team: 1,
+            user: 1,
+            overrides: 1,
           },
         },
-      ]);
-      return bookings;
-    } catch (error) {
-      console.log('Error finding all bookings by date:', error);
-      return [];
-    }
+      ])
+      .toArray();
   }
-  /**
-   * Find upcoming (future, not canceled) bookings for a user
-   * @param userId - The user identifier
-   * @param fromDate - Only bookings on or after this date (YYYY-MM-DD)
-   */
+
+  // Helper to deduplicate bookings by seatId and userId
+  private dedupeBookings(bookings: any[]): any[] {
+    const seen = new Set<string>();
+    return bookings.filter((b) => {
+      const key = `${b.seatId}-${b.userId}-${b.bookingDate}`;
+      return seen.has(key) ? false : (seen.add(key), true);
+    });
+  }
+
+  async findAllBookingsByDate(date: string): Promise<Array<Booking>> {
+    const dayOfWeekStr = this.getDayOfWeekStr(date);
+    const regularBookings = await this.getRegularBookings(date);
+    const recurringBookings = await this.getRecurringBookings(
+      date,
+      dayOfWeekStr
+    );
+    // Merge overrides for matching date and filter out cancelled overrides
+    const allBookings = [...regularBookings, ...recurringBookings]
+      .map((b) => {
+        if (Array.isArray(b.overrides)) {
+          const override = b.overrides.find(
+            (o: { date: string; cancelledAt?: Date }) => o.date === date
+          );
+          if (override) {
+            if (override.cancelledAt) {
+              return null; // Mark for removal
+            }
+            return { ...b, ...override };
+          }
+        }
+        return b;
+      })
+      .filter(Boolean);
+    return this.dedupeBookings(allBookings);
+  }
+
   async findUserUpcomingBookings(
     userId: string,
     fromDate: string
-  ): Promise<BookingType[]> {
-    try {
-      const bookings = await Booking.find({
+  ): Promise<Booking[]> {
+    // Get regular upcoming bookings efficiently
+    const regularBookings = await this.repository.find({
+      where: {
         userId,
         bookingDate: { $gte: fromDate },
         canceledAt: null,
-      })
-        .sort({ bookingDate: 1 })
-        .exec();
-      return bookings.map((b) => b.toObject() as BookingType);
-    } catch (error) {
-      console.log('Error finding user upcoming bookings:', error);
-      return [];
-    }
-  }
-  async getById(id: string): Promise<BookingType | null> {
-    try {
-      const booking = await Booking.findById(id).exec();
-      if (!booking) {
-        return null;
+      },
+      order: { bookingDate: 'ASC' },
+    });
+
+    // Get all recurring bookings for the user once
+    const allRecurring = await this.getAllRecurringBookings(userId);
+    const recurringInstances: Booking[] = [];
+
+    for (const b of allRecurring) {
+      const start = new Date(b.recurring.startDate);
+      const end = b.recurring.endDate
+        ? new Date(b.recurring.endDate)
+        : undefined;
+
+      if (Array.isArray(b.recurring.daysOfWeek)) {
+        for (const dayName of b.recurring.daysOfWeek) {
+          let count = 0;
+
+          // Start from the next occurrence of that weekday
+          const current = new Date(fromDate);
+
+          // Move forward until we hit the right day of the week
+          while (
+            this.getDayOfWeekStr(current.toISOString().slice(0, 10)) !== dayName
+          ) {
+            current.setDate(current.getDate() + 1);
+          }
+
+          // Now generate next 10 dates for that weekday
+          while (count < 10) {
+            if (current >= start && (!end || current <= end)) {
+              // Spread override fields if present for this date
+              let instance: Booking = {
+                ...b,
+                bookingDate: current.toISOString().slice(0, 10),
+              };
+              let isCancelled = false;
+              if (Array.isArray(b.overrides)) {
+                const override = b.overrides.find(
+                  (o: { date: string; cancelledAt?: Date }) =>
+                    o.date === instance.bookingDate
+                );
+                if (override) {
+                  console.log(
+                    'Found override for recurring booking:',
+                    override
+                  );
+                  if (override.cancelledAt) {
+                    isCancelled = true;
+                  } else {
+                    instance = { ...instance, ...override };
+                  }
+                }
+              }
+              if (!isCancelled) {
+                recurringInstances.push(instance);
+                count++;
+              }
+            }
+            // Jump ahead 7 days for the next occurrence
+            current.setDate(current.getDate() + 7);
+          }
+        }
       }
-      return booking.toObject() as BookingType;
-    } catch (error) {
-      console.log('Error fetching booking by ID:', error);
-      return null;
     }
+
+    // Combine, deduplicate, sort, and return first 10
+    const results: Booking[] = [...regularBookings, ...recurringInstances];
+    const unique = this.dedupeBookings(results);
+
+    unique.sort(
+      (a, b) =>
+        new Date(a.bookingDate).getTime() - new Date(b.bookingDate).getTime()
+    );
+
+    return unique.slice(0, 10);
   }
 
-  async create(item: BookingType): Promise<BookingType> {
-    const newBooking = new Booking(item);
-    await newBooking.save();
-    return newBooking.toObject() as BookingType;
-  }
-
-  async update(
-    id: string,
-    item: Partial<BookingType>
-  ): Promise<BookingType | null> {
-    try {
-      // If canceledAt is provided as a string, convert to Date
-      if (item.canceledAt && typeof item.canceledAt === 'string') {
-        item.canceledAt = new Date(item.canceledAt) as Date;
-      }
-      const booking = await Booking.findByIdAndUpdate(id, item, {
-        new: true,
-      }).exec();
-      if (!booking) {
-        return null;
-      }
-      return booking.toObject() as BookingType;
-    } catch (error) {
-      console.log('Error updating booking:', error);
-      return null;
-    }
-  }
-
-  async delete(id: string): Promise<boolean> {
-    try {
-      const result = await Booking.findByIdAndDelete(id).exec();
-      return result !== null;
-    } catch (error) {
-      console.log('Error deleting booking:', error);
-      return false;
-    }
-  }
-
-  /**
-   * Count bookings for a specific date (excludes canceled bookings)
-   */
   async countBookingsByDate(date: string): Promise<number> {
-    try {
-      const count = await Booking.countDocuments({
-        bookingDate: date,
-        canceledAt: null,
-      }).exec();
-
-      return count;
-    } catch (error) {
-      console.log('Error counting bookings by date:', error);
-      return 0;
-    }
+    return this.repository.count({
+      bookingDate: date,
+      canceledAt: null,
+    });
   }
 
-  /**
-   * Check if a user has a booking on a specific date
-   * @param userId - The user identifier
-   * @param bookingDate - Date in YYYY-MM-DD format
-   */
   async hasUserBookingOnDate(
     userId: string,
     bookingDate: string
   ): Promise<boolean> {
-    try {
-      const count = await Booking.countDocuments({
-        userId,
-        bookingDate,
-        canceledAt: null,
-      }).exec();
-      return count > 0;
-    } catch (error) {
-      console.log('Error checking user booking on date:', error);
-      return false;
-    }
+    const count = await this.repository.count({
+      userId,
+      bookingDate,
+      canceledAt: null,
+    });
+    return count > 0;
   }
 }

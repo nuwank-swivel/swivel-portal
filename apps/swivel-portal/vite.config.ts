@@ -2,12 +2,15 @@
 import { defineConfig } from 'vite';
 import { reactRouter } from '@react-router/dev/vite';
 import path from 'path';
+import basicSsl from '@vitejs/plugin-basic-ssl';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const pkg = require('./package.json');
 
 export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/swivel-portal',
   server: {
-    port: 4200,
+    port: 53000,
     host: 'localhost',
     allowedHosts: ['localhost', 'alva-taut-bodingly.ngrok-free.dev'],
   },
@@ -15,7 +18,7 @@ export default defineConfig(() => ({
     port: 4300,
     host: 'localhost',
   },
-  plugins: [!process.env.VITEST && reactRouter()],
+  plugins: [!process.env.VITEST && reactRouter(), basicSsl()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './app'),
@@ -32,6 +35,9 @@ export default defineConfig(() => ({
     commonjsOptions: {
       transformMixedEsModules: true,
     },
+  },
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version ?? '0.0.0'),
   },
   test: {
     name: '@swivel-portal/swivel-portal',

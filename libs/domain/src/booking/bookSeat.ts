@@ -1,9 +1,7 @@
-import {
-  BookingRepository,
-  SeatConfigurationRepository,
-  DaySeatOverrideRepository,
-} from '@swivel-portal/dal';
+import { RepositoryContext } from '@swivel-portal/dal';
 import { Booking } from '@swivel-portal/types';
+import { HttpError } from '@swivel-portal/types';
+import { StatusCodes } from 'http-status-codes';
 
 /**
  * Maps duration strings to standard duration types
@@ -31,17 +29,46 @@ export async function bookSeat(params: {
   userId: string;
   date: string;
   duration: string;
+  seatId: string;
   lunchOption?: string;
+  recurring?: {
+    daysOfWeek: string[];
+    startDate: string;
+    endDate?: string;
+  };
 }): Promise<Booking> {
-  const { userId, date, duration, lunchOption } = params;
-  const bookingRepo = new BookingRepository();
-  const configRepo = new SeatConfigurationRepository();
-  const overrideRepo = new DaySeatOverrideRepository();
+  const { userId, date, duration, seatId, lunchOption, recurring } = params;
+  // Validate seatId
+  if (!seatId) {
+    throw new HttpError(StatusCodes.BAD_REQUEST, 'Missing seatId');
+  }
+
+  // Check if seat is already booked for this date
+  const bookingsForDate =
+    await RepositoryContext.bookingRepository.findAllBookingsByDate(date);
+  const seatBooked = bookingsForDate.some(
+    (b) => b.seatId === seatId && !b.canceledAt
+  );
+  if (seatBooked) {
+    throw new HttpError(
+      StatusCodes.CONFLICT,
+      'Seat is already booked for this date'
+    );
+  }
+
+  const user = await RepositoryContext.userRepository.getByAzureAdId(userId);
+
+  if (!user) {
+    throw new HttpError(StatusCodes.NOT_FOUND, 'User not found');
+  }
 
   // Validate date format
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
   if (!dateRegex.test(date)) {
-    throw new Error('Invalid date format. Expected YYYY-MM-DD');
+    throw new HttpError(
+      StatusCodes.BAD_REQUEST,
+      'Invalid date format. Expected YYYY-MM-DD'
+    );
   }
 
   // Validate date is not in the past
@@ -50,33 +77,54 @@ export async function bookSeat(params: {
   const bookingDate = new Date(date);
   bookingDate.setHours(0, 0, 0, 0);
   if (bookingDate < today) {
-    throw new Error('Booking date cannot be in the past');
+    throw new HttpError(
+      StatusCodes.BAD_REQUEST,
+      'Booking date cannot be in the past'
+    );
   }
 
   // Check if user already has a booking for this date
-  const hasBooking = await bookingRepo.hasUserBookingOnDate(userId, date);
+  const hasBooking =
+    await RepositoryContext.bookingRepository.hasUserBookingOnDate(
+      userId,
+      date
+    );
   if (hasBooking) {
-    throw new Error('You already have a booking for this date');
+    throw new HttpError(
+      StatusCodes.CONFLICT,
+      'You already have a booking for this date'
+    );
   }
 
   // Get the max seat capacity for the date
-  const config = await configRepo.getDefaultConfig();
+  const config =
+    await RepositoryContext.seatConfigurationRepository.getDefaultConfig();
   const defaultSeatCount = config?.defaultSeatCount ?? 50;
-  const override = await overrideRepo.getByDate(date);
+  const override = await RepositoryContext.daySeatOverrideRepository.getByDate(
+    date
+  );
   const effectiveSeatCount = override?.seatCount ?? defaultSeatCount;
 
   // Check if seats are available
-  const totalBookings = await bookingRepo.countBookingsByDate(date);
+  const totalBookings =
+    await RepositoryContext.bookingRepository.countBookingsByDate(date);
   if (totalBookings >= effectiveSeatCount) {
-    throw new Error('No seats available for the selected date');
+    throw new HttpError(
+      StatusCodes.CONFLICT,
+      'No seats available for the selected date'
+    );
   }
 
   const durationType = mapDurationToEnum(duration);
-  return await bookingRepo.create({
+
+  const booking = await RepositoryContext.bookingRepository.create({
     userId,
     bookingDate: date,
+    seatId,
     durationType,
     duration,
     lunchOption,
+    recurring: recurring === null ? undefined : recurring,
   });
+  return { ...booking, _id: booking._id?.toString() };
 }

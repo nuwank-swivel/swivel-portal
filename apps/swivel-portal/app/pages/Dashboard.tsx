@@ -19,7 +19,7 @@ const tools = [
     name: 'Team Directory',
     description: 'Find your colleagues',
     icon: Users,
-    path: '#',
+    path: '/team-directory',
     color: 'text-secondary',
   },
   {

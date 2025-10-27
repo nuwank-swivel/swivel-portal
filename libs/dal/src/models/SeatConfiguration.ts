@@ -1,32 +1,36 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import {
+  Entity,
+  ObjectIdColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { ObjectId } from 'mongodb';
 
-interface ISeatConfiguration extends Document {
-  defaultSeatCount: number;
-  lastModified: Date;
+@Entity('seatConfigurations')
+export class SeatConfiguration {
+  @ObjectIdColumn()
+  _id!: ObjectId;
+
+  @Column()
+  defaultSeatCount!: number;
+
+  @Column({ type: 'json' })
+  tables!: Array<{
+    name: string;
+    seats: Array<{
+      id: string;
+      side: string;
+      index: number;
+    }>;
+  }>;
+
+  @Column({ nullable: true })
   modifiedBy?: string;
+
+  @CreateDateColumn()
+  createdAt!: Date;
+
+  @UpdateDateColumn()
+  lastModified!: Date;
 }
-
-const SeatConfigurationSchema: Schema = new Schema(
-  {
-    defaultSeatCount: {
-      type: Number,
-      required: true,
-    },
-    lastModified: {
-      type: Date,
-      default: Date.now,
-    },
-    modifiedBy: {
-      type: String,
-    },
-  },
-  {
-    timestamps: true,
-  }
-);
-
-export const SeatConfiguration = mongoose.model<ISeatConfiguration>(
-  'SeatConfiguration',
-  SeatConfigurationSchema
-);
-

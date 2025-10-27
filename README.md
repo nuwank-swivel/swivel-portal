@@ -44,20 +44,12 @@ nx dev swivel-portal
 
 Since this is a Microsoft Teams app, the [Microsoft 365 Agents Toolkit](https://learn.microsoft.com/en-us/microsoftteams/platform/toolkit/install-agents-toolkit?tabs=vscode) extension should be installed in the IDE. The `m365agents.yml` file defines the tasks performed by this toolkit. It can `provision` and `publish` the app manifest (`teamsApp/appPackage/manifest.json`) to the [Microsoft Teams Developer Portal](https://dev.teams.microsoft.com/).
 
-During development the VSCode debugger can be used to start the app in Microsoft Teams (click `Debug in Teams (Edge)` from the debugger menu). However, to authenticate with Microsoft Teams the app needs to be served from an `HTTPS` endpoint. [Ngrok](https://ngrok.com/) can be used to expose `localhost` as an `HTTPS` endpoint.
+During development the VSCode debugger can be used to start the app in Microsoft Teams (click `Launch Remote in Teams (Edge)` from the debugger menu).
 
-- Install Ngrok
-- Start Ngrok(`ngrok http 4200`)
-- Copy the forwarding url from the Ngrok output
-- Add that url to the `server.allowedHosts` in `apps/swivel-portal/vite.config.ts`
-- Go the Microsoft Azure Entra ID app registration `swivel-portal-client-dev` and update the `Application ID URI` from the `Expose an API` section. [More](https://learn.microsoft.com/en-us/microsoftteams/platform/tabs/how-to/authentication/tab-sso-register-aad)
-- Update the env values in `teamsApp/env/*.env.local` with the same ngrok url.
-- Start the React app with `nx dev swivel-portal`
-- Open the `Microsoft 365 Agents Toolkit` in the IDE and click `Preview Your App` option.
+- Start the React app with `nx dev swivel-portal`.
+- Select the `Launch Remote in Teams (Edge)` from the debugger menu in VSCode and click run.
 - A new browser window will be opened with Microsoft Teams and the app installation.
 - After doing changes to the React code reload the app page in Microsoft Teams to reflect the changes.
-
-Note: Ngrok url changes whenever it is restarted and the url changes should be done by repeating the same above steps.
 
 ### Backend
 

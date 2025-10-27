@@ -1,55 +1,60 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import {
+  Entity,
+  ObjectIdColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  Index,
+} from 'typeorm';
+import { ObjectId } from 'mongodb';
 
-interface IBooking extends Document {
-  userId: string;
-  bookingDate: string; // YYYY-MM-DD format
-  durationType: 'hour' | 'half-day' | 'full-day';
-  duration?: string; // Alias for durationType (create-booking compatibility)
+@Entity('bookings')
+@Index(['bookingDate', 'userId'])
+export class Booking {
+  @ObjectIdColumn()
+  _id!: ObjectId;
+
+  @Column()
+  userId!: string;
+
+  @Column()
+  bookingDate!: string; // YYYY-MM-DD format
+
+  @Column()
+  seatId!: string;
+
+  @Column()
+  durationType!: 'hour' | 'half-day' | 'full-day';
+
+  @Column({ nullable: true })
+  duration?: string;
+
+  @Column({ nullable: true })
   lunchOption?: string;
-  createdAt: Date;
-  updatedAt?: Date;
+
+  @Column({ nullable: true, type: 'json' })
+  recurring?: {
+    daysOfWeek: string[];
+    startDate: string;
+    endDate?: string;
+  };
+
+  @Column({ nullable: true, type: 'json' })
+  overrides?: Array<{
+    date: string;
+    cancelledAt?: Date;
+    lunchOption?: string;
+  }>;
+
+  @Column({ nullable: true })
   canceledAt?: Date | null;
+
+  @Column({ nullable: true })
   canceledBy?: string | null;
+
+  @CreateDateColumn()
+  createdAt!: Date;
+
+  @UpdateDateColumn()
+  updatedAt!: Date;
 }
-
-const BookingSchema: Schema = new Schema(
-  {
-    userId: {
-      type: String,
-      required: true,
-      index: true,
-    },
-    bookingDate: {
-      type: String,
-      required: true,
-      index: true,
-    },
-    durationType: {
-      type: String,
-      required: true,
-      enum: ['hour', 'half-day', 'full-day'],
-    },
-    duration: {
-      type: String,
-    },
-    lunchOption: {
-      type: String,
-    },
-    canceledAt: {
-      type: Date,
-      default: null,
-    },
-    canceledBy: {
-      type: String,
-      default: null,
-    },
-  },
-  {
-    timestamps: true,
-  }
-);
-
-// Compound index for efficient queries
-BookingSchema.index({ bookingDate: 1, userId: 1 });
-
-export const Booking = mongoose.model<IBooking>('Booking', BookingSchema);

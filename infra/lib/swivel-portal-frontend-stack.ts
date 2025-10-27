@@ -6,16 +6,16 @@ import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as path from 'path';
 import { CfnOriginAccessControl } from 'aws-cdk-lib/aws-cloudfront';
 import { StackProps } from '../types';
+import { BaseStack } from './BaseStack';
 
-export class SwivelPortalFrontendStack extends cdk.Stack {
+export class SwivelPortalFrontendStack extends BaseStack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
-    const envSuffix = props?.envName ? `-${props.envName}` : '';
 
     // S3 bucket for static site hosting (private, no website hosting)
     const siteBucket = new s3.Bucket(
       this,
-      `SwivelPortalSiteBucket${envSuffix}`,
+      `SwivelPortalSiteBucket${this.envSuffix}`,
       {
         blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
@@ -26,14 +26,14 @@ export class SwivelPortalFrontendStack extends cdk.Stack {
     // Create Origin Access Control (OAC) for CloudFront to access S3 securely
     const oac = new CfnOriginAccessControl(
       this,
-      `SwivelPortalOAC${envSuffix}`,
+      `SwivelPortalOAC${this.envSuffix}`,
       {
         originAccessControlConfig: {
-          name: `SwivelPortalOAC${envSuffix}`,
+          name: `SwivelPortalOAC${this.envSuffix}`,
           originAccessControlOriginType: 's3',
           signingBehavior: 'always',
           signingProtocol: 'sigv4',
-          description: `OAC for CloudFront to access S3 bucket${envSuffix}`,
+          description: `OAC for CloudFront to access S3 bucket${this.envSuffix}`,
         },
       }
     );
@@ -42,22 +42,22 @@ export class SwivelPortalFrontendStack extends cdk.Stack {
     const s3OriginId = 'S3Origin';
     const cfnDistribution = new cloudfront.CfnDistribution(
       this,
-      `SwivelPortalDistribution${envSuffix}`,
+      `SwivelPortalDistribution${this.envSuffix}`,
       {
         distributionConfig: {
           enabled: true,
           defaultRootObject: 'index.html',
-          comment: `SwivelPortalDistribution${envSuffix}`,
+          comment: `SwivelPortalDistribution${this.envSuffix}`,
           origins: [
             {
-              id: `${s3OriginId}${envSuffix}`,
+              id: `${s3OriginId}${this.envSuffix}`,
               domainName: siteBucket.bucketRegionalDomainName,
               originAccessControlId: oac.ref,
               s3OriginConfig: {},
             },
           ],
           defaultCacheBehavior: {
-            targetOriginId: `${s3OriginId}${envSuffix}`,
+            targetOriginId: `${s3OriginId}${this.envSuffix}`,
             viewerProtocolPolicy: 'redirect-to-https',
             allowedMethods: ['GET', 'HEAD', 'OPTIONS'],
             cachedMethods: ['GET', 'HEAD'],
@@ -104,19 +104,23 @@ export class SwivelPortalFrontendStack extends cdk.Stack {
 
     // Deploy React build output to S3
 
-    new s3deploy.BucketDeployment(this, `DeploySwivelPortalSite${envSuffix}`, {
-      sources: [
-        s3deploy.Source.asset(
-          path.join(__dirname, '../../apps/swivel-portal/build/client')
-        ),
-      ],
-      destinationBucket: siteBucket,
-      distribution: undefined, // can't use L2 distribution here
-      // Optionally, you can invalidate manually after deployment
-    });
+    new s3deploy.BucketDeployment(
+      this,
+      `DeploySwivelPortalSite${this.envSuffix}`,
+      {
+        sources: [
+          s3deploy.Source.asset(
+            path.join(__dirname, '../../apps/swivel-portal/build/client')
+          ),
+        ],
+        destinationBucket: siteBucket,
+        distribution: undefined, // can't use L2 distribution here
+        // Optionally, you can invalidate manually after deployment
+      }
+    );
 
     // Output the CloudFront URL
-    new cdk.CfnOutput(this, `CloudFrontURL${envSuffix}`, {
+    new cdk.CfnOutput(this, `CloudFrontURL${this.envSuffix}`, {
       value: cdk.Fn.join('', ['https://', cfnDistribution.attrDomainName]),
       description: 'The CloudFront distribution URL for the React app',
     });

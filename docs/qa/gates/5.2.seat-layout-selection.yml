@@ -1,0 +1,13 @@
+schema: 1
+story: '5.2'
+gate: CONCERNS
+status_reason: 'Seat selection UI integration not visible; no automated tests for booking flows.'
+reviewer: 'Quinn'
+updated: '2025-10-22T00:00:00Z'
+top_issues:
+  - id: 'TEST-001'
+    severity: high
+    finding: 'No automated tests for seat selection and booking flows.'
+    suggested_action: 'Add unit and integration tests for seat selection and booking.'
+waiver:
+  active: false

@@ -19,7 +19,7 @@
 
 ## 4.3 Admin Interface
 
-- Integrated seat count management in booking modal
+- Integrated seat count management in booking panel
 - Default seat count configuration in settings
 - Override management for specific dates
 - Super admin panel for managing super admins (via Entra ID group)

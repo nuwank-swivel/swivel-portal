@@ -6,6 +6,7 @@ import { getAllBookingsForDate } from '@/lib/api/seatBooking';
 import { Button } from '../ui/button';
 import { Sheet } from 'lucide-react';
 import { useAuthContext } from '@/lib/AuthContext';
+import { Booking } from '@swivel-portal/types';
 
 interface AllBookingsModalProps {
   opened: boolean;
@@ -37,8 +38,15 @@ export function AllBookingsModal({ opened, onClose }: AllBookingsModalProps) {
     setLoading(true);
     setError(null);
     try {
-      const data = await getAllBookingsForDate(dateStr);
-      setBookings(data);
+      const data = (await getAllBookingsForDate(dateStr)) as Booking[];
+      setBookings(
+        data.map((b) => ({
+          userId: b.userId,
+          userName: b.user?.name ?? '',
+          durationType: b.durationType,
+          lunchOption: b.lunchOption,
+        }))
+      );
     } catch {
       setError('Failed to load bookings.');
       setBookings([]);

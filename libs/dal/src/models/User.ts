@@ -1,44 +1,35 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import {
+  Entity,
+  ObjectIdColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { ObjectId } from 'mongodb';
 
-interface IUser extends Document {
-  _id: string;
+@Entity('users')
+export class User {
+  @ObjectIdColumn()
+  _id: ObjectId;
+
+  @Column()
   azureAdId: string;
+
+  @Column()
   name: string;
+
+  @Column()
   email: string;
-  password: string;
-  createdAt: Date;
-  updatedAt: Date;
+
+  @Column({ default: false })
   isAdmin: boolean;
+
+  @Column({ nullable: true })
+  teamId?: string; // team the user is a member of
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }
-
-const UserSchema: Schema = new Schema(
-  {
-    name: {
-      type: String,
-      // required: true,
-      trim: true,
-    },
-    azureAdId: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-    },
-    isAdmin: {
-      type: Boolean,
-      default: false,
-    },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-      lowercase: true,
-    },
-  },
-  {
-    timestamps: true,
-  }
-);
-
-export const User = mongoose.model<IUser>('User', UserSchema);

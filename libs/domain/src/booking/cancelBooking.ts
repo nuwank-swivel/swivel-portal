@@ -1,4 +1,6 @@
-import { BookingRepository } from '@swivel-portal/dal';
+import { RepositoryContext } from '@swivel-portal/dal';
+import { HttpError } from '@swivel-portal/types';
+import { StatusCodes } from 'http-status-codes';
 
 /**
  * Cancel a booking if owned by user and not in the past
@@ -6,14 +8,65 @@ import { BookingRepository } from '@swivel-portal/dal';
  * @param userId - User ID
  * @throws Error if not allowed
  */
-export async function cancelBooking(bookingId: string, userId: string) {
-  const repo = new BookingRepository();
-  const booking = await repo.getById(bookingId);
-  if (!booking) throw new Error('Booking not found');
-  if (booking.userId !== userId) throw new Error('Forbidden: not your booking');
+export async function cancelBooking(
+  bookingId: string,
+  userId: string,
+  options?: { date?: string }
+) {
+  const booking = await RepositoryContext.bookingRepository.getById(bookingId);
+
+  if (!booking) {
+    throw new HttpError(StatusCodes.NOT_FOUND, 'Booking not found');
+  }
+
+  if (booking.userId !== userId) {
+    throw new HttpError(StatusCodes.FORBIDDEN, 'Forbidden: not your booking');
+  }
+
   const today = new Date().toISOString().slice(0, 10);
-  if (booking.bookingDate < today) throw new Error('Cannot cancel past bookings');
-  const updated = await repo.update(bookingId, { canceledAt: new Date() });
-  if (!updated) throw new Error('Failed to cancel booking');
+
+  // If recurring and date provided, add override for that date
+  if (booking.recurring && options?.date) {
+    // Only allow future dates
+    if (options.date < today) {
+      throw new HttpError(
+        StatusCodes.BAD_REQUEST,
+        'Cannot cancel past bookings'
+      );
+    }
+    // Add override for this date
+    const overrides = Array.isArray(booking.overrides) ? booking.overrides : [];
+    overrides.push({
+      date: options.date,
+      cancelledAt: new Date(),
+    });
+    const updated = await RepositoryContext.bookingRepository.update(
+      bookingId,
+      {
+        overrides,
+      }
+    );
+    if (!updated) {
+      throw new HttpError(
+        StatusCodes.INTERNAL_SERVER_ERROR,
+        'Failed to cancel booking occurrence'
+      );
+    }
+    return true;
+  }
+
+  // Otherwise, cancel the whole booking
+  if (booking.bookingDate < today) {
+    throw new HttpError(StatusCodes.BAD_REQUEST, 'Cannot cancel past bookings');
+  }
+  const updated = await RepositoryContext.bookingRepository.update(bookingId, {
+    canceledAt: new Date(),
+  });
+  if (!updated) {
+    throw new HttpError(
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      'Failed to cancel booking'
+    );
+  }
   return true;
 }

@@ -27,7 +27,18 @@ The project has been migrated to an Nx monorepo to unify the development of the 
 
 - **Database**: MongoDB, hosted on MongoDB Atlas.
 - **Collections**:
+
   - `users`: Stores user profile information.
   - `seatConfigurations`: Defines global settings for seat availability.
   - `daySeatOverrides`: Manages exceptions and overrides for daily capacity.
   - `bookings`: Tracks all reservation data.
+
+  - `teams`: Stores team data including name, color, owner, members, and deleted flag (for soft delete). (Story 05.06)
+
+### Team Management Technical Notes (Story 05.06)
+
+- API endpoints for teams: list, create, update, soft-delete
+- Only admins can create, update, or delete teams
+- Team color stored as string (hex code)
+- User records include list of team IDs
+- Soft delete implemented via `deleted` flag; teams hidden from UI but retained in DB

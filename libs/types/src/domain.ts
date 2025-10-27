@@ -4,19 +4,36 @@ export interface User {
   name?: string;
   email: string;
   isAdmin?: boolean;
+  teamId?: string;
 }
 
 export interface Booking {
   _id?: string;
   userId: string;
   bookingDate: string; // YYYY-MM-DD format
+  seatId: string;
   durationType: 'hour' | 'half-day' | 'full-day';
   duration?: string; // Alias for durationType (create-booking compatibility)
   lunchOption?: string;
+  recurring?: {
+    daysOfWeek: string[];
+    startDate: string;
+    endDate?: string;
+  };
+  overrides?: Array<{
+    date: string;
+    cancelledAt?: Date;
+    lunchOption?: string;
+  }>;
   createdAt?: Date;
   updatedAt?: Date;
   canceledAt?: Date | null;
   canceledBy?: string | null;
+  team?: {
+    name: string;
+    color: string;
+  };
+  user?: User;
 }
 
 export interface SeatConfiguration {
@@ -24,6 +41,12 @@ export interface SeatConfiguration {
   defaultSeatCount: number;
   lastModified?: Date;
   modifiedBy?: string;
+  tables: Table[];
+}
+
+export interface Table {
+  name: string;
+  seats: Array<{ id: string; side: string; index: number }>;
 }
 
 export interface DaySeatOverride {
@@ -32,4 +55,15 @@ export interface DaySeatOverride {
   seatCount: number;
   createdAt?: Date;
   createdBy?: string;
+}
+
+export interface Team {
+  _id?: string;
+  name: string;
+  color: string; // hex code
+  ownerId: string; // admin user who created the team
+  members: string[];
+  deleted?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
