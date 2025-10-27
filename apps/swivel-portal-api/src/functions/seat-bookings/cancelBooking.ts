@@ -8,7 +8,7 @@ import {
 } from '../../middleware/authMiddleware';
 
 export const handler = defineLambda<
-  never,
+  { date?: string },
   never,
   { id: string },
   { message: string },
@@ -16,7 +16,7 @@ export const handler = defineLambda<
 >({
   log: true,
   middlewares: [authMiddleware],
-  handler: async ({ pathParameters, extras }) => {
+  handler: async ({ pathParameters, body, extras }) => {
     // Get userId from extras injected by authMiddleware
     const userId = extras.user.azureAdId;
     // Extract booking id from pathParameters
@@ -25,7 +25,7 @@ export const handler = defineLambda<
       throw new HttpError(400, 'Missing booking id');
     }
     await connectToDb();
-    await cancelBooking(bookingId, userId);
+    await cancelBooking(bookingId, userId, body);
     return { message: 'Booking canceled' };
   },
 });

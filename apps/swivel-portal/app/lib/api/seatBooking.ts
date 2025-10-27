@@ -23,7 +23,7 @@ export async function getSeatLayout(): Promise<{
  * Admin: Get all bookings for a specific date
  */
 export async function getAllBookingsForDate(date: string) {
-  const response = await api.get<{ bookings: any[] }>(
+  const response = await api.get<{ bookings: Booking[] }>(
     '/api/seatbooking/bookings',
     { params: { date } }
   );
@@ -44,12 +44,22 @@ export async function getMyBookings(): Promise<Booking[]> {
  * Cancel a booking by ID
  */
 export async function cancelBooking(
-  bookingId: string
+  bookingId: string,
+  payload?: { date?: string }
 ): Promise<{ message: string }> {
-  const response = await api.delete<{ message: string }>(
-    `/api/seatbooking/bookings/${bookingId}`
-  );
-  return response.data;
+  if (payload && payload.date) {
+    // Send as body in DELETE request (some backends may require POST for this)
+    const response = await api.delete<{ message: string }>(
+      `/api/seatbooking/bookings/${bookingId}`,
+      { data: payload }
+    );
+    return response.data;
+  } else {
+    const response = await api.delete<{ message: string }>(
+      `/api/seatbooking/bookings/${bookingId}`
+    );
+    return response.data;
+  }
 }
 
 /**

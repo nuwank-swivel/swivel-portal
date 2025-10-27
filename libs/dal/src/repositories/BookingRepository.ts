@@ -30,6 +30,7 @@ export class BookingRepository
             seatId: 1,
             recurring: 1,
             bookingDate: 1,
+            overrides: 1,
           },
         },
       ])
@@ -188,6 +189,7 @@ export class BookingRepository
             bookingDate: 1,
             team: 1,
             user: 1,
+            overrides: 1,
           },
         },
       ])
@@ -210,7 +212,24 @@ export class BookingRepository
       date,
       dayOfWeekStr
     );
-    return this.dedupeBookings([...regularBookings, ...recurringBookings]);
+    // Merge overrides for matching date and filter out cancelled overrides
+    const allBookings = [...regularBookings, ...recurringBookings]
+      .map((b) => {
+        if (Array.isArray(b.overrides)) {
+          const override = b.overrides.find(
+            (o: { date: string; cancelledAt?: Date }) => o.date === date
+          );
+          if (override) {
+            if (override.cancelledAt) {
+              return null; // Mark for removal
+            }
+            return { ...b, ...override };
+          }
+        }
+        return b;
+      })
+      .filter(Boolean);
+    return this.dedupeBookings(allBookings);
   }
 
   async findUserUpcomingBookings(
@@ -254,11 +273,33 @@ export class BookingRepository
           // Now generate next 10 dates for that weekday
           while (count < 10) {
             if (current >= start && (!end || current <= end)) {
-              recurringInstances.push({
+              // Spread override fields if present for this date
+              let instance: Booking = {
                 ...b,
                 bookingDate: current.toISOString().slice(0, 10),
-              });
-              count++;
+              };
+              let isCancelled = false;
+              if (Array.isArray(b.overrides)) {
+                const override = b.overrides.find(
+                  (o: { date: string; cancelledAt?: Date }) =>
+                    o.date === instance.bookingDate
+                );
+                if (override) {
+                  console.log(
+                    'Found override for recurring booking:',
+                    override
+                  );
+                  if (override.cancelledAt) {
+                    isCancelled = true;
+                  } else {
+                    instance = { ...instance, ...override };
+                  }
+                }
+              }
+              if (!isCancelled) {
+                recurringInstances.push(instance);
+                count++;
+              }
             }
             // Jump ahead 7 days for the next occurrence
             current.setDate(current.getDate() + 7);

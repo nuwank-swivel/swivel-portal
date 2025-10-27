@@ -39,6 +39,13 @@ export class Booking {
     endDate?: string;
   };
 
+  @Column({ nullable: true, type: 'json' })
+  overrides?: Array<{
+    date: string;
+    cancelledAt?: Date;
+    lunchOption?: string;
+  }>;
+
   @Column({ nullable: true })
   canceledAt?: Date | null;
 

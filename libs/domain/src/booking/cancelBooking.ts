@@ -8,7 +8,11 @@ import { StatusCodes } from 'http-status-codes';
  * @param userId - User ID
  * @throws Error if not allowed
  */
-export async function cancelBooking(bookingId: string, userId: string) {
+export async function cancelBooking(
+  bookingId: string,
+  userId: string,
+  options?: { date?: string }
+) {
   const booking = await RepositoryContext.bookingRepository.getById(bookingId);
 
   if (!booking) {
@@ -20,10 +24,41 @@ export async function cancelBooking(bookingId: string, userId: string) {
   }
 
   const today = new Date().toISOString().slice(0, 10);
+
+  // If recurring and date provided, add override for that date
+  if (booking.recurring && options?.date) {
+    // Only allow future dates
+    if (options.date < today) {
+      throw new HttpError(
+        StatusCodes.BAD_REQUEST,
+        'Cannot cancel past bookings'
+      );
+    }
+    // Add override for this date
+    const overrides = Array.isArray(booking.overrides) ? booking.overrides : [];
+    overrides.push({
+      date: options.date,
+      cancelledAt: new Date(),
+    });
+    const updated = await RepositoryContext.bookingRepository.update(
+      bookingId,
+      {
+        overrides,
+      }
+    );
+    if (!updated) {
+      throw new HttpError(
+        StatusCodes.INTERNAL_SERVER_ERROR,
+        'Failed to cancel booking occurrence'
+      );
+    }
+    return true;
+  }
+
+  // Otherwise, cancel the whole booking
   if (booking.bookingDate < today) {
     throw new HttpError(StatusCodes.BAD_REQUEST, 'Cannot cancel past bookings');
   }
-
   const updated = await RepositoryContext.bookingRepository.update(bookingId, {
     canceledAt: new Date(),
   });
@@ -33,6 +68,5 @@ export async function cancelBooking(bookingId: string, userId: string) {
       'Failed to cancel booking'
     );
   }
-
   return true;
 }
