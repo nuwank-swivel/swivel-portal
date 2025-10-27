@@ -23,9 +23,7 @@ export function MyBookingsModal({ opened, onClose }: MyBookingsModalProps) {
     cancelBooking,
     loading: cancelLoading,
   } = useCancelBooking();
-  const [selectedBookingId, setSelectedBookingId] = useState<string | null>(
-    null
-  );
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
   const fetchBookings = async () => {
     setLoading(true);
@@ -46,12 +44,12 @@ export function MyBookingsModal({ opened, onClose }: MyBookingsModalProps) {
       setBookings([]);
       setLoading(true);
       setError(null);
-      setSelectedBookingId(null);
+      setSelectedBooking(null);
     }
   }, [opened]);
 
   const openCancelDialog = (booking: Booking) => {
-    setSelectedBookingId(booking._id ?? null);
+    setSelectedBooking(booking ?? null);
     // Always pass the booking object with the correct bookingDate for this occurrence
     if (typeof booking._id === 'string') {
       cancelBooking(booking._id, booking);
@@ -97,7 +95,11 @@ export function MyBookingsModal({ opened, onClose }: MyBookingsModalProps) {
                 </Group>
                 <Button
                   color="red"
-                  loading={cancelLoading && selectedBookingId === booking._id}
+                  loading={
+                    cancelLoading &&
+                    selectedBooking?._id === booking._id &&
+                    selectedBooking.bookingDate === booking.bookingDate
+                  }
                   onClick={() => booking._id && openCancelDialog(booking)}
                   size="xs"
                 >
