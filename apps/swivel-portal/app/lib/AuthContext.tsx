@@ -51,7 +51,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await initializeUserInfo();
       } catch (error) {
         console.error('Teams SDK initialization failed:', error);
-        setError(JSON.stringify(error));
+        if (error instanceof Error) {
+          setError(JSON.stringify(error.message));
+        }
       }
     };
 
