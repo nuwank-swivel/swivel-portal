@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 import { cancelBooking } from '@/lib/api/seatBooking';
-import { Modal, Button, Text, Group } from '@mantine/core';
+import { Modal, Button, Text, Group, Radio } from '@mantine/core';
 import { Booking } from '@swivel-portal/types';
 
 export function useCancelBooking() {
@@ -53,21 +53,17 @@ export function useCancelBooking() {
               This is a recurring booking. Do you want to cancel only this
               occurrence ({booking.bookingDate}) or the entire booking?
             </Text>
-            <Group style={{ justifyContent: 'flex-end' }}>
-              <Button
-                variant={cancelMode === 'single' ? 'filled' : 'default'}
-                size="xs"
-                onClick={() => setCancelMode('single')}
+            <Group className="flex flex-row">
+              <Radio.Group
+                value={cancelMode}
+                onChange={(value) => setCancelMode(value as 'single' | 'all')}
+                name="cancelMode"
+                label="Cancel options (select one)"
+                size="sm"
               >
-                Only this occurrence
-              </Button>
-              <Button
-                variant={cancelMode === 'all' ? 'filled' : 'default'}
-                size="xs"
-                onClick={() => setCancelMode('all')}
-              >
-                Entire recurring booking
-              </Button>
+                <Radio my={8} value="single" label="Only this occurrence" />
+                <Radio value="all" label="Entire recurring booking" />
+              </Radio.Group>
             </Group>
             <Group style={{ justifyContent: 'flex-end', marginTop: 16 }}>
               <Button variant="default" onClick={hideDialog} size="xs">

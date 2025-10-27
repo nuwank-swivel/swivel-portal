@@ -176,7 +176,7 @@ export function FloorLayout({
     <Group justify="space-between" align="flex-start">
       <Paper p="lg" radius="md" withBorder style={{ flex: 1 }}>
         <Group justify="space-between" align="start" mb="md">
-          <Title order={4}>Seats</Title>
+          <Title order={4}>{loading ? 'Seats' : 'Select a seat'}</Title>
           <Group gap="xs" className="legend-section">
             <Group gap={4} align="center">
               <Paper
