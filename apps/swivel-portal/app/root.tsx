@@ -17,6 +17,16 @@ import { theme } from './theme';
 import { MantineProvider, mantineHtmlProps } from '@mantine/core';
 import { AuthProvider } from './lib/AuthContext';
 import { UIProvider } from './lib/UIContext';
+import * as Sentry from '@sentry/react';
+
+// configure Sentry only for non-development environments
+if (!import.meta.env.DEV) {
+  Sentry.init({
+    dsn: import.meta.env.VITE_SENTRY_DSN,
+    sendDefaultPii: true,
+    enableLogs: true,
+  });
+}
 
 export const meta: MetaFunction = () => [
   {

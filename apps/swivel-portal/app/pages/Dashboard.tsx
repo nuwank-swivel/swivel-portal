@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router';
 import CoreLayout from '../components/CoreLayout';
 import { useUIContext } from '@/lib/UIContext';
 import { useEffect } from 'react';
+import { useAuthContext } from '@/lib/AuthContext';
+import { Logger } from '@/lib/logger';
 
 const tools = [
   {
@@ -43,9 +45,11 @@ const tools = [
 export default function Dashboard() {
   const navigate = useNavigate();
   const { setCurrentModule } = useUIContext();
+  const { user } = useAuthContext();
 
   useEffect(() => {
     setCurrentModule(null);
+    Logger.info('[app] Dashboard loaded', { user });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

@@ -9,6 +9,7 @@ import * as teams from '@microsoft/teams-js';
 import { setIdToken } from './axios';
 import { getUserInfo } from './api/auth';
 import { Loading } from '@/pages/Loading';
+import { Logger } from './logger';
 
 export interface User {
   azureAdId: string;
@@ -31,10 +32,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const user = await getUserInfo();
     if (user === null) {
       setError('Failed to fetch user info');
+      Logger.error('[auth] Failed to fetch user info');
+
       return;
     }
     setUser(user);
-    console.log('User info initialized');
+    Logger.info('[auth] User info initialized', { user });
   };
 
   useEffect(() => {
@@ -42,16 +45,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         await teams.app.initialize();
         console.log('Teams SDK initialized');
+        Logger.info('[init] Teams SDK initialized');
 
-        const idToken = await teams.authentication.getAuthToken({
-          claims: ['User.ReadBasic.All'],
-        });
+        const idToken = await teams.authentication.getAuthToken();
         setIdToken(idToken);
+
+        const teamsUser = (await teams.app.getContext()).user;
+        Logger.info('[auth] User authenticated with Teams', { teamsUser });
 
         await initializeUserInfo();
       } catch (error) {
-        console.error('Teams SDK initialization failed:', error);
+        console.error('[init] Teams SDK initialization failed:', error);
+
         if (error instanceof Error) {
+          Logger.error('[init] Teams SDK initialization failed:', { error });
           setError(JSON.stringify(error.message));
         }
       }
