@@ -5,7 +5,7 @@ import CoreLayout from '../components/CoreLayout';
 import { useUIContext } from '@/lib/UIContext';
 import { useEffect } from 'react';
 
-const tools = [
+const baseTools = [
   {
     id: 'seat-booking',
     name: 'Seat Booking',
@@ -43,6 +43,14 @@ const tools = [
 export default function Dashboard() {
   const navigate = useNavigate();
   const { setCurrentModule } = useUIContext();
+  // load auth user role
+  let isAdmin = false;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { useAuthContext } = require('@/lib/AuthContext');
+    const { user } = useAuthContext();
+    isAdmin = !!user?.isAdmin;
+  } catch {}
 
   useEffect(() => {
     setCurrentModule(null);
@@ -58,7 +66,7 @@ export default function Dashboard() {
           gap: 24,
         }}
       >
-        {tools.map((tool) => {
+        {baseTools.map((tool) => {
           const Icon = tool.icon;
           return (
             <Card

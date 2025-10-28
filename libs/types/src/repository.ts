@@ -26,3 +26,14 @@ export interface ISeatConfigurationRepository<T> extends IRepository<T> {
 export interface IDaySeatOverrideRepository<T> extends IRepository<T> {
   getByDate(date: string): Promise<T | null>;
 }
+
+export interface IMealOptionsRepository<T> extends IRepository<T> {
+  getAllOptions(): Promise<T[]>;
+  replaceAllOptions(options: Array<{ id: string; label: string; enabled: boolean }>): Promise<T>;
+}
+
+export interface IMealNotificationSettingsRepository<T> extends IRepository<T> {
+  getByUserId(userId: string): Promise<T | null>;
+  setForUser(userId: string, settings: { receiveDailyEmail: boolean; preferredTimeUTC?: string | null }): Promise<T>;
+  listAllEnabled(): Promise<T[]>;
+}

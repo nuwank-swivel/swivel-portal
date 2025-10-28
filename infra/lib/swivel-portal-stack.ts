@@ -3,6 +3,9 @@ import { Construct } from 'constructs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as path from 'path';
+import * as events from 'aws-cdk-lib/aws-events';
+import * as targets from 'aws-cdk-lib/aws-events-targets';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { StackProps } from '../types';
 import { BaseStack } from './BaseStack';
 
@@ -468,6 +471,50 @@ export class SwivelPortalStack extends BaseStack {
       }
     );
 
+    // --- MEAL Lambda Functions ---
+
+    const getMealNotificationsLambda = new lambda.Function(
+      this,
+      `GetMealNotificationsLambda${this.envSuffix}`,
+      {
+        code: lambda.Code.fromAsset(
+          path.join(
+            __dirname,
+            '../../apps/swivel-portal-api/dist/meal/getMealNotifications.js.zip'
+          )
+        ),
+        handler: 'getMealNotifications.handler',
+        runtime: lambda.Runtime.NODEJS_22_X,
+        functionName: `GetMealNotificationsLambda${this.envSuffix}`,
+        environment: {
+          ...DB_ENV,
+        },
+        layers: [sharedLayer],
+        timeout: cdk.Duration.seconds(10),
+      }
+    );
+
+    const putMealNotificationsLambda = new lambda.Function(
+      this,
+      `PutMealNotificationsLambda${this.envSuffix}`,
+      {
+        code: lambda.Code.fromAsset(
+          path.join(
+            __dirname,
+            '../../apps/swivel-portal-api/dist/meal/putMealNotifications.js.zip'
+          )
+        ),
+        handler: 'putMealNotifications.handler',
+        runtime: lambda.Runtime.NODEJS_22_X,
+        functionName: `PutMealNotificationsLambda${this.envSuffix}`,
+        environment: {
+          ...DB_ENV,
+        },
+        layers: [sharedLayer],
+        timeout: cdk.Duration.seconds(10),
+      }
+    );
+
     // --- TEAM API Gateway Resources ---
     const teamResource = apiResource.addResource('team');
     // POST /api/team (create)
@@ -519,5 +566,64 @@ export class SwivelPortalStack extends BaseStack {
         authorizationType: apigateway.AuthorizationType.CUSTOM,
       }
     );
+
+    // --- MEAL API Gateway Resources ---
+    const mealResource = apiResource.addResource('meal');
+    // Meal options endpoints removed per scope adjustment
+
+    const mealNotificationsResource = mealResource.addResource('notifications');
+    mealNotificationsResource.addMethod(
+      'GET',
+      new apigateway.LambdaIntegration(getMealNotificationsLambda, { proxy: true }),
+      {
+        authorizer: apiAuthorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
+      }
+    );
+    mealNotificationsResource.addMethod(
+      'PUT',
+      new apigateway.LambdaIntegration(putMealNotificationsLambda, { proxy: true }),
+      {
+        authorizer: apiAuthorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
+      }
+    );
+
+    // --- Scheduled Daily Email Job Lambda ---
+    const mealDailyEmailLambda = new lambda.Function(
+      this,
+      `MealDailyEmailLambda${this.envSuffix}`,
+      {
+        code: lambda.Code.fromAsset(
+          path.join(
+            __dirname,
+            '../../apps/swivel-portal-api/dist/meal/dailyEmailRun.js.zip'
+          )
+        ),
+        handler: 'dailyEmailRun.handler',
+        runtime: lambda.Runtime.NODEJS_22_X,
+        functionName: `MealDailyEmailLambda${this.envSuffix}`,
+        environment: {
+          ...DB_ENV,
+          EMAIL_FROM: process.env.EMAIL_FROM || '',
+        },
+        layers: [sharedLayer],
+        timeout: cdk.Duration.seconds(30),
+      }
+    );
+
+    // Allow Lambda to send emails via SES
+    mealDailyEmailLambda.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ['ses:SendEmail', 'ses:SendRawEmail'],
+        resources: ['*'],
+      })
+    );
+
+    // Schedule the daily email job at 08:00 UTC
+    new events.Rule(this, `MealDailyEmailSchedule${this.envSuffix}`, {
+      schedule: events.Schedule.cron({ minute: '0', hour: '8' }),
+      targets: [new targets.LambdaFunction(mealDailyEmailLambda)],
+    });
   }
 }
