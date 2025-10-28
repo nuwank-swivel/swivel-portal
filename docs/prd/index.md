@@ -71,3 +71,4 @@
     - [A. Technical Stack](./14-appendix.md#a-technical-stack)
     - [B. Database Schema](./14-appendix.md#b-database-schema)
     - [C. API Documentation](./14-appendix.md#c-api-documentation)
+  - [User Availability Management](#user-availability-management)

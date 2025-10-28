@@ -17,3 +17,9 @@
 9. PUT /api/seatbooking/config/default-seat-count
 10. GET /api/lunch-options
 11. PUT /api/lunch-options
+
+## Availability Endpoints
+
+1. POST /api/availability
+2. GET /api/availability/me?date={date}
+3. GET /api/availability/records?date={date} (admin only)

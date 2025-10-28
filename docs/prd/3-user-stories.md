@@ -23,3 +23,8 @@
 ## 3.3 Team Management
 
 1. As a user, I can access a Team Directory from the dashboard, view all teams, and (if I am an admin) create, update, or delete teams and manage team members, so that teams can be organized, managed, and referenced throughout the portal. (Story 05.06)
+
+## 3.4 User Availability Management
+
+1. As a user, I can manage my daily availability (signin, signoff, AFK, back) from the dashboard, so my presence and status are accurately reflected in the system and in Microsoft Teams. (Story 03.06)
+2. As an admin, I can view today’s and historical availability records for all users, with a date selector. (Story 03.06)
