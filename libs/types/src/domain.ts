@@ -2,6 +2,7 @@ export interface PresenceEventRecord {
   _id?: string;
   userId: string;
   event: PresenceEventType;
+  message?: string;
   eta?: number;
   timestamp: Date;
 }

@@ -20,3 +20,20 @@ export async function getPresence(
   });
   return res.data.events || [];
 }
+// Fetch team presence records (enriched with user/team info)
+export async function getTeamPresence(date: string): Promise<
+  Array<{
+    userId: string;
+    event: PresenceEventType;
+    eta?: number;
+    timestamp: Date;
+    userName: string;
+    teamName: string;
+    teamId: string;
+  }>
+> {
+  const res = await api.get('/api/presence/team-presence', {
+    params: { date },
+  });
+  return res.data.events || [];
+}

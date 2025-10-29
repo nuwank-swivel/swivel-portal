@@ -18,26 +18,11 @@ import { Badge } from './ui/badge';
 import { ChevronDownIcon } from 'lucide-react';
 import moment from 'moment';
 import { useAvailabilityPanel } from '@/hooks/useAvailabilityPanel';
+import { getStatusDisplayName } from '@/lib/utils';
 
 // Utility to get ETA time string
 export function getEtaTime(minutes: number): string {
   return moment().add(minutes, 'minutes').format('h:mm A');
-}
-
-// Helper to get display name for status
-function getStatusDisplayName(status: PresenceEventType): string {
-  switch (status) {
-    case PresenceEventType.Signin:
-      return 'Available';
-    case PresenceEventType.Signoff:
-      return 'Signed off';
-    case PresenceEventType.Afk:
-      return 'AFK';
-    case PresenceEventType.Back:
-      return 'Available';
-    default:
-      return status;
-  }
 }
 
 export default function AvailabilityPanel() {

@@ -1,6 +1,6 @@
 import { Card } from '@mantine/core';
 import AvailabilityPanel from '../components/AvailabilityPanel';
-import { Calendar, Users, FileText, Settings } from 'lucide-react';
+import { Calendar, Users, FileText, Settings, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import CoreLayout from '../components/CoreLayout';
 import { useUIContext } from '@/lib/UIContext';
@@ -24,6 +24,14 @@ const tools = [
     icon: Users,
     path: '/team-directory',
     color: 'text-secondary',
+  },
+  {
+    id: 'team-availability',
+    name: 'Team Availability',
+    description: 'View team or all users availability',
+    icon: Clock,
+    path: '/team-availability',
+    color: 'text-primary',
   },
   {
     id: 'documents',

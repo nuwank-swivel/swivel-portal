@@ -27,7 +27,7 @@ export default function CoreLayout({ children }: CoreLayoutProps) {
       // Removed navbar prop
       padding="md"
     >
-      <AppShell.Header className="bg-transparent border-0">
+      <AppShell.Header className="bg-gray-50 border-0">
         <Group h="100%" px="md" justify="space-between">
           <Group>
             {location.pathname !== '/' &&

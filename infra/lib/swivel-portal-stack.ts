@@ -244,6 +244,27 @@ export class SwivelPortalStack extends BaseStack {
       }
     );
 
+    // Lambda function for GET /api/presence/team-presence
+    const getTeamPresenceLambda = new lambda.Function(
+      this,
+      `GetTeamPresenceLambda${this.envSuffix}`,
+      {
+        code: lambda.Code.fromAsset(
+          path.join(
+            __dirname,
+            '../../apps/swivel-portal-api/dist/presence/getTeamPresence.js.zip'
+          )
+        ),
+        handler: 'getTeamPresence.handler',
+        runtime: lambda.Runtime.NODEJS_22_X,
+        functionName: `GetTeamPresenceLambda${this.envSuffix}`,
+        environment: {
+          ...DB_ENV,
+        },
+        timeout: cdk.Duration.seconds(10),
+      }
+    );
+
     // API Gateway Lambda Authorizer
     const apiAuthorizer = new apigateway.RequestAuthorizer(
       this,
@@ -344,6 +365,16 @@ export class SwivelPortalStack extends BaseStack {
     presenceMeResource.addMethod(
       'GET',
       new apigateway.LambdaIntegration(getPresenceLambda, { proxy: true }),
+      {
+        authorizer: apiAuthorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
+      }
+    );
+    // GET /api/presence/team-presence
+    const teamPresenceResource = presenceResource.addResource('team-presence');
+    teamPresenceResource.addMethod(
+      'GET',
+      new apigateway.LambdaIntegration(getTeamPresenceLambda, { proxy: true }),
       {
         authorizer: apiAuthorizer,
         authorizationType: apigateway.AuthorizationType.CUSTOM,
