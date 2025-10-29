@@ -1,4 +1,5 @@
 import { Card } from '@mantine/core';
+import AvailabilityPanel from '../components/AvailabilityPanel';
 import { Calendar, Users, FileText, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import CoreLayout from '../components/CoreLayout';
@@ -55,6 +56,8 @@ export default function Dashboard() {
 
   return (
     <CoreLayout>
+      <AvailabilityPanel />
+      {/* ...existing dashboard cards... */}
       <div
         style={{
           display: 'grid',
@@ -68,6 +71,7 @@ export default function Dashboard() {
             <Card
               key={tool.id}
               p="lg"
+              radius="lg"
               style={{
                 cursor: tool.path !== '#' ? 'pointer' : 'default',
                 opacity: tool.path !== '#' ? 1 : 0.6,
