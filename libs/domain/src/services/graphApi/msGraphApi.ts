@@ -12,25 +12,79 @@ export class MsGraphApiService {
     this.accessToken = accessToken;
   }
 
-  private async callApi(endpoint: string) {
+  private async init() {
+    this.graphApiToken = await getMSGraphToken(this.accessToken);
+  }
+
+  private async callApi(
+    endpoint: string,
+    method: 'GET' | 'POST' | 'PATCH' = 'GET',
+    data?: any
+  ) {
     if (this.graphApiToken === null) {
       await this.init();
     }
 
-    const options = {
+    const options: any = {
       headers: {
         Authorization: `Bearer ${this.graphApiToken}`,
         ConsistencyLevel: 'eventual',
+        'Content-Type': 'application/json',
       },
     };
-
-    const response = await axios.get(endpoint, options);
-    console.log('request made to MS Graph API at: ' + new Date().toString());
-    return response.data;
+    if (method === 'GET') {
+      const response = await axios.get(endpoint, options);
+      console.log('request made to MS Graph API at: ' + new Date().toString());
+      return response.data;
+    } else if (method === 'POST') {
+      const response = await axios.post(endpoint, data, options);
+      console.log(
+        'POST request made to MS Graph API at: ' + new Date().toString()
+      );
+      return response.data;
+    }
+  }
+  // Unified method to update user presence
+  async updatePresence(
+    userId: string,
+    presence: {
+      availability: string;
+      activity: string;
+      expirationDuration?: string;
+    }
+  ) {
+    const endpoint = `${MS_GRAPH_API_BASE_URL}/users/${userId}/presence/setUserPreferredPresence`;
+    const presenceBody = {
+      availability: presence.availability,
+      activity: presence.activity,
+      expirationDuration: presence.expirationDuration,
+    };
+    await this.callApi(endpoint, 'POST', presenceBody);
   }
 
-  private async init() {
-    this.graphApiToken = await getMSGraphToken(this.accessToken);
+  // Set status message for a user using Graph API
+  async setStatusMessage(
+    userId: string,
+    content: string,
+    expiryDateTime?: string,
+    timeZone?: string
+  ) {
+    const endpoint = `${MS_GRAPH_API_BASE_URL}/users/${userId}/presence/setStatusMessage`;
+    const statusMessageBody: any = {
+      statusMessage: {
+        message: {
+          content,
+          contentType: 'text',
+        },
+      },
+    };
+    if (expiryDateTime && timeZone) {
+      statusMessageBody.statusMessage.expiryDateTime = {
+        dateTime: expiryDateTime,
+        timeZone,
+      };
+    }
+    await this.callApi(endpoint, 'POST', statusMessageBody);
   }
 
   async searchTenantUsersByEmail(query: string): Promise<string[]> {

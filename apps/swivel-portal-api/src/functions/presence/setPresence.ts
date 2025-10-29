@@ -6,17 +6,21 @@ import {
   ExtrasWithUser,
 } from '../../middleware/authMiddleware';
 import { savePresenceEvent } from '@swivel-portal/domain';
-import type { PresenceEvent } from '@swivel-portal/types';
+import type { PresenceEventType } from '@swivel-portal/types';
+import {
+  authTokenMiddleware,
+  ExtrasWithAuthToken,
+} from '../../middleware/tokenMiddleware';
 
 export const handler = defineLambda<
-  { event: PresenceEvent; eta?: number; message?: string },
+  { event: PresenceEventType; eta?: number; message?: string },
   never,
   never,
   { success: boolean },
-  ExtrasWithUser
+  ExtrasWithUser & ExtrasWithAuthToken
 >({
   log: true,
-  middlewares: [authMiddleware],
+  middlewares: [authMiddleware, authTokenMiddleware],
   handler: async ({ body, extras }) => {
     await connectToDb();
     const { event, eta, message } = body;
@@ -33,6 +37,8 @@ export const handler = defineLambda<
       eta,
       message,
       timestamp: new Date(),
+      accessToken: extras.authorizationToken,
+      userGraphId: extras.user.userGraphId,
     });
 
     return { success: true };

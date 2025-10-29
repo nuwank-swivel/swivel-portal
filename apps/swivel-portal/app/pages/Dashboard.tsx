@@ -58,6 +58,10 @@ export default function Dashboard() {
     <CoreLayout>
       <AvailabilityPanel />
       {/* ...existing dashboard cards... */}
+
+      <h3 className="m-2" style={{ color: '#6B7280' }}>
+        Select a tool to get started.
+      </h3>
       <div
         style={{
           display: 'grid',

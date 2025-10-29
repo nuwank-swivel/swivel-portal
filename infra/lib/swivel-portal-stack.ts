@@ -215,6 +215,7 @@ export class SwivelPortalStack extends BaseStack {
         functionName: `SetPresenceLambda${this.envSuffix}`,
         environment: {
           ...DB_ENV,
+          ...MS_ENTRA_ENV,
         },
         // layers: [sharedLayer],
         timeout: cdk.Duration.seconds(10),

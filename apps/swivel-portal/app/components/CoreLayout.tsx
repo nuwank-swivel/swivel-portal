@@ -27,10 +27,9 @@ export default function CoreLayout({ children }: CoreLayoutProps) {
       // Removed navbar prop
       padding="md"
     >
-      <AppShell.Header>
+      <AppShell.Header className="bg-transparent border-0">
         <Group h="100%" px="md" justify="space-between">
           <Group>
-            {/* Burger button removed as per requirements */}
             {location.pathname !== '/' &&
               location.pathname !== '/dashboard' && <BackButton />}
             {currentModule ? (
@@ -39,7 +38,7 @@ export default function CoreLayout({ children }: CoreLayoutProps) {
               </span>
             ) : (
               <h3 style={{ color: '#6B7280', marginTop: 4 }}>
-                Welcome back, {user?.name}! Select a tool to get started.
+                {/* Welcome back, {user?.name}! Select a tool to get started. */}
               </h3>
             )}
           </Group>

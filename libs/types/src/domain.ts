@@ -11,10 +11,11 @@ export enum PresenceEventType {
   Afk = 'afk',
   Back = 'back',
 }
-export type PresenceEvent = 'signin' | 'signoff' | 'afk' | 'back';
+
 export interface User {
   _id?: string;
   azureAdId: string;
+  userGraphId: string;
   name?: string;
   email: string;
   isAdmin?: boolean;

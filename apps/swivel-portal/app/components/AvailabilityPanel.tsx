@@ -11,6 +11,23 @@ import {
 import { useAvailabilityPanel } from '@/hooks/useAvailabilityPanel';
 import React from 'react';
 import { PresenceEventType } from '@swivel-portal/types';
+import { Badge } from './ui/badge';
+
+// Helper to get display name for status
+function getStatusDisplayName(status: PresenceEventType): string {
+  switch (status) {
+    case PresenceEventType.Signin:
+      return 'Signed in';
+    case PresenceEventType.Signoff:
+      return 'Signed off';
+    case PresenceEventType.Afk:
+      return 'AFK';
+    case PresenceEventType.Back:
+      return 'Back';
+    default:
+      return status;
+  }
+}
 
 export default function AvailabilityPanel() {
   const {
@@ -94,22 +111,22 @@ export default function AvailabilityPanel() {
       </Group>
       {/* Always show sign-in time if present */}
       {eventTimes.signin && (
-        <Chip color="green" checked={true} variant="filled">
-          Signin: {eventTimes.signin}
-        </Chip>
+        <Badge size="md" color="green" variant="filled">
+          Signed in at: {eventTimes.signin}
+        </Badge>
       )}
       {/* Always show signoff time if present */}
       {eventTimes.signoff && (
-        <Chip color="red" checked={true} variant="filled">
-          Signoff: {eventTimes.signoff}
-        </Chip>
+        <Badge color="red" variant="filled">
+          Signed off at: {eventTimes.signoff}
+        </Badge>
       )}
       {/* Status & event times: only show after signed in */}
       {status !== PresenceEventType.Signoff && (
         <Group gap={8} style={{ marginTop: 8 }}>
-          <Chip color="indigo" checked={true} variant="filled">
-            Status: <b>{status}</b>
-          </Chip>
+          <Badge color="indigo" variant="light">
+            Status: <b>{getStatusDisplayName(status)}</b>
+          </Badge>
           {/* AFK List */}
           {eventTimes.afk.length > 0 && (
             <List spacing="xs" size="sm" center>

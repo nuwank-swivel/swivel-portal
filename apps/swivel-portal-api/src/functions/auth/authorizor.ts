@@ -1,4 +1,5 @@
 interface JWTClaims {
+  oid: string;
   sub: string;
   name?: string;
   preferred_username?: string;
@@ -45,6 +46,7 @@ export const handler = async (
   const name = decoded.name;
   const email = decoded.preferred_username;
   const roles: string[] = decoded.groups ?? decoded.roles ?? [];
+  const userGraphId = decoded.oid;
 
   // Check if user is admin
   let isAdmin = false;
@@ -57,6 +59,7 @@ export const handler = async (
     name,
     email,
     isAdmin,
+    userGraphId,
   };
 
   // Attach azureAdId to context (context is not directly modifiable, so return in context field)
