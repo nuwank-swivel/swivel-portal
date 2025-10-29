@@ -4,19 +4,23 @@ import { setPresence, getPresence } from '@/lib/api/presence';
 import { PresenceEventRecord, PresenceEventType } from '@swivel-portal/types';
 import { getEtaTime } from '../components/AvailabilityPanel';
 import moment from 'moment';
+import { usePresenceState } from '@/lib/state/presenceState';
 
 export function useAvailabilityPanel() {
-  const [status, setStatus] = React.useState<PresenceEventType>(
-    PresenceEventType.Signoff
-  );
   const [afkEta, setAfkEta] = React.useState(60); // minutes
-  const [eventTimes, setEventTimes] = React.useState<{
-    signin?: string;
-    signoff?: string;
-    afk: string[];
-    back: string[];
-  }>({ afk: [], back: [] });
-  const { user } = useAuthContext();
+
+  const fetched = usePresenceState((state) => state.fetched);
+  const signin = usePresenceState((state) => state.signin);
+  const signoff = usePresenceState((state) => state.signoff);
+  const afk = usePresenceState((state) => state.afk);
+  const back = usePresenceState((state) => state.back);
+  const status = usePresenceState((state) => state.status);
+  const eventTimes = { fetched, signin, signoff, afk, back };
+
+  const setPresenceState = usePresenceState((state) => state.setPresenceState);
+  const setStatus = usePresenceState((state) => state.setStatus);
+
+  const { user, refreshAuth } = useAuthContext();
   const [today, setToday] = React.useState<string>(
     new Date().toISOString().slice(0, 10)
   );
@@ -25,7 +29,7 @@ export function useAvailabilityPanel() {
     signoff: false,
     afk: false,
     back: false,
-    presence: true,
+    presence: false,
   });
 
   React.useEffect(() => {
@@ -53,10 +57,10 @@ export function useAvailabilityPanel() {
         if (e.event === PresenceEventType.Back)
           times.back.push(moment(e.timestamp).format('h:mm A'));
       });
+      setPresenceState({ fetched: true, ...times });
       if (events.length > 0) {
         lastStatus = events[0].event as PresenceEventType;
       }
-      setEventTimes(times);
       if (lastStatus === PresenceEventType.Afk) {
         setStatus(PresenceEventType.Afk);
       } else if (times.signin) {
@@ -66,32 +70,39 @@ export function useAvailabilityPanel() {
       }
       setLoading((l) => ({ ...l, presence: false }));
     }
-    fetchPresence();
+    console.log('Fetching presence...', eventTimes);
+    if (eventTimes.fetched === false) {
+      fetchPresence();
+    }
   }, [today]);
 
   const handleSignin = async () => {
     setLoading((l) => ({ ...l, signin: true }));
     await setPresence(PresenceEventType.Signin);
     setStatus(PresenceEventType.Signin);
-    setEventTimes((t) => ({
-      ...t,
-      signin: t.signin || new Date().toLocaleTimeString(),
-    }));
+    setPresenceState({
+      ...eventTimes,
+      signin: new Date().toLocaleTimeString(),
+    });
     setLoading((l) => ({ ...l, signin: false }));
   };
+
   const handleSignoff = async () => {
     setLoading((l) => ({ ...l, signoff: true }));
     await setPresence(PresenceEventType.Signoff);
     setStatus(PresenceEventType.Signoff);
-    setEventTimes((t) => ({
-      ...t,
+    setPresenceState({
+      ...eventTimes,
       signoff: new Date().toLocaleTimeString(),
-      signin: t.signin,
-    }));
+    });
     setLoading((l) => ({ ...l, signoff: false }));
   };
+
   const handleAfk = async (eta?: number, customMessage?: string) => {
     setLoading((l) => ({ ...l, afk: true }));
+
+    await refreshAuth();
+
     const etaMinutes = eta ?? afkEta;
     const etaTime = getEtaTime(etaMinutes);
     let message = customMessage;
@@ -100,22 +111,24 @@ export function useAvailabilityPanel() {
     }
     await setPresence(PresenceEventType.Afk, etaMinutes, message);
     setStatus(PresenceEventType.Afk);
-    setEventTimes((t) => ({
-      ...t,
-      afk: [...(t.afk || []), new Date().toLocaleTimeString()],
-      signin: t.signin,
-    }));
+    setPresenceState({
+      ...eventTimes,
+      afk: [...(eventTimes.afk || []), new Date().toLocaleTimeString()],
+    });
     setLoading((l) => ({ ...l, afk: false }));
   };
+
   const handleBack = async () => {
     setLoading((l) => ({ ...l, back: true }));
+
+    await refreshAuth();
+
     await setPresence(PresenceEventType.Back);
     setStatus(PresenceEventType.Back);
-    setEventTimes((t) => ({
-      ...t,
-      back: [...(t.back || []), new Date().toLocaleTimeString()],
-      signin: t.signin,
-    }));
+    setPresenceState({
+      ...eventTimes,
+      back: [...(eventTimes.back || []), new Date().toLocaleTimeString()],
+    });
     setLoading((l) => ({ ...l, back: false }));
   };
 

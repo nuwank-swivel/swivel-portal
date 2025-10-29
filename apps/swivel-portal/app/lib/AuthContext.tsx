@@ -20,6 +20,7 @@ export interface User {
 
 interface AuthContextType {
   user: User | null;
+  refreshAuth: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -38,6 +39,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setUser(user);
     Logger.info('[auth] User info initialized', { user });
+  };
+
+  const refreshAuth = async () => {
+    const idToken = await teams.authentication.getAuthToken();
+    setIdToken(idToken);
   };
 
   useEffect(() => {
@@ -68,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user }}>
+    <AuthContext.Provider value={{ user, refreshAuth }}>
       {user !== null ? children : <Loading error={error} />}
     </AuthContext.Provider>
   );
