@@ -56,7 +56,7 @@ export default function CoreLayout({ children }: CoreLayoutProps) {
         </Group>
       </AppShell.Header>
       {/* Sidebar removed as per requirements */}
-      <AppShell.Main>{children}</AppShell.Main>
+      <AppShell.Main className="bg-gray-50">{children}</AppShell.Main>
     </AppShell>
   );
 }

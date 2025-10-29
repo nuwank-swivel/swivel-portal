@@ -1,3 +1,17 @@
+export interface PresenceEventRecord {
+  _id?: string;
+  userId: string;
+  event: PresenceEventType;
+  eta?: number;
+  timestamp: Date;
+}
+export enum PresenceEventType {
+  Signin = 'signin',
+  Signoff = 'signoff',
+  Afk = 'afk',
+  Back = 'back',
+}
+export type PresenceEvent = 'signin' | 'signoff' | 'afk' | 'back';
 export interface User {
   _id?: string;
   azureAdId: string;
