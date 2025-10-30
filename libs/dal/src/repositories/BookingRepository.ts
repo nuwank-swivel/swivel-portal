@@ -51,6 +51,36 @@ export class BookingRepository
     ][jsDayOfWeek];
   }
 
+  private processBookingInstanceOverride(
+    booking: Booking,
+    date: string
+  ): Booking | null {
+    if (Array.isArray(booking.overrides)) {
+      const cancelledOverride = booking.overrides.find(
+        (o) => date === o.date && o.cancelledAt !== undefined
+      );
+      if (cancelledOverride) {
+        return null; // Mark for removal
+      }
+
+      const lunchOverrides = booking.overrides.filter(
+        (o) => o.date === date && o.cancelledAt === undefined
+      );
+      const latestLunchOverride = lunchOverrides.pop();
+      if (latestLunchOverride) {
+        const { date: _, ...rest } = latestLunchOverride;
+        return { ...booking, ...rest };
+      }
+    }
+    return booking;
+  }
+
+  private processOverrides(bookings: Booking[], date: string): Booking[] {
+    return bookings
+      .map((b) => this.processBookingInstanceOverride(b, date))
+      .filter(Boolean) as Booking[];
+  }
+
   // Helper to get regular bookings for a date (optionally filtered by user)
   private async getRegularBookings(date: string, userId?: string) {
     const match: any = { bookingDate: date, canceledAt: null };
@@ -208,28 +238,18 @@ export class BookingRepository
   async findAllBookingsByDate(date: string): Promise<Array<Booking>> {
     const dayOfWeekStr = this.getDayOfWeekStr(date);
     const regularBookings = await this.getRegularBookings(date);
-    const recurringBookings = await this.getRecurringBookings(
-      date,
-      dayOfWeekStr
-    );
+    let recurringBookings = await this.getRecurringBookings(date, dayOfWeekStr);
+
+    // there could be original bookingDate in recurring bookings, override it
+    recurringBookings = recurringBookings.map((b) => ({
+      ...b,
+      bookingDate: date,
+    }));
+
     // Merge overrides for matching date and filter out cancelled overrides
-    const allBookings = [...regularBookings, ...recurringBookings]
-      .map((b) => {
-        if (Array.isArray(b.overrides)) {
-          const override = b.overrides.find(
-            (o: { date: string; cancelledAt?: Date }) => o.date === date
-          );
-          if (override) {
-            if (override.cancelledAt) {
-              return null; // Mark for removal
-            }
-            return { ...b, ...override };
-          }
-        }
-        return b;
-      })
-      .filter(Boolean);
-    return this.dedupeBookings(allBookings);
+    const allBookings = [...regularBookings, ...recurringBookings] as Booking[];
+    const processedBookings = this.processOverrides(allBookings, date);
+    return this.dedupeBookings(processedBookings);
   }
 
   async findUserUpcomingBookings(
@@ -274,30 +294,16 @@ export class BookingRepository
           while (count < 10) {
             if (current >= start && (!end || current <= end)) {
               // Spread override fields if present for this date
-              let instance: Booking = {
+              const instance: Booking = {
                 ...b,
                 bookingDate: current.toISOString().slice(0, 10),
               };
-              let isCancelled = false;
-              if (Array.isArray(b.overrides)) {
-                const override = b.overrides.find(
-                  (o: { date: string; cancelledAt?: Date }) =>
-                    o.date === instance.bookingDate
-                );
-                if (override) {
-                  console.log(
-                    'Found override for recurring booking:',
-                    override
-                  );
-                  if (override.cancelledAt) {
-                    isCancelled = true;
-                  } else {
-                    instance = { ...instance, ...override };
-                  }
-                }
-              }
-              if (!isCancelled) {
-                recurringInstances.push(instance);
+              const processedInstance = this.processBookingInstanceOverride(
+                instance,
+                instance.bookingDate
+              );
+              if (processedInstance) {
+                recurringInstances.push(processedInstance);
                 count++;
               }
             }

@@ -13,24 +13,36 @@ import { DatePickerInput } from '@mantine/dates';
 import { getAllBookingsForDate } from '@/lib/api/seatBooking';
 import { Button } from '../ui/button';
 import { Repeat, Sheet } from 'lucide-react';
+import { useCancelBooking } from '@/hooks/useCancelBooking';
 import { useAuthContext } from '@/lib/AuthContext';
 import { Booking } from '@swivel-portal/types';
 
 interface AdminBooking {
+  bookingId: string;
+  bookingDate: string;
   userId: string;
   userName: string;
   durationType: string;
   lunchOption?: string;
   recurring?: boolean;
+  original: Booking;
 }
 
 export function AllBookingsPage() {
   const { user } = useAuthContext();
   const exportBookingsExcel = useExportBookingsExcel();
+  const {
+    CancelDialog,
+    cancelBooking,
+    loading: cancelLoading,
+  } = useCancelBooking();
   const [date, setDate] = useState<Date | null>(new Date());
   const [bookings, setBookings] = useState<AdminBooking[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<AdminBooking | null>(
+    null
+  );
 
   const fetchBookings = useCallback(async (dateObj: Date) => {
     const yyyy = dateObj.getFullYear();
@@ -42,13 +54,18 @@ export function AllBookingsPage() {
     try {
       const data = (await getAllBookingsForDate(dateStr)) as Booking[];
       setBookings(
-        data.map((b) => ({
-          userId: b.userId,
-          userName: b.user?.name ?? '',
-          durationType: b.durationType,
-          lunchOption: b.lunchOption,
-          recurring: Boolean(b.recurring),
-        }))
+        data
+          .filter((b) => typeof b._id === 'string')
+          .map((b) => ({
+            bookingId: b._id as string,
+            bookingDate: b.bookingDate,
+            userId: b.userId,
+            userName: b.user?.name ?? '',
+            durationType: b.duration ?? b.durationType,
+            lunchOption: b.lunchOption,
+            recurring: Boolean(b.recurring),
+            original: b,
+          }))
       );
     } catch {
       setError('Failed to load bookings.');
@@ -124,11 +141,14 @@ export function AllBookingsPage() {
               <Table.Th>Name</Table.Th>
               <Table.Th>Duration</Table.Th>
               <Table.Th>Meal</Table.Th>
+              <Table.Th>Actions</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
             {bookings.map((booking, idx) => (
-              <Table.Tr key={`${booking.userId}-${idx}`}>
+              <Table.Tr
+                key={`${booking.bookingId}-${booking.bookingDate}-${idx}`}
+              >
                 <Table.Td>
                   <Group gap="xs" wrap="nowrap">
                     <span>{booking.userName || booking.userId}</span>
@@ -161,11 +181,41 @@ export function AllBookingsPage() {
                     <span style={{ color: '#aaa' }}>-</span>
                   )}
                 </Table.Td>
+                <Table.Td>
+                  <Group gap="xs" justify="flex-start">
+                    <Button
+                      type="button"
+                      color="red"
+                      variant="outline"
+                      size="xs"
+                      loading={
+                        cancelLoading &&
+                        selectedBooking?.bookingId === booking.bookingId &&
+                        selectedBooking?.bookingDate === booking.bookingDate
+                      }
+                      onClick={() => {
+                        setSelectedBooking(booking);
+                        cancelBooking(booking.bookingId, booking.original);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </Group>
+                </Table.Td>
               </Table.Tr>
             ))}
           </Table.Tbody>
         </Table>
       )}
+      <CancelDialog
+        onSuccess={() => {
+          if (date) {
+            setBookings([]);
+            fetchBookings(date);
+          }
+          setSelectedBooking(null);
+        }}
+      />
     </Card>
   );
 }

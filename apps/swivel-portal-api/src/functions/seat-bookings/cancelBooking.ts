@@ -25,7 +25,11 @@ export const handler = defineLambda<
       throw new HttpError(400, 'Missing booking id');
     }
     await connectToDb();
-    await cancelBooking(bookingId, userId, body);
+    await cancelBooking(
+      bookingId,
+      { userId, isAdmin: extras.user.isAdmin },
+      body
+    );
     return { message: 'Booking canceled' };
   },
 });
