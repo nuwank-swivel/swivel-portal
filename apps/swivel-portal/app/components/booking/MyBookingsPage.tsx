@@ -1,11 +1,21 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Group, Button, Loader, Text, Badge, Select } from '@mantine/core';
+import {
+  Group,
+  Button,
+  Loader,
+  Text,
+  Badge,
+  Select,
+  Table,
+  Tooltip,
+  Card,
+} from '@mantine/core';
 import { getMyBookings, updateBooking } from '@/lib/api/seatBooking';
 import { useCancelBooking } from '@/hooks/useCancelBooking';
 import { Booking } from '@swivel-portal/types';
 import { notifications } from '@mantine/notifications';
-import { Card } from '../ui/card';
 import moment from 'moment';
+import { Repeat } from 'lucide-react';
 
 export interface MyBookingsPageProps {
   onBookingsChanged?: () => void;
@@ -28,6 +38,14 @@ export function MyBookingsPage({
   const [editingMealKey, setEditingMealKey] = useState<string | null>(null);
   const [mealEditValue, setMealEditValue] = useState<string | null>(null);
   const [mealEditLoading, setMealEditLoading] = useState(false);
+  const mealOptions = [
+    { value: '', label: 'No meal' },
+    { value: 'veg', label: 'Veg' },
+    { value: 'fish', label: 'Fish' },
+    { value: 'chicken', label: 'Chicken' },
+    { value: 'egg', label: 'Egg' },
+    { value: 'seafood', label: 'Seafood' },
+  ];
 
   const fetchBookings = useCallback(async () => {
     setLoading(true);
@@ -92,105 +110,135 @@ export function MyBookingsPage({
       ) : bookings.length === 0 ? (
         <Text>No upcoming bookings.</Text>
       ) : (
-        <div>
-          {bookings.map((booking: Booking, index: number) => {
-            if (!booking._id) return null;
-            const mealKey = `${booking._id}-${booking.bookingDate}`;
-            return (
-              <Card
-                key={`booking_${booking._id}_${index}`}
-                mb="sm"
-                radius="md"
-                className="flex flex-row justify-between items-center"
-                withBorder
-              >
-                <Group className="flex flex-col items-start gap-0">
-                  <Group className="flex flex-row gap-1">
-                    <Text size="md">
-                      {moment(booking.bookingDate).format('dddd')}
-                    </Text>
-                    <Text size="sm" c="dimmed">
-                      ({booking.bookingDate})
-                    </Text>
-                    <Badge color="indigo" size="sm" variant="light">
-                      {booking.duration}
-                    </Badge>
-                    <Badge color="green" size="sm" variant="light">
-                      {booking.lunchOption}
-                    </Badge>
-                  </Group>
-                </Group>
-                <Group gap="xs">
-                  {editingMealKey === mealKey ? (
-                    <>
-                      <Select
-                        value={mealEditValue ?? booking.lunchOption ?? ''}
-                        onChange={setMealEditValue}
-                        disabled={mealEditLoading}
-                        data={[
-                          { value: '', label: 'No meal' },
-                          { value: 'veg', label: 'Veg' },
-                          { value: 'fish', label: 'Fish' },
-                          { value: 'chicken', label: 'Chicken' },
-                          { value: 'egg', label: 'Egg' },
-                          { value: 'seafood', label: 'Seafood' },
-                        ]}
-                        size="xs"
-                        style={{ marginRight: 8, minWidth: 120 }}
-                        allowDeselect
-                        clearable
-                      />
-                      <Button
-                        size="xs"
-                        color="green"
-                        loading={mealEditLoading}
-                        onClick={() => handleMealEditSubmit(booking)}
-                        style={{ marginRight: 4 }}
-                      >
-                        Save
-                      </Button>
-                      <Button
-                        size="xs"
-                        variant="default"
-                        onClick={() => {
-                          setEditingMealKey(null);
-                          setMealEditValue(null);
-                        }}
-                      >
-                        Cancel
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button
-                        size="xs"
-                        variant="default"
-                        onClick={() => {
-                          setEditingMealKey(mealKey);
-                          setMealEditValue(booking.lunchOption ?? '');
-                        }}
-                        style={{ marginRight: 4 }}
-                      >
-                        Edit Meal
-                      </Button>
-                      <Button
-                        color="red"
-                        loading={
-                          cancelLoading &&
-                          selectedBooking?._id === booking._id &&
-                          selectedBooking.bookingDate === booking.bookingDate
-                        }
-                        onClick={() => booking._id && openCancelDialog(booking)}
-                        size="xs"
-                      >
-                        Cancel
-                      </Button>
-                    </>
-                  )}
-                </Group>
-              </Card>
-            );
-          })}
+        <Card
+          p="lg"
+          radius="lg"
+          withBorder
+          shadow="sm"
+          style={{ width: '100%' }}
+        >
+          <Table.ScrollContainer minWidth={600}>
+            <Table
+              highlightOnHover
+              withRowBorders
+              striped
+              withTableBorder
+              withColumnBorders
+            >
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Date</Table.Th>
+                  <Table.Th>Duration</Table.Th>
+                  <Table.Th>Meal</Table.Th>
+                  <Table.Th>Actions</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {bookings.map((booking: Booking, index: number) => {
+                  if (!booking._id) return null;
+                  const mealKey = `${booking._id}-${booking.bookingDate}`;
+
+                  return (
+                    <Table.Tr key={`booking_${booking._id}_${index}`}>
+                      <Table.Td>
+                        <Group gap="xs" wrap="nowrap">
+                          <div>
+                            <Text size="sm" fw={500}>
+                              {moment(booking.bookingDate).format(
+                                'dddd, MMM D YYYY'
+                              )}
+                            </Text>
+                            <Text size="xs" c="dimmed">
+                              {booking.bookingDate}
+                            </Text>
+                          </div>
+                          {booking.recurring ? (
+                            <Tooltip label="Recurring booking" withinPortal>
+                              <Repeat size={16} strokeWidth={2} />
+                            </Tooltip>
+                          ) : null}
+                        </Group>
+                      </Table.Td>
+                      <Table.Td>
+                        <Badge color="indigo" size="sm" variant="light">
+                          {booking.duration}
+                        </Badge>
+                      </Table.Td>
+                      <Table.Td>
+                        {editingMealKey === mealKey ? (
+                          <Select
+                            value={mealEditValue ?? booking.lunchOption ?? ''}
+                            onChange={setMealEditValue}
+                            disabled={mealEditLoading}
+                            data={mealOptions}
+                            size="xs"
+                            allowDeselect
+                            clearable
+                          />
+                        ) : (
+                          <Badge color="green" size="sm" variant="light">
+                            {booking.lunchOption || 'No meal'}
+                          </Badge>
+                        )}
+                      </Table.Td>
+                      <Table.Td>
+                        {editingMealKey === mealKey ? (
+                          <Group gap="xs" justify="flex-start">
+                            <Button
+                              size="xs"
+                              color="green"
+                              loading={mealEditLoading}
+                              onClick={() => handleMealEditSubmit(booking)}
+                            >
+                              Save
+                            </Button>
+                            <Button
+                              size="xs"
+                              variant="default"
+                              onClick={() => {
+                                setEditingMealKey(null);
+                                setMealEditValue(null);
+                              }}
+                            >
+                              Discard
+                            </Button>
+                          </Group>
+                        ) : (
+                          <Group gap="xs" justify="flex-start">
+                            <Button
+                              size="xs"
+                              variant="default"
+                              onClick={() => {
+                                setEditingMealKey(mealKey);
+                                setMealEditValue(booking.lunchOption ?? '');
+                              }}
+                            >
+                              Edit Meal
+                            </Button>
+                            <Button
+                              color="red"
+                              loading={
+                                cancelLoading &&
+                                selectedBooking?._id === booking._id &&
+                                selectedBooking.bookingDate ===
+                                  booking.bookingDate
+                              }
+                              onClick={() =>
+                                booking._id && openCancelDialog(booking)
+                              }
+                              size="xs"
+                            >
+                              Cancel
+                            </Button>
+                          </Group>
+                        )}
+                      </Table.Td>
+                    </Table.Tr>
+                  );
+                })}
+              </Table.Tbody>
+            </Table>
+          </Table.ScrollContainer>
           <CancelDialog
             onSuccess={() => {
               fetchBookings();
@@ -198,7 +246,7 @@ export function MyBookingsPage({
               onBookingsChanged?.();
             }}
           />
-        </div>
+        </Card>
       )}
     </div>
   );

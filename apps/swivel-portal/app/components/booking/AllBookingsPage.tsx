@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useExportBookingsExcel } from '@/hooks/useExportBookingsExcel';
-import { Group, Loader, Text, Badge, Table } from '@mantine/core';
+import { Group, Loader, Text, Badge, Table, Card } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import { getAllBookingsForDate } from '@/lib/api/seatBooking';
 import { Button } from '../ui/button';
@@ -64,7 +64,7 @@ export function AllBookingsPage() {
   }
 
   return (
-    <div>
+    <Card p="lg" radius="lg" withBorder shadow="sm" style={{ width: '100%' }}>
       <Group mb="md" className="flex flex-row justify-between items-end">
         <DatePickerInput
           label="Select a date"
@@ -102,7 +102,13 @@ export function AllBookingsPage() {
       ) : bookings.length === 0 ? (
         <Text>No bookings for this date.</Text>
       ) : (
-        <Table striped highlightOnHover withTableBorder withColumnBorders>
+        <Table
+          striped
+          highlightOnHover
+          withTableBorder
+          withColumnBorders
+          withRowBorders
+        >
           <Table.Thead>
             <Table.Tr>
               <Table.Th>Name</Table.Th>
@@ -133,6 +139,6 @@ export function AllBookingsPage() {
           </Table.Tbody>
         </Table>
       )}
-    </div>
+    </Card>
   );
 }
