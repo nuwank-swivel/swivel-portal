@@ -18,7 +18,9 @@ export const handler = defineLambda<never, never, never, User, ExtrasWithUser>({
     const name = extras.user.name as string;
     const email = extras.user.email as string;
     const isAdmin = extras.user.isAdmin ?? false;
-    const user = await loginUser(azureAdId, name, email, isAdmin);
+    const userGraphId = extras.user.userGraphId as string;
+
+    const user = await loginUser(azureAdId, name, email, isAdmin, userGraphId);
     return user;
   },
   log: true,

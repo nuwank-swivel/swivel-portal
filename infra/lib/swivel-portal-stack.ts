@@ -23,20 +23,6 @@ export class SwivelPortalStack extends BaseStack {
       MS_ENTRA_CLIENT_SECRET: process.env.MS_ENTRA_CLIENT_SECRET || '',
     };
 
-    // Lambda Layer from infra/layers/layer.zip
-    const sharedLayer = new lambda.LayerVersion(
-      this,
-      `SwivelPortalSharedLayer${this.envSuffix}`,
-      {
-        code: lambda.Code.fromAsset(
-          path.join(__dirname, '../layers/layer.zip')
-        ),
-        compatibleRuntimes: [lambda.Runtime.NODEJS_22_X],
-        description: `Shared layer for Swivel Portal Lambdas${this.envSuffix}`,
-        layerVersionName: `SwivelPortalSharedLayer${this.envSuffix}`,
-      }
-    );
-
     // Lambda function for /auth/login
     const loginLambda = new lambda.Function(
       this,
@@ -55,7 +41,7 @@ export class SwivelPortalStack extends BaseStack {
           ...DB_ENV,
           ADMIN_GROUP_ID: process.env.ADMIN_GROUP_ID || '',
         },
-        layers: [sharedLayer],
+        // layers: [sharedLayer],
         timeout: cdk.Duration.seconds(10),
       }
     );
@@ -89,7 +75,7 @@ export class SwivelPortalStack extends BaseStack {
         code: lambda.Code.fromAsset(
           path.join(
             __dirname,
-            '../../apps/swivel-portal-api/dist/availability/getAvailability.js.zip'
+            '../../apps/swivel-portal-api/dist/seat-bookings/getAvailability.js.zip'
           )
         ),
         handler: 'getAvailability.handler',
@@ -98,7 +84,7 @@ export class SwivelPortalStack extends BaseStack {
         environment: {
           ...DB_ENV,
         },
-        layers: [sharedLayer],
+        // layers: [sharedLayer],
         timeout: cdk.Duration.seconds(10),
       }
     );
@@ -120,7 +106,7 @@ export class SwivelPortalStack extends BaseStack {
         environment: {
           ...DB_ENV,
         },
-        layers: [sharedLayer],
+        // layers: [sharedLayer],
         timeout: cdk.Duration.seconds(10),
       }
     );
@@ -142,7 +128,7 @@ export class SwivelPortalStack extends BaseStack {
         environment: {
           ...DB_ENV,
         },
-        layers: [sharedLayer],
+        // layers: [sharedLayer],
         timeout: cdk.Duration.seconds(10),
       }
     );
@@ -164,7 +150,7 @@ export class SwivelPortalStack extends BaseStack {
         environment: {
           ...DB_ENV,
         },
-        layers: [sharedLayer],
+        // layers: [sharedLayer],
         timeout: cdk.Duration.seconds(10),
       }
     );
@@ -186,7 +172,7 @@ export class SwivelPortalStack extends BaseStack {
         environment: {
           ...DB_ENV,
         },
-        layers: [sharedLayer],
+        // layers: [sharedLayer],
         timeout: cdk.Duration.seconds(10),
       }
     );
@@ -208,7 +194,73 @@ export class SwivelPortalStack extends BaseStack {
         environment: {
           ...DB_ENV,
         },
-        layers: [sharedLayer],
+        // layers: [sharedLayer],
+        timeout: cdk.Duration.seconds(10),
+      }
+    );
+
+    // Lambda function for POST /api/presence/setPresence
+    const setPresenceLambda = new lambda.Function(
+      this,
+      `SetPresenceLambda${this.envSuffix}`,
+      {
+        code: lambda.Code.fromAsset(
+          path.join(
+            __dirname,
+            '../../apps/swivel-portal-api/dist/presence/setPresence.js.zip'
+          )
+        ),
+        handler: 'setPresence.handler',
+        runtime: lambda.Runtime.NODEJS_22_X,
+        functionName: `SetPresenceLambda${this.envSuffix}`,
+        environment: {
+          ...DB_ENV,
+          ...MS_ENTRA_ENV,
+        },
+        // layers: [sharedLayer],
+        timeout: cdk.Duration.seconds(10),
+      }
+    );
+
+    // Lambda function for GET /api/presence/getPresence
+    const getPresenceLambda = new lambda.Function(
+      this,
+      `GetPresenceLambda${this.envSuffix}`,
+      {
+        code: lambda.Code.fromAsset(
+          path.join(
+            __dirname,
+            '../../apps/swivel-portal-api/dist/presence/getPresence.js.zip'
+          )
+        ),
+        handler: 'getPresence.handler',
+        runtime: lambda.Runtime.NODEJS_22_X,
+        functionName: `GetPresenceLambda${this.envSuffix}`,
+        environment: {
+          ...DB_ENV,
+        },
+        // layers: [sharedLayer],
+        timeout: cdk.Duration.seconds(10),
+      }
+    );
+
+    // Lambda function for GET /api/presence/team-presence
+    const getTeamPresenceLambda = new lambda.Function(
+      this,
+      `GetTeamPresenceLambda${this.envSuffix}`,
+      {
+        code: lambda.Code.fromAsset(
+          path.join(
+            __dirname,
+            '../../apps/swivel-portal-api/dist/presence/getTeamPresence.js.zip'
+          )
+        ),
+        handler: 'getTeamPresence.handler',
+        runtime: lambda.Runtime.NODEJS_22_X,
+        functionName: `GetTeamPresenceLambda${this.envSuffix}`,
+        environment: {
+          ...DB_ENV,
+        },
         timeout: cdk.Duration.seconds(10),
       }
     );
@@ -296,6 +348,40 @@ export class SwivelPortalStack extends BaseStack {
 
     // /api resource
     const apiResource = api.root.addResource(`api`);
+
+    // /api/presence resource
+    const presenceResource = apiResource.addResource('presence');
+    // POST /api/presence
+    presenceResource.addMethod(
+      'POST',
+      new apigateway.LambdaIntegration(setPresenceLambda, { proxy: true }),
+      {
+        authorizer: apiAuthorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
+      }
+    );
+    // GET /api/presence/me
+    const presenceMeResource = presenceResource.addResource('me');
+    presenceMeResource.addMethod(
+      'GET',
+      new apigateway.LambdaIntegration(getPresenceLambda, { proxy: true }),
+      {
+        authorizer: apiAuthorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
+      }
+    );
+    // GET /api/presence/team-presence
+    const teamPresenceResource = presenceResource.addResource('team-presence');
+    teamPresenceResource.addMethod(
+      'GET',
+      new apigateway.LambdaIntegration(getTeamPresenceLambda, { proxy: true }),
+      {
+        authorizer: apiAuthorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
+      }
+    );
+    // (future) GET /api/presence for admin
+
     // /api/seatbooking resource
     const seatBookingResource = apiResource.addResource(`seatbooking`);
 
@@ -378,7 +464,7 @@ export class SwivelPortalStack extends BaseStack {
         environment: {
           ...DB_ENV,
         },
-        layers: [sharedLayer],
+        // layers: [sharedLayer],
         timeout: cdk.Duration.seconds(10),
       }
     );
@@ -399,7 +485,7 @@ export class SwivelPortalStack extends BaseStack {
         environment: {
           ...DB_ENV,
         },
-        layers: [sharedLayer],
+        // layers: [sharedLayer],
         timeout: cdk.Duration.seconds(10),
       }
     );
@@ -420,7 +506,6 @@ export class SwivelPortalStack extends BaseStack {
         environment: {
           ...DB_ENV,
         },
-        layers: [sharedLayer],
         timeout: cdk.Duration.seconds(10),
       }
     );
@@ -441,7 +526,6 @@ export class SwivelPortalStack extends BaseStack {
         environment: {
           ...DB_ENV,
         },
-        layers: [sharedLayer],
         timeout: cdk.Duration.seconds(10),
       }
     );
@@ -463,7 +547,6 @@ export class SwivelPortalStack extends BaseStack {
           ...DB_ENV,
           ...MS_ENTRA_ENV,
         },
-        layers: [sharedLayer],
         timeout: cdk.Duration.seconds(10),
       }
     );

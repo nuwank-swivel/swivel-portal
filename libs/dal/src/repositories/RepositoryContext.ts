@@ -13,6 +13,7 @@ import { SeatConfigurationRepository } from './SeatConfigurationRepository.js';
 import { DaySeatOverrideRepository } from './index.js';
 import { DaySeatOverride } from 'src/models/DaySeatOverride.js';
 import { TeamRepository } from './TeamRepository.js';
+import { PresenceEventRepository } from './PresenceEventRepository.js';
 
 class RepositoryContext {
   private _bookingRepository: IBookingRepository<Booking>;
@@ -20,6 +21,7 @@ class RepositoryContext {
   private _seatConfigurationRepository: ISeatConfigurationRepository<SeatConfiguration>;
   private _daySeatOverrideRepository: IDaySeatOverrideRepository<DaySeatOverride>;
   private _teamRepository: TeamRepository;
+  private _presenceEventRepository: PresenceEventRepository;
 
   constructor() {
     this._bookingRepository = new BookingRepository();
@@ -28,6 +30,10 @@ class RepositoryContext {
     this._daySeatOverrideRepository = new DaySeatOverrideRepository();
     this._teamRepository =
       new (require('./TeamRepository.js').TeamRepository)();
+    this._presenceEventRepository = new PresenceEventRepository();
+  }
+  get presenceEventRepository(): PresenceEventRepository {
+    return this._presenceEventRepository;
   }
   get teamRepository(): TeamRepository {
     return this._teamRepository;
