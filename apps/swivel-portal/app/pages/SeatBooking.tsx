@@ -22,6 +22,8 @@ const tomorrow = () => moment().add(1, 'day').format('YYYY-MM-DD');
 const SeatBooking = () => {
   const [selectedDate, setSelectedDate] = useState<string | null>(tomorrow);
   const [selectedSeatId, setSelectedSeatId] = useState<string | null>(null);
+  const [bookForSomeone, setBookForSomeone] = useState(false);
+  const [selectedBookFor, setSelectedBookFor] = useState<string | null>(null);
   const [myBookingsOpen, setMyBookingsOpen] = useState(false);
   const [allBookingsOpen, setAllBookingsOpen] = useState(false);
   const { user } = useAuthContext();
@@ -137,6 +139,10 @@ const SeatBooking = () => {
             error={bookingError}
             myBookedSeatId={availability?.myBooking?.seatId}
             onCancelBooking={handleCancelBooking}
+            bookForSomeone={bookForSomeone}
+            setBookForSomeone={setBookForSomeone}
+            selectedBookFor={selectedBookFor}
+            setSelectedBookFor={setSelectedBookFor}
           />
         </Grid.Col>
         <Grid.Col span={8}>
@@ -145,6 +151,7 @@ const SeatBooking = () => {
             setSelectedSeatId={setSelectedSeatId}
             bookedSeats={availability?.bookedSeats ?? []}
             myBookedSeatId={availability?.myBooking?.seatId}
+            allowSelectWhenMyBooking={bookForSomeone}
             seatAvailabilityLoading={isLoading}
           />
         </Grid.Col>

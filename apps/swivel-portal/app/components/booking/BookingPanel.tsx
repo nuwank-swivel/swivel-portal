@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Paper, Title, Button, Group, Text, Select, Alert } from '@mantine/core';
 import { Grid } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
@@ -24,6 +24,10 @@ export function BookingPanel({
   error,
   myBookedSeatId,
   onCancelBooking,
+  bookForSomeone,
+  setBookForSomeone,
+  selectedBookFor,
+  setSelectedBookFor,
 }: {
   selectedDate: string | null;
   setSelectedDate: (date: string | null) => void;
@@ -34,6 +38,10 @@ export function BookingPanel({
   error?: string | null;
   myBookedSeatId?: string;
   onCancelBooking?: () => void;
+  bookForSomeone: boolean;
+  setBookForSomeone: (v: boolean) => void;
+  selectedBookFor: string | null;
+  setSelectedBookFor: (v: string | null) => void;
 }) {
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('17:00');
@@ -42,6 +50,32 @@ export function BookingPanel({
   // Recurring booking state
   const [recurringDays, setRecurringDays] = useState<string[]>([]);
   const [isRecurring, setIsRecurring] = useState(false);
+  // Book for someone else search/UI state (selection is lifted to parent)
+  const [bookForSearch, setBookForSearch] = useState('');
+  const [bookForOptions, setBookForOptions] = useState<
+    { value: string; label: string }[]
+  >([]);
+
+  const handleBookForSearch = useCallback(() => {
+    if (bookForSearch) {
+      // lazy-load search to preserve bundle size
+      import('../../lib/api/user').then(({ searchUsers }) => {
+        searchUsers(bookForSearch)
+          .then((results: string[]) => {
+            setBookForOptions(results.map((u) => ({ value: u, label: u })));
+          })
+          .catch(() => setBookForOptions([]));
+      });
+    } else {
+      setBookForOptions([]);
+    }
+  }, [bookForSearch]);
+
+  // Debounced search effect for people picker
+  useEffect(() => {
+    const handler = setTimeout(() => handleBookForSearch(), 350);
+    return () => clearTimeout(handler);
+  }, [bookForSearch, handleBookForSearch]);
 
   const handlePreset = (label: string, hours: number) => {
     const start = parseInt(startTime.split(':')[0]);
@@ -62,11 +96,12 @@ export function BookingPanel({
       duration: getDuration(),
       seatId: selectedSeatId,
       lunchOption: lunch || undefined,
-      // ...isRecurring ? [
-      recurring: isRecurring ? {
+      // If booking for someone else, recurring MUST be omitted per acceptance criteria
+      recurring: bookForSomeone ? undefined : (isRecurring ? {
         daysOfWeek: recurringDays,
         startDate: dateStr
-      } : undefined,
+      } : undefined),
+      bookForUserId: selectedBookFor?.toLowerCase() ?? undefined,
     };
     onConfirm(payload, () => {
       setLunch(null);
@@ -75,6 +110,9 @@ export function BookingPanel({
       setEndTime('17:00');
       setRecurringDays([]);
       setIsRecurring(false);
+      setBookForSomeone(false);
+      setBookForSearch('');
+      setBookForOptions([]);
     });
   };
 
@@ -111,16 +149,16 @@ export function BookingPanel({
         Create Booking
       </Title>
       {myBookedSeatId && (
-        <Alert
-          color="red"
-          title="You already have a booking for this date."
-          mb="md"
-        >
+        <Alert color={bookForSomeone ? 'yellow' : 'red'} title={bookForSomeone ? 'You have a booking but can still create one for someone else' : 'You already have a booking for this date.'} mb="md">
           <Group justify="space-between" align="center">
-            <Text size="sm">Do you want to cancel your existing booking?</Text>
+            <Text size="sm">
+              {bookForSomeone
+                ? 'You already have a booking for this date, but you can still create a booking on behalf of someone else.'
+                : 'Do you want to cancel your existing booking?'}
+            </Text>
             {onCancelBooking && (
               <Button
-                color="red"
+                color={bookForSomeone ? 'orange' : 'red'}
                 size="xs"
                 variant="outline"
                 onClick={onCancelBooking}
@@ -147,9 +185,44 @@ export function BookingPanel({
             <Text className="text-sm font-medium flex items-center gap-2">
               <input
                 type="checkbox"
+                checked={bookForSomeone}
+                onChange={(e) => {
+                  setBookForSomeone(e.target.checked);
+                  // when toggling on, clear any recurring selection
+                  if (e.target.checked) {
+                    setIsRecurring(false);
+                    setRecurringDays([]);
+                  }
+                }}
+                className="mr-2"
+              />
+              Book for someone else
+            </Text>
+            {bookForSomeone && (
+              <div className="pt-2">
+                <Text size="xs" c="dimmed" mb={6}>
+                  Search by email to select a user from your tenant
+                </Text>
+                <Select
+                  data={bookForOptions}
+                  searchable
+                  clearable
+                  value={selectedBookFor}
+                  onSearchChange={(val) => setBookForSearch(val ?? '')}
+                  onChange={(val) => setSelectedBookFor(val)}
+                  placeholder="Search user by email"
+                  size="sm"
+                />
+              </div>
+            )}
+
+            <Text className="text-sm font-medium flex items-center gap-2">
+              <input
+                type="checkbox"
                 checked={isRecurring}
                 onChange={e => setIsRecurring(e.target.checked)}
                 className="mr-2"
+                disabled={bookForSomeone}
               />
               Recurring Booking
             </Text>
@@ -162,12 +235,14 @@ export function BookingPanel({
                     size="xs"
                     type="button"
                     onClick={() => {
+                      if (bookForSomeone) return; // disabled when booking for someone else
                       setRecurringDays(prev =>
                         prev.includes(day)
                           ? prev.filter(d => d !== day)
                           : [...prev, day]
                       );
                     }}
+                    disabled={bookForSomeone}
                   >
                     {day}
                   </Button>
