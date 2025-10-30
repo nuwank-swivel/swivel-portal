@@ -123,3 +123,20 @@ export async function createBooking(
   );
   return response.data;
 }
+
+/**
+ * Update a booking
+ */
+export async function updateBooking(
+  bookingId: string,
+  updates: Record<string, unknown>,
+  options?: { date?: string }
+) {
+  // PATCH to new API endpoint, pass date as query param if present
+  const query = options?.date
+    ? `?date=${encodeURIComponent(options.date)}`
+    : '';
+  return api.patch(`/api/seatbooking/bookings/${bookingId}${query}`, {
+    ...updates,
+  });
+}

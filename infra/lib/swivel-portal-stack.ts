@@ -427,10 +427,40 @@ export class SwivelPortalStack extends BaseStack {
       }
     );
     // /api/seatbooking/bookings/{id} (DELETE)
-    const deleteBookingResource = bookingsResource.addResource(`{id}`);
-    deleteBookingResource.addMethod(
+    const bookingIdResource = bookingsResource.addResource(`{id}`);
+    bookingIdResource.addMethod(
       'DELETE',
       new apigateway.LambdaIntegration(cancelBookingLambda, { proxy: true }),
+      {
+        authorizer: apiAuthorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
+      }
+    );
+
+    // Lambda function for PATCH /api/seatbooking/bookings/{id}
+    const updateBookingLambda = new lambda.Function(
+      this,
+      `UpdateBookingLambda${this.envSuffix}`,
+      {
+        code: lambda.Code.fromAsset(
+          path.join(
+            __dirname,
+            '../../apps/swivel-portal-api/dist/seat-bookings/updateBooking.js.zip'
+          )
+        ),
+        handler: 'updateBooking.handler',
+        runtime: lambda.Runtime.NODEJS_22_X,
+        functionName: `UpdateBookingLambda${this.envSuffix}`,
+        environment: {
+          ...DB_ENV,
+        },
+        timeout: cdk.Duration.seconds(10),
+      }
+    );
+    // PATCH /api/seatbooking/bookings/{id}
+    bookingIdResource.addMethod(
+      'PATCH',
+      new apigateway.LambdaIntegration(updateBookingLambda, { proxy: true }),
       {
         authorizer: apiAuthorizer,
         authorizationType: apigateway.AuthorizationType.CUSTOM,

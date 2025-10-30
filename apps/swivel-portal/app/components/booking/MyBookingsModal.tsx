@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Modal, Group, Button, Loader, Text, Badge } from '@mantine/core';
 import { Select } from '@mantine/core';
 import { getMyBookings } from '@/lib/api/seatBooking';
-import { updateBookingMeal } from '@/lib/api/seatBooking';
+import { updateBooking } from '@/lib/api/seatBooking';
 import { useCancelBooking } from '@/hooks/useCancelBooking';
 import { Booking } from '@swivel-portal/types';
 import { notifications } from '@mantine/notifications';
@@ -21,7 +21,12 @@ export function MyBookingsModal({ opened, onClose }: MyBookingsModalProps) {
     setMealEditLoading(true);
     try {
       if (!booking._id) throw new Error('Booking ID missing');
-      await updateBookingMeal(booking._id, booking.bookingDate, mealEditValue);
+      // Use new generic updateBooking API
+      await updateBooking(
+        booking._id,
+        { lunchOption: mealEditValue },
+        booking.recurring ? { date: booking.bookingDate } : undefined
+      );
       setEditingMealKey(null);
       setMealEditValue(null);
       fetchBookings();
