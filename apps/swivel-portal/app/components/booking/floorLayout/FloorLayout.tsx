@@ -26,6 +26,7 @@ function TableLayout({
   bookedSeats,
   seatAvailabilityLoading,
   myBookedSeatId,
+  allowSelectWhenMyBooking,
 }: {
   table: Table;
   selectedSeatId: string | null;
@@ -33,6 +34,7 @@ function TableLayout({
   bookedSeats: Booking[];
   seatAvailabilityLoading: boolean;
   myBookedSeatId?: string;
+  allowSelectWhenMyBooking?: boolean;
 }) {
   const renderSeats = (side: string) =>
     table.seats
@@ -86,7 +88,8 @@ function TableLayout({
                   position: 'relative',
                 }}
                 onClick={() =>
-                  !isBooked && !myBookedSeatId && setSelectedSeatId(seat.id)
+                  !isBooked && (!myBookedSeatId || allowSelectWhenMyBooking) &&
+                  setSelectedSeatId(seat.id)
                 }
               >
                 {isBooked && teamColor && (
@@ -132,12 +135,14 @@ export function FloorLayout({
   bookedSeats,
   seatAvailabilityLoading,
   myBookedSeatId,
+  allowSelectWhenMyBooking,
 }: {
   selectedSeatId: string | null;
   setSelectedSeatId: (id: string) => void;
   bookedSeats: import('@swivel-portal/types').Booking[];
   seatAvailabilityLoading: boolean;
   myBookedSeatId?: string;
+  allowSelectWhenMyBooking?: boolean;
 }) {
   const [tables, setTables] = useState<Array<Table> | null>(null);
   const [loading, setLoading] = useState(true);
@@ -245,6 +250,7 @@ export function FloorLayout({
                 bookedSeats={bookedSeats}
                 seatAvailabilityLoading={seatAvailabilityLoading}
                 myBookedSeatId={myBookedSeatId}
+                allowSelectWhenMyBooking={allowSelectWhenMyBooking}
               />
             ))}
           </Group>

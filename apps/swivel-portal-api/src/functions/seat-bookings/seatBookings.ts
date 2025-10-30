@@ -75,18 +75,35 @@ export const handler = defineLambda<
     if (!date || !duration) {
       throw new HttpError(400, 'Missing required fields');
     }
-    const booking = await bookSeat({
-      userId: finalUserId,
-      date,
-      duration,
-      seatId,
-      lunchOption,
-      recurring: recurring ? {
-        daysOfWeek: recurring.daysOfWeek,
-        startDate: recurring.startDate,
-        endDate: recurring.endDate,
-      } : undefined,
-    });
+    let booking;
+    try {
+      booking = await bookSeat({
+        userId: finalUserId,
+        date,
+        duration,
+        seatId,
+        lunchOption,
+        recurring: recurring ? {
+          daysOfWeek: recurring.daysOfWeek,
+          startDate: recurring.startDate,
+          endDate: recurring.endDate,
+        } : undefined,
+      });
+    } catch (err) {
+      // If booking-for-other and the target user already has a booking, return a clear message
+      if (
+        bookForUserId &&
+        err instanceof HttpError &&
+        (err as HttpError).statusCode === 409
+      ) {
+        throw new HttpError(
+          409,
+          'Selected user already has a booking for this date'
+        );
+      }
+      throw err;
+    }
+
     return { message: 'Booking created', booking: [booking] };
   },
 });

@@ -24,6 +24,10 @@ export function BookingPanel({
   error,
   myBookedSeatId,
   onCancelBooking,
+  bookForSomeone,
+  setBookForSomeone,
+  selectedBookFor,
+  setSelectedBookFor,
 }: {
   selectedDate: string | null;
   setSelectedDate: (date: string | null) => void;
@@ -34,6 +38,10 @@ export function BookingPanel({
   error?: string | null;
   myBookedSeatId?: string;
   onCancelBooking?: () => void;
+  bookForSomeone: boolean;
+  setBookForSomeone: (v: boolean) => void;
+  selectedBookFor: string | null;
+  setSelectedBookFor: (v: string | null) => void;
 }) {
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('17:00');
@@ -42,13 +50,11 @@ export function BookingPanel({
   // Recurring booking state
   const [recurringDays, setRecurringDays] = useState<string[]>([]);
   const [isRecurring, setIsRecurring] = useState(false);
-  // Book for someone else state
-  const [bookForSomeone, setBookForSomeone] = useState(false);
+  // Book for someone else search/UI state (selection is lifted to parent)
   const [bookForSearch, setBookForSearch] = useState('');
   const [bookForOptions, setBookForOptions] = useState<
     { value: string; label: string }[]
   >([]);
-  const [selectedBookFor, setSelectedBookFor] = useState<string | null>(null);
 
   const handleBookForSearch = useCallback(() => {
     if (bookForSearch) {
@@ -95,9 +101,8 @@ export function BookingPanel({
         daysOfWeek: recurringDays,
         startDate: dateStr
       } : undefined),
-      bookForUserId: selectedBookFor ?? undefined,
+      bookForUserId: selectedBookFor?.toLowerCase() ?? undefined,
     };
-    console.log('=======Booking payload:', payload);
     onConfirm(payload, () => {
       setLunch(null);
       setSelectedPreset(null);
@@ -144,16 +149,16 @@ export function BookingPanel({
         Create Booking
       </Title>
       {myBookedSeatId && (
-        <Alert
-          color="red"
-          title="You already have a booking for this date."
-          mb="md"
-        >
+        <Alert color={bookForSomeone ? 'yellow' : 'red'} title={bookForSomeone ? 'You have a booking but can still create one for someone else' : 'You already have a booking for this date.'} mb="md">
           <Group justify="space-between" align="center">
-            <Text size="sm">Do you want to cancel your existing booking?</Text>
+            <Text size="sm">
+              {bookForSomeone
+                ? 'You already have a booking for this date, but you can still create a booking on behalf of someone else.'
+                : 'Do you want to cancel your existing booking?'}
+            </Text>
             {onCancelBooking && (
               <Button
-                color="red"
+                color={bookForSomeone ? 'orange' : 'red'}
                 size="xs"
                 variant="outline"
                 onClick={onCancelBooking}
