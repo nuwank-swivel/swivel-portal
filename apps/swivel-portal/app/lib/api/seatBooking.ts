@@ -1,6 +1,17 @@
 import api from '../axios';
 import { SeatAvailabilityResponse, Booking } from '@swivel-portal/types';
 
+export async function updateBookingMeal(
+  bookingId: string,
+  date: string,
+  lunchOption: string | null
+) {
+  return api.patch(`/api/seatbooking/bookings/${bookingId}`, {
+    lunchOption,
+    date,
+  });
+}
+
 /**
  * Fetch seat layout from backend
  */
