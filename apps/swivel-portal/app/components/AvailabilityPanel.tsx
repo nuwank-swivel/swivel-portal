@@ -43,6 +43,8 @@ export default function AvailabilityPanel() {
   const [afkRecordsModalOpen, setAfkRecordsModalOpen] = React.useState(false);
   const [customEta, setCustomEta] = React.useState(0);
   const [afkMessage, setAfkMessage] = React.useState('');
+  // Modal state for signoff confirmation
+  const [signoffConfirmOpen, setSignoffConfirmOpen] = React.useState(false);
 
   const submitAfk = async () => {
     await handleAfk(customEta, afkMessage);
@@ -50,6 +52,11 @@ export default function AvailabilityPanel() {
     setAfkMessage('');
   };
   // Only show Signin if not signed in and not signed off
+  const handleSignoffConfirmed = async () => {
+    await handleSignoff();
+    setSignoffConfirmOpen(false);
+  };
+
   const getPresenceActionButtons = () => {
     // Only show Signin if not signed in and not signed off
     if (
@@ -61,8 +68,8 @@ export default function AvailabilityPanel() {
         <Button
           color="green"
           onClick={handleSignin}
-          disabled={!!eventTimes.signoff || loading.signoff}
-          loading={loading.signoff}
+          disabled={!!eventTimes.signoff || loading.signin}
+          loading={loading.signin}
         >
           Sign In
         </Button>
@@ -111,7 +118,7 @@ export default function AvailabilityPanel() {
           </ButtonGroup>
           <Button
             color="red"
-            onClick={handleSignoff}
+            onClick={() => setSignoffConfirmOpen(true)}
             disabled={loading.signoff}
             loading={loading.signoff}
           >
@@ -268,6 +275,32 @@ export default function AvailabilityPanel() {
           >
             Go AFK
           </Button>
+        </Modal>
+        {/* Signoff Confirmation Modal */}
+        <Modal
+          opened={signoffConfirmOpen}
+          onClose={() => setSignoffConfirmOpen(false)}
+          title="Confirm Signoff"
+          centered
+        >
+          <Box mb={16}>
+            Are you sure you want to sign off? This will end your session.
+          </Box>
+          <Group justify="flex-end">
+            <Button
+              variant="default"
+              onClick={() => setSignoffConfirmOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              color="red"
+              onClick={handleSignoffConfirmed}
+              loading={loading.signoff}
+            >
+              Yes, Sign Off
+            </Button>
+          </Group>
         </Modal>
       </Box>
     </Card>

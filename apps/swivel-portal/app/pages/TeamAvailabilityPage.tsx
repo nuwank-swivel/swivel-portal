@@ -8,27 +8,28 @@ import {
   Group,
   Box,
   LoadingOverlay,
-  Avatar,
-  Indicator,
-  Paper,
   Chip,
+  Tooltip,
 } from '@mantine/core';
 import CoreLayout from '../components/CoreLayout';
 import { useAuthContext } from '@/lib/AuthContext';
 import { getTeamPresence } from '@/lib/api/presence';
-import { PresenceEventRecord, PresenceEventType } from '@swivel-portal/types';
+import { getTeams } from '@/lib/api/team';
+import { useTeamState } from '@/lib/state/teamState';
+import { PresenceEventRecord, Team } from '@swivel-portal/types';
 import moment from 'moment';
 import { getStatusDisplayName } from '@/lib/utils';
 import { useUIContext } from '@/lib/UIContext';
 import { TimerIcon } from 'lucide-react';
+import { v4 as uuid } from 'uuid';
 
 // Helper to get latest presence event for a user
 function getLatestPresence(
   records: AvailabilityRecord[],
-  userId: string
+  userName: string
 ): AvailabilityRecord | undefined {
   return records
-    .filter((r) => r.userId === userId)
+    .filter((r) => r.userName === userName)
     .sort(
       (a, b) =>
         new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
@@ -44,6 +45,7 @@ export default function TeamAvailabilityPage() {
   const { user } = useAuthContext();
   const { setCurrentModule } = useUIContext();
   const isAdmin = !!user?.isAdmin;
+  const { teams, setTeams } = useTeamState();
   const [records, setRecords] = useState<AvailabilityRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [teamFilter, setTeamFilter] = useState('');
@@ -52,6 +54,11 @@ export default function TeamAvailabilityPage() {
 
   useEffect(() => {
     setCurrentModule('Team Availability');
+    // Fetch all teams on mount
+    (async () => {
+      const allTeams = await getTeams();
+      setTeams(allTeams);
+    })();
   }, []);
 
   useEffect(() => {
@@ -69,22 +76,34 @@ export default function TeamAvailabilityPage() {
     fetchRecords();
   }, [isAdmin, selectedDate]);
 
-  // Get unique teams for filter dropdown
-  const teams = Array.from(new Set(records.map((r) => r.teamName)));
+  const isToday = moment(selectedDate).isSame(moment(), 'day');
 
-  // Get team members for selected team (or user's team if not admin)
-  let teamMembers: AvailabilityRecord[] = [];
-  let showTeamCard = false;
-  if (!isAdmin) {
-    // Non-admin: show user's team
-    const userTeam = records[0]?.teamName;
-    teamMembers = records.filter((r) => r.teamName === userTeam);
-    showTeamCard = true;
-  } else if (teamFilter) {
-    // Admin: show selected team
-    teamMembers = records.filter((r) => r.teamName === teamFilter);
-    showTeamCard = true;
-  }
+  // Get all team members for the selected team (from teams state)
+  const { teamMembers, showTeamCard } = React.useMemo(() => {
+    let teamMembers: { id: string; name: string; email: string }[] = [];
+    let showTeamCard = false;
+    if (isToday) {
+      let team: Team | undefined = undefined;
+      if (!isAdmin) {
+        // Non-admin: show user's team only on today
+        const userTeamName = records[0]?.teamName;
+        team = teams.find((t) => t.name === userTeamName);
+      } else if (teamFilter) {
+        team = teams.find((t) => t.name === teamFilter);
+      }
+      if (team && Array.isArray(team.membersDetails)) {
+        teamMembers = team.membersDetails.map(
+          (member: { email: string; name: string }) => ({
+            id: uuid(),
+            name: member.name,
+            email: member.email,
+          })
+        );
+        showTeamCard = true;
+      }
+    }
+    return { teamMembers, showTeamCard };
+  }, [isAdmin, isToday, records, teamFilter, teams]);
 
   // Filter records
   const filtered = records.filter((r) => {
@@ -118,7 +137,7 @@ export default function TeamAvailabilityPage() {
                 label="Filter by Team"
                 data={[
                   { value: '', label: 'All Teams' },
-                  ...teams.map((t) => ({ value: t, label: t })),
+                  ...teams.map((t) => ({ value: t.name, label: t.name })),
                 ]}
                 value={teamFilter}
                 onChange={(value) => setTeamFilter(value || '')}
@@ -143,26 +162,39 @@ export default function TeamAvailabilityPage() {
           >
             <h3 style={{ fontWeight: 600, marginBottom: 12 }}>Team Members</h3>
             <Group gap={16} wrap="wrap">
-              {Array.from(
-                new Map(teamMembers.map((m) => [m.userId, m])).values()
-              ).map((member) => {
-                const latest = getLatestPresence(records, member.userId);
+              {teamMembers.map((member) => {
+                const latest = getLatestPresence(records, member.name);
                 let color = 'gray';
-                if (latest?.event === 'signin' || latest?.event === 'back')
+                let hint: string | undefined = undefined;
+                if (!latest) {
+                  hint = 'Offline';
+                } else if (
+                  latest.event === 'signin' ||
+                  latest.event === 'back'
+                ) {
                   color = 'green';
-                else if (latest?.event === 'afk') color = 'yellow';
-                else if (latest?.event === 'signoff') color = 'red';
+                  hint = 'Available';
+                } else if (latest.event === 'afk') {
+                  color = 'yellow';
+                  hint = 'AFK';
+                } else if (latest.event === 'signoff') {
+                  color = 'red';
+                  hint = 'Signed Off';
+                }
                 return (
-                  <Chip
-                    defaultChecked={color === 'green'}
-                    color={color}
-                    checked={true}
-                    icon={
-                      color === 'green' ? undefined : <TimerIcon size={14} />
-                    }
-                  >
-                    {member.userName}
-                  </Chip>
+                  <Tooltip key={member.id} label={hint} refProp="rootRef">
+                    <Chip
+                      color={color}
+                      checked={true}
+                      id={member.id}
+                      variant={color === 'gray' ? 'outline' : 'filled'}
+                      icon={
+                        color === 'green' ? undefined : <TimerIcon size={14} />
+                      }
+                    >
+                      {member.name}
+                    </Chip>
+                  </Tooltip>
                 );
               })}
             </Group>
@@ -201,7 +233,7 @@ export default function TeamAvailabilityPage() {
                     <Table.Td>{r.teamName}</Table.Td>
                     <Table.Td>{getStatusDisplayName(r.event)}</Table.Td>
                     <Table.Td>{r.message}</Table.Td>
-                    <Table.Td>{moment(r.timestamp).format('HH:mm a')}</Table.Td>
+                    <Table.Td>{moment(r.timestamp).format('hh:mm a')}</Table.Td>
                   </Table.Tr>
                 ))
               )}

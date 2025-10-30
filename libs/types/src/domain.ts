@@ -79,6 +79,10 @@ export interface Team {
   color: string; // hex code
   ownerId: string; // admin user who created the team
   members: string[];
+  membersDetails?: Array<{
+    email: string;
+    name: string;
+  }>;
   deleted?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
