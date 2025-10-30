@@ -1,7 +1,7 @@
 import { AppShell, Group, Badge } from '@mantine/core';
 
 import { ReactNode } from 'react';
-import { useLocation } from 'react-router';
+import { useLocation, useNavigation } from 'react-router';
 import UserAvatarMenu from './UserAvatarMenu';
 import BackButton from './ui/BackButton';
 import { useAuthContext } from '@/lib/AuthContext';
@@ -18,6 +18,7 @@ export default function CoreLayout({ children }: CoreLayoutProps) {
   // Removed theme as it is no longer used
   // Removed navigate as sidebar is gone
   const location = useLocation();
+  const { state } = useNavigation();
   const { user } = useAuthContext();
   const { currentModule } = useUIContext();
 
@@ -55,7 +56,17 @@ export default function CoreLayout({ children }: CoreLayoutProps) {
         </Group>
       </AppShell.Header>
       {/* Sidebar removed as per requirements */}
-      <AppShell.Main className="bg-gray-50">{children}</AppShell.Main>
+      <AppShell.Main className="bg-gray-50">
+        <>
+          {state === 'loading' && (
+            <div
+              className="absolute top-0 left-0 w-full h-1 bg-blue-500 animate-pulse"
+              style={{ zIndex: 1000 }}
+            />
+          )}
+          {children}
+        </>
+      </AppShell.Main>
     </AppShell>
   );
 }
