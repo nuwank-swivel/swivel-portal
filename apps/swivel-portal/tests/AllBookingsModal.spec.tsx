@@ -1,8 +1,6 @@
 import '@testing-library/jest-dom';
-import { render, screen } from '@testing-library/react';
-import { AllBookingsModal } from '../app/components/booking/AllBookingsModal';
-import * as UserContext from '../app/lib/UserContext';
-import React from 'react';
+import { render, screen, waitFor } from '@testing-library/react';
+import { AllBookingsPage } from '../app/components/booking/AllBookingsPage';
 
 const adminUser = {
   azureAdId: '1',
@@ -11,18 +9,24 @@ const adminUser = {
   isAdmin: true,
 };
 
-jest.mock('../app/lib/UserContext', () => {
-  const actual = jest.requireActual('../app/lib/UserContext');
-  return {
-    ...actual,
-    useUser: () => ({ user: adminUser }),
-  };
-});
+jest.mock('@/lib/AuthContext', () => ({
+  useAuthContext: () => ({ user: adminUser }),
+}));
 
-describe('AllBookingsModal', () => {
-  it('renders without crashing for admin', () => {
-    render(<AllBookingsModal opened={true} onClose={() => {}} />);
-    // Just check modal title is present
-    expect(screen.getByText('All Bookings (Admin)')).toBeInTheDocument();
+jest.mock('@/hooks/useExportBookingsExcel', () => ({
+  useExportBookingsExcel: () => jest.fn(),
+}));
+
+jest.mock('@/lib/api/seatBooking', () => ({
+  getAllBookingsForDate: jest.fn().mockResolvedValue([]),
+}));
+
+describe('AllBookingsPage', () => {
+  it('shows empty state for admin users', async () => {
+    render(<AllBookingsPage />);
+
+    await waitFor(() =>
+      expect(screen.getByText('No bookings for this date.')).toBeInTheDocument()
+    );
   });
 });
