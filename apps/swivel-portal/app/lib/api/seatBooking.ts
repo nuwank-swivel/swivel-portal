@@ -93,6 +93,8 @@ export interface CreateBookingRequest {
     startDate: string;
     endDate?: string;
   };
+  // Optional: create booking on behalf of another user (email or azureAdId)
+  bookForUserId?: string;
 }
 
 export interface CreateBookingResponse {

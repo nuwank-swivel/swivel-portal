@@ -16,6 +16,7 @@ export interface IBookingRepository<T> extends IRepository<T> {
 
 export interface IUserRepository<T> extends IRepository<T> {
   getByAzureAdId(azureAdId: string): Promise<T | null>;
+  getByEmail(email: string): Promise<T | null>;
   setTeamForUsers(emails: string[], teamId: string): Promise<void>;
 }
 
