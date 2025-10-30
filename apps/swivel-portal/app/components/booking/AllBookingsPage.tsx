@@ -1,10 +1,18 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useExportBookingsExcel } from '@/hooks/useExportBookingsExcel';
-import { Group, Loader, Text, Badge, Table, Card } from '@mantine/core';
+import {
+  Group,
+  Loader,
+  Text,
+  Badge,
+  Table,
+  Card,
+  Tooltip,
+} from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import { getAllBookingsForDate } from '@/lib/api/seatBooking';
 import { Button } from '../ui/button';
-import { Sheet } from 'lucide-react';
+import { Repeat, Sheet } from 'lucide-react';
 import { useAuthContext } from '@/lib/AuthContext';
 import { Booking } from '@swivel-portal/types';
 
@@ -13,6 +21,7 @@ interface AdminBooking {
   userName: string;
   durationType: string;
   lunchOption?: string;
+  recurring?: boolean;
 }
 
 export function AllBookingsPage() {
@@ -38,6 +47,7 @@ export function AllBookingsPage() {
           userName: b.user?.name ?? '',
           durationType: b.durationType,
           lunchOption: b.lunchOption,
+          recurring: Boolean(b.recurring),
         }))
       );
     } catch {
@@ -119,7 +129,24 @@ export function AllBookingsPage() {
           <Table.Tbody>
             {bookings.map((booking, idx) => (
               <Table.Tr key={`${booking.userId}-${idx}`}>
-                <Table.Td>{booking.userName || booking.userId}</Table.Td>
+                <Table.Td>
+                  <Group gap="xs" wrap="nowrap">
+                    <span>{booking.userName || booking.userId}</span>
+                    {booking.recurring ? (
+                      <Tooltip label="Recurring booking" withinPortal>
+                        <Badge
+                          color="blue"
+                          size="sm"
+                          variant="light"
+                          radius="xl"
+                          px={6}
+                        >
+                          <Repeat size={14} strokeWidth={2} />
+                        </Badge>
+                      </Tooltip>
+                    ) : null}
+                  </Group>
+                </Table.Td>
                 <Table.Td>
                   <Badge color="indigo" size="sm" variant="light">
                     {booking.durationType}

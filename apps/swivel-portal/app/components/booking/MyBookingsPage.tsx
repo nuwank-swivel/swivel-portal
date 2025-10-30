@@ -154,7 +154,15 @@ export function MyBookingsPage({
                           </div>
                           {booking.recurring ? (
                             <Tooltip label="Recurring booking" withinPortal>
-                              <Repeat size={16} strokeWidth={2} />
+                              <Badge
+                                color="blue"
+                                size="sm"
+                                variant="light"
+                                radius="xl"
+                                px={6}
+                              >
+                                <Repeat size={14} strokeWidth={2} />
+                              </Badge>
                             </Tooltip>
                           ) : null}
                         </Group>
@@ -207,16 +215,17 @@ export function MyBookingsPage({
                           <Group gap="xs" justify="flex-start">
                             <Button
                               size="xs"
-                              variant="default"
+                              variant="light"
                               onClick={() => {
                                 setEditingMealKey(mealKey);
                                 setMealEditValue(booking.lunchOption ?? '');
                               }}
                             >
-                              Edit Meal
+                              Change Meal
                             </Button>
                             <Button
                               color="red"
+                              variant="light"
                               loading={
                                 cancelLoading &&
                                 selectedBooking?._id === booking._id &&
