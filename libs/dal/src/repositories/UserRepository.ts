@@ -21,4 +21,8 @@ export class UserRepository
   async getByAzureAdId(azureAdId: string): Promise<User | null> {
     return this.repository.findOne({ where: { azureAdId } });
   }
+
+  async getByEmail(email: string): Promise<User | null> {
+    return this.repository.findOne({ where: { email } });
+  }
 }
