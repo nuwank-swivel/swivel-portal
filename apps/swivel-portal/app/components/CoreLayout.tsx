@@ -60,7 +60,7 @@ export default function CoreLayout({ children }: CoreLayoutProps) {
         <>
           {state === 'loading' && (
             <div
-              className="absolute top-0 left-0 w-full h-1 bg-blue-500 animate-pulse"
+              className="absolute top-0 left-0 w-full h-2 bg-blue-500 animate-pulse"
               style={{ zIndex: 1000 }}
             />
           )}

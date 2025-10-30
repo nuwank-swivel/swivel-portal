@@ -82,7 +82,7 @@ export function useAvailabilityPanel() {
     setStatus(PresenceEventType.Signin);
     setPresenceState({
       ...eventTimes,
-      signin: new Date().toLocaleTimeString(),
+      signin: moment(new Date()).format('h:mm A'),
     });
     setLoading((l) => ({ ...l, signin: false }));
   };
@@ -93,7 +93,7 @@ export function useAvailabilityPanel() {
     setStatus(PresenceEventType.Signoff);
     setPresenceState({
       ...eventTimes,
-      signoff: new Date().toLocaleTimeString(),
+      signoff: moment(new Date()).format('h:mm A'),
     });
     setLoading((l) => ({ ...l, signoff: false }));
   };
@@ -113,7 +113,7 @@ export function useAvailabilityPanel() {
     setStatus(PresenceEventType.Afk);
     setPresenceState({
       ...eventTimes,
-      afk: [...(eventTimes.afk || []), new Date().toLocaleTimeString()],
+      afk: [...(eventTimes.afk || []), moment(new Date()).format('h:mm A')],
     });
     setLoading((l) => ({ ...l, afk: false }));
   };
@@ -127,7 +127,7 @@ export function useAvailabilityPanel() {
     setStatus(PresenceEventType.Back);
     setPresenceState({
       ...eventTimes,
-      back: [...(eventTimes.back || []), new Date().toLocaleTimeString()],
+      back: [...(eventTimes.back || []), moment(new Date()).format('h:mm A')],
     });
     setLoading((l) => ({ ...l, back: false }));
   };
