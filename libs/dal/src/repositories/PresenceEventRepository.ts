@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongodb';
 import { PresenceEvent } from '../models/PresenceEvent.js';
 import { BaseRepository } from './BaseRepository.js';
 
@@ -137,7 +138,7 @@ export class PresenceEventRepository extends BaseRepository<PresenceEvent> {
         },
       },
       // Match team
-      { $match: { 'user.teamId': teamId } },
+      { $match: { 'user.teamId': new ObjectId(teamId) } },
       // Lookup team info
       {
         $lookup: {
