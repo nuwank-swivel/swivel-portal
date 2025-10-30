@@ -26,6 +26,7 @@
   - Implement booking creation modal (UI Done)
   - Develop API for creating and managing bookings (Blocked by Epic 1)
   - Display user's existing bookings (Blocked by Epic 1)
+  - Add user availability management (Story 03.06): dashboard section, backend endpoints, admin view, Teams presence integration
 
 ## Epic 4: Admin Features
 

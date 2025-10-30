@@ -16,3 +16,7 @@
 
 - Link to Figma designs: [URL]
 
+## 14.4 Availability Management Integrations
+
+- Microsoft Graph API for Teams presence/status updates
+- Database logging and reporting for availability events

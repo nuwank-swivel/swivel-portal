@@ -11,6 +11,7 @@ export const authMiddleware: Middleware<
   ExtrasWithUser
 > = async ({ event }) => {
   const userId = event.requestContext.authorizer?.azureAdId;
+  const userGraphId = event.requestContext.authorizer?.userGraphId;
 
   if (!userId) throw new HttpError(401, 'Unauthorized');
 
@@ -20,5 +21,7 @@ export const authMiddleware: Middleware<
     event.requestContext.authorizer?.isAdmin === true ||
     event.requestContext.authorizer?.isAdmin === 'true';
 
-  return { extra: { user: { azureAdId: userId, name, email, isAdmin } } };
+  return {
+    extra: { user: { azureAdId: userId, name, email, isAdmin, userGraphId } },
+  };
 };

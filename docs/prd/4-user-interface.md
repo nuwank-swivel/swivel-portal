@@ -24,3 +24,20 @@
 - Override management for specific dates
 - Super admin panel for managing super admins (via Entra ID group)
 - Meal booking settings: super admins can configure meal options and set up automated daily meal booking emails for selected users
+
+## 4.4 Availability Management
+
+### User Dashboard
+
+- "Availability" section is visible on the dashboard for all users.
+- Users see "Signin" and "AFK" buttons:
+  - "Signin" starts the day, records signin time, and changes to "Signoff."
+  - "AFK" allows users to set an ETA (default 1 hour, customizable), changes to "Back" when active.
+  - "Back" resets presence/status.
+  - "Signoff" ends the day and records signoff time.
+- Display current status and times for each event.
+
+### Admin Dashboard
+
+- "Availability" button and date selector to view records for all users.
+- Can view today’s and historical availability records.

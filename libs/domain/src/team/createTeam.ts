@@ -13,6 +13,12 @@ export async function createTeam(input: {
   if (!user) {
     throw new Error('Owner user not found');
   }
+
+  // add owner to members list if not already present
+  if (!input.members.includes(user.email)) {
+    input.members.push(user.email);
+  }
+
   // Only name, color, ownerId are required; memberIds defaults to []
   const team = await RepositoryContext.teamRepository.create({
     name: input.name,
@@ -24,7 +30,7 @@ export async function createTeam(input: {
   // Update users to set their teamId
   if (input.members && input.members.length > 0) {
     await RepositoryContext.userRepository.setTeamForUsers(
-      [...input.members.map((e) => e.toLowerCase()), user.email],
+      [...input.members.map((e) => e.toLowerCase())],
       team._id.toString()
     );
   }
