@@ -1,7 +1,7 @@
 import { connectToDb, RepositoryContext } from '@swivel-portal/dal';
 import { SESClient, SendRawEmailCommand } from '@aws-sdk/client-ses';
 import * as XLSX from 'xlsx';
-import { Booking } from '@swivel-portal/dal';
+
 
 const ses = new SESClient({});
 
@@ -10,32 +10,59 @@ function getTodayDateStr() {
   return now.toISOString().slice(0, 10);
 }
 
-function aggregateMealSummary(bookings: Booking[]) {
-  const summary: Record<string, number> = {};
+
+
+// Count bookings by meal type
+function getMealTypeCounts(bookings: any[]): Record<string, number> {
+  const counts: Record<string, number> = {};
   for (const b of bookings) {
-    const opt = b.lunchOption || 'none';
-    summary[opt] = (summary[opt] || 0) + 1;
+    const meal = b.lunchOption || '-';
+    counts[meal] = (counts[meal] || 0) + 1;
   }
-  return summary;
+  return counts;
 }
 
-function generateSummaryTableHtml(summary: Record<string, number>) {
-  let html = '<table border="1" cellpadding="4" style="border-collapse:collapse"><tr><th>Meal Option</th><th>Count</th></tr>';
-  for (const [option, count] of Object.entries(summary)) {
-    html += `<tr><td>${option}</td><td>${count}</td></tr>`;
+// Generate HTML for meal type counts
+function generateMealTypeCountsHtml(counts: Record<string, number>): string {
+  let html = '<ul style="margin:8px 0 16px 0;padding-left:20px">';
+  for (const [meal, count] of Object.entries(counts)) {
+    html += `<li><b>${meal}</b>: ${count}</li>`;
+  }
+  html += '</ul>';
+  return html;
+}
+function generateDetailedBookingsSheet(bookings: any[]) {
+  const ws = XLSX.utils.aoa_to_sheet([
+    ['Name', 'Duration', 'Meal'],
+    ...bookings.map(b => [
+      (b.user && b.user.name && b.user.name.trim())
+        ? b.user.name
+        : (b.userName && b.userName.trim())
+          ? b.userName
+          : b.userId || '',
+      b.duration || b.durationType || '',
+      b.lunchOption || '',
+    ]),
+  ]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Bookings');
+  return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+}
+
+// Generate HTML table with Name and Meal
+function generateBookingsTableHtml(bookings: any[]) {
+    console.log(bookings);
+  let html = '<table border="1" cellpadding="4" style="border-collapse:collapse"><tr><th>Name</th><th>Duration</th><th>Meal</th></tr>';
+  for (const b of bookings) {
+    const name = (b.user && b.user.name && b.user.name.trim())
+      ? b.user.name
+      : (b.userName && b.userName.trim())
+        ? b.userName
+        : b.userId || '';
+    html += `<tr><td>${name}</td><td>${b.duration || b.durationType || ''}</td><td>${b.lunchOption || '-'}</td></tr>`;
   }
   html += '</table>';
   return html;
-}
-
-function generateSummarySheet(summary: Record<string, number>) {
-  const ws = XLSX.utils.aoa_to_sheet([
-    ['Meal name', 'Count'],
-    ...Object.entries(summary),
-  ]);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Summary');
-  return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
 }
 
 export async function runDailyMealSummaryEmail(): Promise<{ sent: number }> {
@@ -56,18 +83,24 @@ export async function runDailyMealSummaryEmail(): Promise<{ sent: number }> {
     console.log(`[MealEmail] Fetching bookings for ${today}...`);
     const bookings = await RepositoryContext.bookingRepository.findAllBookingsByDate(today);
     console.log(`[MealEmail] Bookings:`, bookings);
-    const summary = aggregateMealSummary(bookings);
-    console.log('[MealEmail] Summary:', summary);
-    const summaryHtml = generateSummaryTableHtml(summary);
-    const summarySheet = generateSummarySheet(summary);
+
+    // Prepare new content
+  // Remove unused summary aggregation
+  const detailedSheet = generateDetailedBookingsSheet(bookings);
+  const bookingsTableHtml = generateBookingsTableHtml(bookings);
+  const mealTypeCounts = getMealTypeCounts(bookings);
+  const mealTypeCountsHtml = generateMealTypeCountsHtml(mealTypeCounts);
 
     const subject = `Meal Booking Summary for ${today}`;
     const htmlBody = `
       <div style="font-family:Arial,sans-serif;max-width:600px">
         <h2>Meal Booking Summary for ${today}</h2>
-        <p>Below is the summary of meal bookings for today. See the attached Excel file for download.</p>
-        ${summaryHtml}
-        <p style="margin-top:24px">You can also <a href="${process.env.PORTAL_URL || '#'}">open the portal</a> to view or manage bookings.</p>
+        <p>Below is the list of Meal bookings for today:</p>
+        ${bookingsTableHtml}
+        <div style="margin-top:16px">
+          <b>Meal counts:</b>
+          ${mealTypeCountsHtml}
+        </div>
       </div>
     `;
 
@@ -95,11 +128,11 @@ export async function runDailyMealSummaryEmail(): Promise<{ sent: number }> {
           htmlBody,
           '',
           `--${boundary}`,
-          'Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet; name="meal-summary.xlsx"',
+          'Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet; name="all-bookings.xlsx"',
           'Content-Transfer-Encoding: base64',
-          'Content-Disposition: attachment; filename="meal-summary.xlsx"',
+          'Content-Disposition: attachment; filename="all-bookings.xlsx"',
           '',
-          summarySheet.toString('base64'),
+          detailedSheet.toString('base64'),
           '',
           `--${boundary}--`,
           '',

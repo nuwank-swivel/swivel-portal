@@ -7,7 +7,7 @@ interface DeleteBody {
   userEmail?: string;
 }
 
-export default defineLambda<DeleteBody, any, any, { ok: true }, ExtrasWithUser>({
+export const handler = defineLambda<DeleteBody, any, any, { ok: true }, ExtrasWithUser>({
   middlewares: [authMiddleware],
   log: true,
   handler: async ({ body, extras }) => {

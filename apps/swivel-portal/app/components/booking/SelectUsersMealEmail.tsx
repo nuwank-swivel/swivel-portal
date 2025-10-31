@@ -11,7 +11,7 @@ import {
 } from '@mantine/core';
 import { searchUsers } from '@/lib/api/user';
 import {
-  getMealNotifications,
+  listMealNotifications,
   addMealNotification,
   deleteMealNotification,
   MealNotificationSettings,
@@ -43,17 +43,8 @@ export function SelectUsersMealEmail({
     setLoading(true);
     setError(null);
     setSuccess(null);
-    // Try to get all users (API may need to be adjusted to support this)
-    getMealNotifications()
-      .then((data: any) => {
-        if (Array.isArray(data)) {
-          setUsers(data);
-        } else if (data && data.userEmail) {
-          setUsers([data]);
-        } else {
-          setUsers([]);
-        }
-      })
+    listMealNotifications()
+      .then((data) => setUsers(data))
       .catch(() => setError('Failed to load users.'))
       .finally(() => setLoading(false));
   }, [opened]);
@@ -93,15 +84,7 @@ export function SelectUsersMealEmail({
       setUserSearch('');
       setUserOptions([]);
       // Refresh list
-      getMealNotifications().then((data: any) => {
-        if (Array.isArray(data)) {
-          setUsers(data);
-        } else if (data && data.userEmail) {
-          setUsers([data]);
-        } else {
-          setUsers([]);
-        }
-      });
+      listMealNotifications().then((data) => setUsers(data));
     } catch {
       setError('Failed to add users.');
     } finally {
@@ -130,7 +113,7 @@ export function SelectUsersMealEmail({
       opened={opened}
       onClose={onClose}
       title="Select Users for Meal Email"
-      size="lg"
+      size="80vw"
     >
       {error && <Notification color="red">{error}</Notification>}
       {success && <Notification color="green">{success}</Notification>}
@@ -148,14 +131,15 @@ export function SelectUsersMealEmail({
           <Table.Thead>
             <Table.Tr>
               <Table.Th>Email</Table.Th>
-              <Table.Th>Preferred Time</Table.Th>
+              <Table.Th>Added By</Table.Th>
+              <Table.Th>Updated By</Table.Th>
               <Table.Th>Action</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
             {users.length === 0 ? (
               <Table.Tr>
-                <Table.Td colSpan={3} style={{ textAlign: 'center' }}>
+                <Table.Td colSpan={4} style={{ textAlign: 'center' }}>
                   No users set.
                 </Table.Td>
               </Table.Tr>
@@ -163,7 +147,16 @@ export function SelectUsersMealEmail({
               users.map((u) => (
                 <Table.Tr key={u.userEmail}>
                   <Table.Td>{u.userEmail}</Table.Td>
-                  <Table.Td>{u.preferredTimeUTC || '-'}</Table.Td>
+                  <Table.Td>
+                    <span style={{ fontSize: '0.75rem', color: '#888' }}>
+                      {u.addedBy || '-'}
+                    </span>
+                  </Table.Td>
+                  <Table.Td>
+                    <span style={{ fontSize: '0.75rem', color: '#888' }}>
+                      {u.updatedBy || '-'}
+                    </span>
+                  </Table.Td>
                   <Table.Td>
                     <MantineButton
                       color="red"

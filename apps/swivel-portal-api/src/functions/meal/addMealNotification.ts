@@ -8,7 +8,7 @@ interface AddBody {
   preferredTimeUTC?: string | null;
 }
 
-export default defineLambda<AddBody, any, any, { ok: true }, ExtrasWithUser>({
+export const handler = defineLambda<AddBody, any, any, { ok: true }, ExtrasWithUser>({
   middlewares: [authMiddleware],
   log: true,
   handler: async ({ body, extras }) => {

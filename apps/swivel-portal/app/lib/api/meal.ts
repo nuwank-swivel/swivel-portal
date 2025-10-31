@@ -1,4 +1,3 @@
-
 import api from '../axios';
 
 export type MealNotificationSettings = {
@@ -9,9 +8,9 @@ export type MealNotificationSettings = {
   updatedAt?: string;
 };
 
-export async function getMealNotifications(userEmail?: string): Promise<MealNotificationSettings | null> {
-  const res = await api.get('/api/meal/notifications', { params: { userEmail } });
-  return (res.data.settings ?? null) as MealNotificationSettings | null;
+export async function listMealNotifications(): Promise<MealNotificationSettings[]> {
+  const res = await api.get('/api/meal/notifications/all');
+  return res.data.users ?? [];
 }
 
 export async function addMealNotification(settings: { userEmail: string; preferredTimeUTC?: string | null }) {
