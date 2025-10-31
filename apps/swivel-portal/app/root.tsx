@@ -13,10 +13,10 @@ import '@mantine/notifications/styles.css';
 import '@mantine/dates/styles.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import './index.css';
-import { theme } from './theme';
-import { MantineProvider, mantineHtmlProps } from '@mantine/core';
+import { mantineHtmlProps, ColorSchemeScript } from '@mantine/core';
 import { AuthProvider } from './lib/AuthContext';
 import { UIProvider } from './lib/UIContext';
+import { ThemeProvider } from './lib/ThemeContext';
 import * as Sentry from '@sentry/react';
 
 // configure Sentry only for non-development environments
@@ -55,19 +55,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <ColorSchemeScript defaultColorScheme="light" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{var key='swivel-portal:color-scheme';var stored=localStorage.getItem(key);var scheme=stored=== 'dark'?'dark':'light';if(!stored&&window.matchMedia('(prefers-color-scheme: dark)').matches){scheme='dark';}if(scheme==='dark'){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}catch(e){}})();",
+          }}
+        />
         <Meta />
         <Links />
       </head>
       <body>
         <QueryClientProvider client={queryClient}>
-          <MantineProvider theme={theme}>
+          <ThemeProvider>
             <AuthProvider>
               <UIProvider>
                 <Toaster />
                 {children}
               </UIProvider>
             </AuthProvider>
-          </MantineProvider>
+          </ThemeProvider>
           <ScrollRestoration />
           <Scripts />
         </QueryClientProvider>

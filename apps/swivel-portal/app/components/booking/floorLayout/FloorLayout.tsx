@@ -14,10 +14,10 @@ import { useState, useEffect } from 'react';
 
 import { Skeleton } from '@mantine/core';
 
-const BOOKED_CLASS = 'bg-red-300 border-red-400';
+const BOOKED_CLASS = 'bg-red-300 border-red-400 dark:text-black';
 const AVAILABLE_CLASS = ' border-gray-200';
-const SELECTED_CLASS = '!bg-blue-200 !border-blue-600';
-const MY_BOOKING_CLASS = '!bg-green-200 !border-green-600';
+const SELECTED_CLASS = '!bg-blue-200 !border-blue-600 dark:text-black';
+const MY_BOOKING_CLASS = '!bg-green-200 !border-green-600 dark:text-black';
 
 function TableLayout({
   table,
@@ -84,11 +84,12 @@ function TableLayout({
                   textAlign: 'center',
                   borderRadius:
                     side === 'A' ? '8px 0px 0px 8px' : '0 8px 8px 0px',
-                  opacity: isBooked ? 0.6 : 1,
+                  // opacity: isBooked ? 0.6 : 1,
                   position: 'relative',
                 }}
                 onClick={() =>
-                  !isBooked && (!myBookedSeatId || allowSelectWhenMyBooking) &&
+                  !isBooked &&
+                  (!myBookedSeatId || allowSelectWhenMyBooking) &&
                   setSelectedSeatId(seat.id)
                 }
               >
@@ -119,7 +120,7 @@ function TableLayout({
       <Group gap={0} className="flex flex-row">
         <Group className="flex-col">{renderSeats('A')}</Group>
         <Paper withBorder className="h-64 flex items-center p-3 bg-orange-100">
-          <Title className="" order={6}>
+          <Title className="text-black" order={6}>
             {table.name}
           </Title>
         </Paper>

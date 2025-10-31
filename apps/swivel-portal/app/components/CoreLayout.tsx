@@ -6,6 +6,7 @@ import UserAvatarMenu from './UserAvatarMenu';
 import BackButton from './ui/BackButton';
 import { useAuthContext } from '@/lib/AuthContext';
 import { useUIContext } from '@/lib/UIContext';
+import ThemeToggle from './ui/ThemeToggle';
 
 declare const __APP_VERSION__: string;
 
@@ -23,28 +24,25 @@ export default function CoreLayout({ children }: CoreLayoutProps) {
   const { currentModule } = useUIContext();
 
   return (
-    <AppShell
-      header={{ height: 60 }}
-      // Removed navbar prop
-      padding="md"
-    >
-      <AppShell.Header className="bg-gray-50 border-0">
+    <AppShell header={{ height: 60 }} padding="md">
+      <AppShell.Header className="border-0 bg-background transition-colors">
         <Group h="100%" px="md" justify="space-between">
           <Group>
             {location.pathname !== '/' &&
               location.pathname !== '/dashboard' && <BackButton />}
             {currentModule ? (
-              <span style={{ fontWeight: 700, fontSize: 22 }}>
+              <span className="text-[22px] font-bold text-foreground">
                 {currentModule}
               </span>
             ) : (
-              <h3 style={{ color: '#6B7280', marginTop: 4 }}>
+              <h3 className="mt-1 text-sm font-medium text-muted-foreground">
                 {/* Welcome back, {user?.name}! Select a tool to get started. */}
               </h3>
             )}
           </Group>
 
           <Group>
+            <ThemeToggle />
             <Badge color="gray" variant="light" size="xs">
               v
               {typeof __APP_VERSION__ !== 'undefined'
@@ -56,11 +54,11 @@ export default function CoreLayout({ children }: CoreLayoutProps) {
         </Group>
       </AppShell.Header>
       {/* Sidebar removed as per requirements */}
-      <AppShell.Main className="bg-gray-50">
+      <AppShell.Main className="bg-background transition-colors">
         <>
           {state === 'loading' && (
             <div
-              className="absolute top-0 left-0 w-full h-2 bg-blue-500 animate-pulse"
+              className="absolute top-0 left-0 w-full h-1.5 bg-blue-500 animate-pulse"
               style={{ zIndex: 1000 }}
             />
           )}

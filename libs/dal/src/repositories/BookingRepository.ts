@@ -337,11 +337,7 @@ export class BookingRepository
     userId: string,
     bookingDate: string
   ): Promise<boolean> {
-    const count = await this.repository.count({
-      userId,
-      bookingDate,
-      canceledAt: null,
-    });
-    return count > 0;
+    const bookings = await this.findUserUpcomingBookings(userId, bookingDate);
+    return bookings.length > 0;
   }
 }

@@ -99,18 +99,17 @@ export default function Dashboard() {
                   style={{
                     padding: 12,
                     borderRadius: 8,
-                    background: '#F1F5F9',
                   }}
+                  className="bg-blue-50 dark:bg-blue-200"
                 >
                   <Icon size={24} color="#2563EB" />
                 </div>
                 <div>
-                  <h2
-                    style={{ fontSize: 20, fontWeight: 600, color: '#111827' }}
+                  <h2 style={{ fontSize: 20, fontWeight: 600 }}>{tool.name}</h2>
+                  <p
+                    className="text-gray-600 dark:text-gray-400"
+                    style={{ fontSize: 14, marginTop: 4 }}
                   >
-                    {tool.name}
-                  </h2>
-                  <p style={{ fontSize: 14, color: '#6B7280', marginTop: 4 }}>
                     {tool.description}
                   </p>
                 </div>

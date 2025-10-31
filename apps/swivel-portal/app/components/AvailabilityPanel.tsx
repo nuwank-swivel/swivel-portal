@@ -168,9 +168,9 @@ export default function AvailabilityPanel() {
             style={{
               fontSize: 22,
               fontWeight: 700,
-              color: '#2563EB',
               margin: 0,
             }}
+            className="text-blue-600 dark:text-blue-400"
           >
             {getGreeting()} {userName}!
           </h2>

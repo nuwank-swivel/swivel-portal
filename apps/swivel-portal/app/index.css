@@ -8,6 +8,7 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
+    color-scheme: light;
     /* Base colors - enterprise clean palette */
     --background: 0 0% 99%;
     --foreground: 218 15% 15%;
@@ -72,6 +73,7 @@ All colors MUST be HSL.
   }
 
   .dark {
+    color-scheme: dark;
     --background: 218 20% 8%;
     --foreground: 0 0% 98%;
 
@@ -128,6 +130,6 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground transition-colors duration-200;
   }
 }

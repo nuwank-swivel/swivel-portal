@@ -4,12 +4,14 @@ import {
   useState,
   ReactNode,
   useEffect,
+  useCallback,
 } from 'react';
 import * as teams from '@microsoft/teams-js';
 import { setIdToken } from './axios';
 import { getUserInfo } from './api/auth';
 import { Loading } from '@/pages/Loading';
 import { Logger } from './logger';
+import { ThemeColorScheme, useTheme } from './ThemeContext';
 
 export interface User {
   azureAdId: string;
@@ -28,6 +30,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [error, setError] = useState<string | undefined>(undefined);
+  const { setColorScheme } = useTheme();
 
   const initializeUserInfo = async () => {
     const user = await getUserInfo();
@@ -46,12 +49,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIdToken(idToken);
   };
 
+  const registerForCaching = useCallback(() => {
+    teams.app.lifecycle.registerOnResumeHandler((data) => {
+      teams.app.notifySuccess();
+    });
+
+    teams.app.lifecycle.registerBeforeSuspendOrTerminateHandler(() => {
+      return Promise.resolve();
+    });
+  }, []);
+
   useEffect(() => {
     const initialize = async () => {
       try {
         await teams.app.initialize();
         console.log('Teams SDK initialized');
         Logger.info('[init] Teams SDK initialized');
+
+        registerForCaching();
+
+        const appContext = await teams.app.getContext();
+        console.log('App theme retrieved:', appContext.app.theme);
+        setColorScheme(appContext.app.theme === 'dark' ? 'dark' : 'light');
 
         const idToken = await teams.authentication.getAuthToken();
         setIdToken(idToken);
