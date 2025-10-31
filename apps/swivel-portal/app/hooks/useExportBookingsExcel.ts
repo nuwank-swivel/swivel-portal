@@ -1,4 +1,5 @@
 import * as XLSX from 'xlsx';
+import { Logger } from '@/lib/logger';
 
 export interface ExportableBooking {
   userId: string;
@@ -13,7 +14,17 @@ export interface ExportableBooking {
  */
 export function useExportBookingsExcel() {
   return (bookings: ExportableBooking[], date: Date | null) => {
-    if (!bookings || bookings.length === 0 || !date) return;
+    Logger.info('[booking] Excel export requested', {
+      total: bookings?.length ?? 0,
+      hasDate: Boolean(date),
+    });
+    if (!bookings || bookings.length === 0 || !date) {
+      Logger.warn('[booking] Excel export skipped due to missing data', {
+        total: bookings?.length ?? 0,
+        hasDate: Boolean(date),
+      });
+      return;
+    }
     const wsData = bookings.map((b) => ({
       Name: b.userName || b.userId,
       Duration: b.durationType,
@@ -27,5 +38,9 @@ export function useExportBookingsExcel() {
     const dd = String(date.getDate()).padStart(2, '0');
     const filename = `bookings-${yyyy}-${mm}-${dd}.xlsx`;
     XLSX.writeFile(wb, filename);
+    Logger.info('[booking] Excel export completed', {
+      filename,
+      total: bookings.length,
+    });
   };
 }

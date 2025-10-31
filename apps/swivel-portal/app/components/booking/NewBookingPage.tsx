@@ -12,6 +12,7 @@ import { BookingPanel } from './BookingPanel';
 import { FloorLayout } from './floorLayout/FloorLayout';
 import { useBookingConfirmation } from '@/hooks/useBookingConfirmation';
 import { useCancelBooking } from '@/hooks/useCancelBooking';
+import { Logger } from '@/lib/logger';
 
 interface NewBookingPageProps {
   refreshSignal: number;
@@ -54,13 +55,21 @@ export function NewBookingPage({
 
       setIsLoading(true);
       setError(null);
+      Logger.debug('[availability] Fetching seat availability', {
+        date: dateToUse,
+      });
 
       try {
         const data = await getSeatAvailability(dateToUse);
         setAvailability(data);
         setSelectedSeatId(null);
-      } catch {
+        Logger.info('[availability] Seat availability received');
+      } catch (err) {
         setError('Failed to load seat availability. Please try again.');
+        Logger.error('[availability] Failed to fetch seat availability', {
+          date: dateToUse,
+          error: err,
+        });
       } finally {
         setIsLoading(false);
       }
@@ -93,12 +102,19 @@ export function NewBookingPage({
 
   const handleCancelBooking = async () => {
     if (!availability?.myBooking) return;
+    Logger.info('[booking] Self-service cancellation requested', {
+      bookingId: availability.myBooking.bookingId,
+      seatId: availability.myBooking.seatId,
+    });
     cancelBooking(availability.myBooking.bookingId);
   };
 
   const resetBookingState = () => {
     const defaultDate = tomorrow();
     setSelectedSeatId(null);
+    Logger.debug('[booking] Resetting booking panel state', {
+      defaultDate,
+    });
     if (selectedDate === defaultDate) {
       fetchAvailability(defaultDate);
     } else {
