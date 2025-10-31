@@ -59,4 +59,5 @@ jobs:
           cd infra
           # for testing purpose
           ls -a
+          npx cdk ls
           npx cdk deploy SwivelPortalStack-staging --context env=staging --require-approval never --app "npx ts-node --prefer-ts-exts ./bin/swivel-portal.ts"
