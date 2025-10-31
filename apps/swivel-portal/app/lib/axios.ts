@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { Logger } from './logger';
 
 let idToken: string | null = null;
 
@@ -28,6 +29,20 @@ api.interceptors.request.use(
     return config;
   },
   (error) => Promise.reject(error)
+);
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    Logger.error('[api] HTTP request failed', {
+      method: error?.config?.method,
+      url: error?.config?.url,
+      status: error?.response?.status,
+      statusText: error?.response?.statusText,
+      error,
+    });
+    return Promise.reject(error);
+  }
 );
 
 export default api;

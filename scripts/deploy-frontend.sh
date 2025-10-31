@@ -15,5 +15,5 @@ rm -rf ./apps/swivel-portal/build
 nx build swivel-portal --configuration=$ENV_MODE --tui false --skipNxCache
 
 cd ./infra
-npx cdk deploy SwivelPortalFrontendStack-$ENV_MODE --context env=$ENV_MODE
+npx cdk deploy SwivelPortalFrontendStack-dev --context env=dev
 

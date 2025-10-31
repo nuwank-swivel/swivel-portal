@@ -1,6 +1,17 @@
 import api from '../axios';
 import { SeatAvailabilityResponse, Booking } from '@swivel-portal/types';
 
+export async function updateBookingMeal(
+  bookingId: string,
+  date: string,
+  lunchOption: string | null
+) {
+  return api.patch(`/api/seatbooking/bookings/${bookingId}`, {
+    lunchOption,
+    date,
+  });
+}
+
 /**
  * Fetch seat layout from backend
  */
@@ -93,6 +104,8 @@ export interface CreateBookingRequest {
     startDate: string;
     endDate?: string;
   };
+  // Optional: create booking on behalf of another user (email or azureAdId)
+  bookForUserId?: string;
 }
 
 export interface CreateBookingResponse {
@@ -109,4 +122,21 @@ export async function createBooking(
     bookingData
   );
   return response.data;
+}
+
+/**
+ * Update a booking
+ */
+export async function updateBooking(
+  bookingId: string,
+  updates: Record<string, unknown>,
+  options?: { date?: string }
+) {
+  // PATCH to new API endpoint, pass date as query param if present
+  const query = options?.date
+    ? `?date=${encodeURIComponent(options.date)}`
+    : '';
+  return api.patch(`/api/seatbooking/bookings/${bookingId}${query}`, {
+    ...updates,
+  });
 }

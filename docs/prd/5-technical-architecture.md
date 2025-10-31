@@ -34,6 +34,7 @@ The project has been migrated to an Nx monorepo to unify the development of the 
   - `bookings`: Tracks all reservation data.
 
   - `teams`: Stores team data including name, color, owner, members, and deleted flag (for soft delete). (Story 05.06)
+  - `availabilityEvents`: Stores all user availability actions (signin, signoff, afk, back) with timestamps, user ID, and status/ETA
 
 ### Team Management Technical Notes (Story 05.06)
 
@@ -42,3 +43,17 @@ The project has been migrated to an Nx monorepo to unify the development of the 
 - Team color stored as string (hex code)
 - User records include list of team IDs
 - Soft delete implemented via `deleted` flag; teams hidden from UI but retained in DB
+
+## 5.3 Availability Management Architecture
+
+### Frontend
+
+- Availability section on dashboard for presence management (Signin, Signoff, AFK, Back)
+- Admin dashboard view for availability records and date selection
+
+### Backend
+
+- API endpoints for availability events (signin, signoff, afk, back)
+- Integration with Microsoft Graph API to update Teams presence/status
+- Store all events in the database and allow querying by date/user
+- Admin endpoint to retrieve availability records for any date

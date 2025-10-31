@@ -11,3 +11,9 @@
 - 100% employee adoption
 - < 30 seconds to complete a booking
 - Zero double-bookings
+
+## 12.3 Availability Management Metrics
+
+- % of users actively managing availability daily
+- Accuracy of Teams presence/status updates
+- Time to update and retrieve availability records

@@ -5,12 +5,12 @@ import { StatusCodes } from 'http-status-codes';
 /**
  * Cancel a booking if owned by user and not in the past
  * @param bookingId - Booking ID
- * @param userId - User ID
+ * @param requester - Requesting user context
  * @throws Error if not allowed
  */
 export async function cancelBooking(
   bookingId: string,
-  userId: string,
+  requester: { userId: string; isAdmin?: boolean },
   options?: { date?: string }
 ) {
   const booking = await RepositoryContext.bookingRepository.getById(bookingId);
@@ -19,7 +19,10 @@ export async function cancelBooking(
     throw new HttpError(StatusCodes.NOT_FOUND, 'Booking not found');
   }
 
-  if (booking.userId !== userId) {
+  const { userId, isAdmin } = requester;
+  const isAdminUser = Boolean(isAdmin);
+
+  if (!isAdminUser && booking.userId !== userId) {
     throw new HttpError(StatusCodes.FORBIDDEN, 'Forbidden: not your booking');
   }
 
@@ -61,6 +64,7 @@ export async function cancelBooking(
   }
   const updated = await RepositoryContext.bookingRepository.update(bookingId, {
     canceledAt: new Date(),
+    canceledBy: userId,
   });
   if (!updated) {
     throw new HttpError(

@@ -12,6 +12,11 @@ new SwivelPortalStack(app, 'SwivelPortalStack-dev', {
   envName: 'dev',
 });
 
+new SwivelPortalStack(app, 'SwivelPortalStack-staging', {
+  env,
+  envName: 'staging',
+});
+
 new SwivelPortalStack(app, 'SwivelPortalStack-production', {
   env,
   envName: 'prod',

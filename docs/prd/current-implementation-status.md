@@ -15,9 +15,15 @@ The following components have been implemented in the React frontend:
    - Date selection UI
 
 3. **Booking Management** (`src/frontend/src/components/booking/`)
+
    - Booking modal UI (`BookingModal.tsx`)
    - Seat card component (`SeatCard.tsx`)
    - Form controls for duration and time selection
+
+4. **Availability Management** (`src/frontend/src/components/availability/`)
+   - Dashboard display for seat availability
+   - Backend admin view for managing seat availability
+   - Real-time updates
 
 Pending Implementation:
 

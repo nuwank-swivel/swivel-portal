@@ -18,3 +18,9 @@
 
 - **Database**: Automated backups and point-in-time recovery are handled by MongoDB Atlas.
 - **Infrastructure**: The use of AWS CDK for infrastructure-as-code facilitates disaster recovery and environment replication.
+
+## 10.4 Availability Management Operations
+
+- Monitor API usage and errors for availability endpoints
+- Ensure database backup includes availability events
+- Audit logs for all availability actions

@@ -29,3 +29,10 @@
 - Final bug fixes and performance tuning
 - Deploy to production
 - Monitor application health and user activity
+
+## Milestone: User Availability Management
+
+- Implement dashboard availability section (UI & API)
+- Integrate Microsoft Graph API for Teams presence/status
+- Build admin view for availability records and reporting
+- Backend endpoints and database for event logging

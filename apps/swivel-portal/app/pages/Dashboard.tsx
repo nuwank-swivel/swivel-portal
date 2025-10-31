@@ -1,5 +1,6 @@
 import { Card } from '@mantine/core';
-import { Calendar, Users, FileText, Settings } from 'lucide-react';
+import AvailabilityPanel from '../components/AvailabilityPanel';
+import { Calendar, Users, FileText, Settings, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import CoreLayout from '../components/CoreLayout';
 import { useUIContext } from '@/lib/UIContext';
@@ -23,6 +24,14 @@ const tools = [
     icon: Users,
     path: '/team-directory',
     color: 'text-secondary',
+  },
+  {
+    id: 'team-availability',
+    name: 'Team Availability',
+    description: 'View team or all users availability',
+    icon: Clock,
+    path: '/team-availability',
+    color: 'text-primary',
   },
   {
     id: 'documents',
@@ -55,6 +64,12 @@ export default function Dashboard() {
 
   return (
     <CoreLayout>
+      <AvailabilityPanel />
+      {/* ...existing dashboard cards... */}
+
+      <h3 className="m-2" style={{ color: '#6B7280' }}>
+        Select a tool to get started.
+      </h3>
       <div
         style={{
           display: 'grid',
@@ -68,6 +83,7 @@ export default function Dashboard() {
             <Card
               key={tool.id}
               p="lg"
+              radius="lg"
               style={{
                 cursor: tool.path !== '#' ? 'pointer' : 'default',
                 opacity: tool.path !== '#' ? 1 : 0.6,
@@ -83,18 +99,17 @@ export default function Dashboard() {
                   style={{
                     padding: 12,
                     borderRadius: 8,
-                    background: '#F1F5F9',
                   }}
+                  className="bg-blue-50 dark:bg-blue-200"
                 >
                   <Icon size={24} color="#2563EB" />
                 </div>
                 <div>
-                  <h2
-                    style={{ fontSize: 20, fontWeight: 600, color: '#111827' }}
+                  <h2 style={{ fontSize: 20, fontWeight: 600 }}>{tool.name}</h2>
+                  <p
+                    className="text-gray-600 dark:text-gray-400"
+                    style={{ fontSize: 14, marginTop: 4 }}
                   >
-                    {tool.name}
-                  </h2>
-                  <p style={{ fontSize: 14, color: '#6B7280', marginTop: 4 }}>
                     {tool.description}
                   </p>
                 </div>

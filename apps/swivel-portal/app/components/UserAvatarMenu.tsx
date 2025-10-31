@@ -11,7 +11,7 @@ export default function UserAvatarMenu() {
           Admin
         </Badge>
       ) : null}
-      <Menu shadow="md" width={180} position="bottom-end">
+      {/* <Menu shadow="md" width={180} position="bottom-end">
         <Menu.Target>
           <UnstyledButton>
             <Avatar color="indigo" radius="xl" size={36}>
@@ -22,9 +22,8 @@ export default function UserAvatarMenu() {
         <Menu.Dropdown>
           <Menu.Label>{user?.name || user?.email || 'User'}</Menu.Label>
           <Menu.Divider />
-          <Menu.Item>{/* <LogoutButton /> */}</Menu.Item>
         </Menu.Dropdown>
-      </Menu>
+      </Menu> */}
     </Group>
   );
 }
