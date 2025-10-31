@@ -37,6 +37,8 @@ jobs:
           cd ../
 
       - name: Build frontend
+        env:
+          VITE_BACKEND_URL: ${{ vars.VITE_BACKEND_URL }}
         run: npx nx build swivel-portal --configuration=production --skipNxCache --mode=production
 
       # - name: zip frontend build artifacts
