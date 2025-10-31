@@ -3,6 +3,9 @@ import { Construct } from 'constructs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as path from 'path';
+import * as events from 'aws-cdk-lib/aws-events';
+import * as targets from 'aws-cdk-lib/aws-events-targets';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { StackProps } from '../types';
 import { BaseStack } from './BaseStack';
 
@@ -581,6 +584,74 @@ export class SwivelPortalStack extends BaseStack {
       }
     );
 
+
+    // --- MEAL Lambda Functions ---
+
+
+
+    // --- MEAL Lambda Functions ---
+    const addMealNotificationLambda = new lambda.Function(
+      this,
+      `AddMealNotificationLambda${this.envSuffix}`,
+      {
+        code: lambda.Code.fromAsset(
+          path.join(
+            __dirname,
+            '../../apps/swivel-portal-api/dist/meal/addMealNotification.js.zip'
+          )
+        ),
+        handler: 'addMealNotification.handler',
+        runtime: lambda.Runtime.NODEJS_22_X,
+        functionName: `AddMealNotificationLambda${this.envSuffix}`,
+        environment: {
+          ...DB_ENV,
+        },
+        timeout: cdk.Duration.seconds(10),
+      }
+    );
+
+    const deleteMealNotificationLambda = new lambda.Function(
+      this,
+      `DeleteMealNotificationLambda${this.envSuffix}`,
+      {
+        code: lambda.Code.fromAsset(
+          path.join(
+            __dirname,
+            '../../apps/swivel-portal-api/dist/meal/deleteMealNotification.js.zip'
+          )
+        ),
+        handler: 'deleteMealNotification.handler',
+        runtime: lambda.Runtime.NODEJS_22_X,
+        functionName: `DeleteMealNotificationLambda${this.envSuffix}`,
+        environment: {
+          ...DB_ENV,
+        },
+        timeout: cdk.Duration.seconds(10),
+      }
+    );
+    const listMealNotificationsLambda = new lambda.Function(
+      this,
+      `ListMealNotificationsLambda${this.envSuffix}`,
+      {
+        code: lambda.Code.fromAsset(
+          path.join(
+            __dirname,
+            '../../apps/swivel-portal-api/dist/meal/listMealNotifications.js.zip'
+          )
+        ),
+        handler: 'listMealNotifications.handler',
+        runtime: lambda.Runtime.NODEJS_22_X,
+        functionName: `ListMealNotificationsLambda${this.envSuffix}`,
+        environment: {
+          ...DB_ENV,
+        },
+        timeout: cdk.Duration.seconds(10),
+      }
+    );
+
+
+    // Lambda for GET /api/meal/notifications/enabled (admin)
+
     // --- TEAM API Gateway Resources ---
     const teamResource = apiResource.addResource('team');
     // POST /api/team (create)
@@ -632,5 +703,77 @@ export class SwivelPortalStack extends BaseStack {
         authorizationType: apigateway.AuthorizationType.CUSTOM,
       }
     );
+
+    // --- MEAL API Gateway Resources ---
+    const mealResource = apiResource.addResource('meal');
+    // Meal options endpoints removed per scope adjustment
+
+
+    const mealNotificationsResource = mealResource.addResource('notifications');
+
+    // GET /api/meal/notifications/all (admin, all users)
+    const mealNotificationsAllResource = mealNotificationsResource.addResource('all');
+    mealNotificationsAllResource.addMethod(
+      'GET',
+      new apigateway.LambdaIntegration(listMealNotificationsLambda, { proxy: true }),
+      {
+        authorizer: apiAuthorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
+      }
+    );
+    mealNotificationsResource.addMethod(
+      'POST',
+      new apigateway.LambdaIntegration(addMealNotificationLambda, { proxy: true }),
+      {
+        authorizer: apiAuthorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
+      }
+    );
+    mealNotificationsResource.addMethod(
+      'DELETE',
+      new apigateway.LambdaIntegration(deleteMealNotificationLambda, { proxy: true }),
+      {
+        authorizer: apiAuthorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
+      }
+    );
+
+
+    // --- Scheduled Daily Email Job Lambda ---
+    const mealDailyEmailLambda = new lambda.Function(
+      this,
+      `MealDailyEmailLambda${this.envSuffix}`,
+      {
+        code: lambda.Code.fromAsset(
+          path.join(
+            __dirname,
+            '../../apps/swivel-portal-api/dist/meal/dailyEmailRun.js.zip'
+          )
+        ),
+        handler: 'dailyEmailRun.handler',
+        runtime: lambda.Runtime.NODEJS_22_X,
+        functionName: `MealDailyEmailLambda${this.envSuffix}`,
+        environment: {
+          ...DB_ENV,
+          EMAIL_FROM: process.env.EMAIL_FROM || '',
+        },
+        // layers: [sharedLayer],
+        timeout: cdk.Duration.seconds(30),
+      }
+    );
+
+    // Allow Lambda to send emails via SES
+    mealDailyEmailLambda.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ['ses:SendEmail', 'ses:SendRawEmail'],
+        resources: ['*'],
+      })
+    );
+
+    // Schedule the daily email job at 08:00 UTC
+    new events.Rule(this, `MealDailyEmailSchedule${this.envSuffix}`, {
+      schedule: events.Schedule.cron({ minute: '0', hour: '8' }),
+      targets: [new targets.LambdaFunction(mealDailyEmailLambda)],
+    });
   }
 }

@@ -3,3 +3,4 @@ export * from './BookingRepository.js';
 export * from './SeatConfigurationRepository.js';
 export * from './DaySeatOverrideRepository.js';
 export { default as RepositoryContext } from './RepositoryContext.js';
+export * from './MealNotificationSettingsRepository.js';
