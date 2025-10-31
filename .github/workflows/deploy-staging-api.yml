@@ -37,8 +37,6 @@ jobs:
           cd ../
 
       - name: Build api
-        env:
-          VITE_BACKEND_URL: ${{ vars.VITE_BACKEND_URL }}
         run: npx nx build swivel-portal-api --configuration=production --tui false --skipNxCache
 
       - name: Zip functions
