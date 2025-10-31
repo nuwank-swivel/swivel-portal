@@ -34,25 +34,33 @@ jobs:
         run: |
           cd infra
           npm install
+          cd ../
 
       - name: Build frontend
+        env:
+          VITE_BACKEND_URL: ${{ vars.VITE_BACKEND_URL }}
         run: npx nx build swivel-portal --configuration=production --skipNxCache --mode=production
 
-      - name: zip frontend build artifacts
-        run: |
-          cd apps/swivel-portal/build/client
-          zip -r ../../../../swivel-portal-ui-${{ github.event.inputs.tag }}.zip .
-          cd ../../../../
+      # - name: zip frontend build artifacts
+      #   run: |
+      #     cd apps/swivel-portal/build/client
+      #     zip -r ../../../../swivel-portal-ui-${{ github.event.inputs.tag }}.zip .
+      #     cd ../../../../
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ github.event.inputs.tag }}
-          files: swivel-portal-ui-${{ github.event.inputs.tag }}.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Create GitHub Release
+      #   uses: softprops/action-gh-release@v1
+      #   with:
+      #     tag_name: ${{ github.event.inputs.tag }}
+      #     files: swivel-portal-ui-${{ github.event.inputs.tag }}.zip
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy frontend to Staging
+        env:
+          AWS_ACCESS_KEY_ID: ${{ vars.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ vars.AWS_SECRET_ACCESS_KEY }}
         run: |
           cd infra
-          npx cdk deploy  SwivelPortalFrontendStack-staging  --require-approval never --parameters tag=${{ github.event.inputs.tag }} --app "npx ts-node --prefer-ts-exts ./bin/swivel-portal-frontend.ts"
+          # for testing purpose
+          ls -a
+          npx cdk deploy  SwivelPortalFrontendStack-staging  --require-approval never --app "npx ts-node --prefer-ts-exts ./bin/swivel-portal-frontend.ts"
