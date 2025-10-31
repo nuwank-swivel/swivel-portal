@@ -61,4 +61,4 @@ jobs:
           cd infra
           # for testing purpose
           ls -a
-          npx cdk deploy  SwivelPortalFrontendStack-staging  --require-approval never --parameters tag=${{ github.event.inputs.tag }} --app "npx ts-node --prefer-ts-exts ./bin/swivel-portal-frontend.ts"
+          npx cdk deploy  SwivelPortalFrontendStack-staging  --require-approval never --app "npx ts-node --prefer-ts-exts ./bin/swivel-portal-frontend.ts"
