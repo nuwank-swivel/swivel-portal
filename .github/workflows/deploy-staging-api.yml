@@ -1,0 +1,57 @@
+name: Deploy Staging API
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to deploy'
+        required: true
+        type: string
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout to tag
+        run: git checkout ${{ github.event.inputs.tag }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - name: Install AWS CDK
+        run: npm install -g aws-cdk
+
+      - name: Install dependencies (root)
+        run: npm install
+
+      - name: Install dependencies (infra)
+        run: |
+          cd infra
+          npm install
+          cd ../
+
+      - name: Build api
+        env:
+          VITE_BACKEND_URL: ${{ vars.VITE_BACKEND_URL }}
+        run: npx nx build swivel-portal-api --configuration=production --tui false --skipNxCache
+
+      - name: Deploy api to Staging
+        env:
+          AWS_ACCESS_KEY_ID: ${{ vars.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ vars.AWS_SECRET_ACCESS_KEY }}
+          DB_URL: ${{ vars.DB_URL }}
+          ADMIN_GROUP_ID: ${{ vars.ADMIN_GROUP_ID }}
+          MS_ENTRA_TENANT_ID: ${{ vars.MS_ENTRA_TENANT_ID }}
+          MS_ENTRA_CLIENT_ID: ${{ vars.MS_ENTRA_CLIENT_ID }}
+          MS_ENTRA_CLIENT_SECRET: ${{ secrets.MS_ENTRA_CLIENT_SECRET }}
+        run: |
+          cd infra
+          # for testing purpose
+          ls -a
+          npx cdk deploy SwivelPortalStack-staging --context env=staging --require-approval never --app "npx ts-node --prefer-ts-exts ./bin/swivel-portal.ts"
