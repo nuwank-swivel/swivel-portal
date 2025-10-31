@@ -34,7 +34,8 @@ export interface IMealOptionsRepository<T> extends IRepository<T> {
 }
 
 export interface IMealNotificationSettingsRepository<T> extends IRepository<T> {
-  getByUserId(userId: string): Promise<T | null>;
-  setForUser(userId: string, settings: { receiveDailyEmail: boolean; preferredTimeUTC?: string | null }): Promise<T>;
+  getByUserEmail(userEmail: string): Promise<T | null>;
+  addForUser(userEmail: string, settings: { preferredTimeUTC?: string | null; addedBy?: string; updatedBy?: string }): Promise<T>;
+  deleteForUser(userEmail: string): Promise<void>;
   listAllEnabled(): Promise<T[]>;
 }

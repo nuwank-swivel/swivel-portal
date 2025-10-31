@@ -587,69 +587,70 @@ export class SwivelPortalStack extends BaseStack {
 
     // --- MEAL Lambda Functions ---
 
-    const getMealNotificationsLambda = new lambda.Function(
+
+
+    // --- MEAL Lambda Functions ---
+    const addMealNotificationLambda = new lambda.Function(
       this,
-      `GetMealNotificationsLambda${this.envSuffix}`,
+      `AddMealNotificationLambda${this.envSuffix}`,
       {
         code: lambda.Code.fromAsset(
           path.join(
             __dirname,
-            '../../apps/swivel-portal-api/dist/meal/getMealNotifications.js.zip'
+            '../../apps/swivel-portal-api/dist/meal/addMealNotification.js.zip'
           )
         ),
-        handler: 'getMealNotifications.handler',
+        handler: 'addMealNotification.handler',
         runtime: lambda.Runtime.NODEJS_22_X,
-        functionName: `GetMealNotificationsLambda${this.envSuffix}`,
+        functionName: `AddMealNotificationLambda${this.envSuffix}`,
         environment: {
           ...DB_ENV,
         },
-        layers: [sharedLayer],
         timeout: cdk.Duration.seconds(10),
       }
     );
 
-    const putMealNotificationsLambda = new lambda.Function(
+    const deleteMealNotificationLambda = new lambda.Function(
       this,
-      `PutMealNotificationsLambda${this.envSuffix}`,
+      `DeleteMealNotificationLambda${this.envSuffix}`,
       {
         code: lambda.Code.fromAsset(
           path.join(
             __dirname,
-            '../../apps/swivel-portal-api/dist/meal/putMealNotifications.js.zip'
+            '../../apps/swivel-portal-api/dist/meal/deleteMealNotification.js.zip'
           )
         ),
-        handler: 'putMealNotifications.handler',
+        handler: 'deleteMealNotification.handler',
         runtime: lambda.Runtime.NODEJS_22_X,
-        functionName: `PutMealNotificationsLambda${this.envSuffix}`,
+        functionName: `DeleteMealNotificationLambda${this.envSuffix}`,
         environment: {
           ...DB_ENV,
         },
-        layers: [sharedLayer],
         timeout: cdk.Duration.seconds(10),
       }
     );
+    const listMealNotificationsLambda = new lambda.Function(
+      this,
+      `ListMealNotificationsLambda${this.envSuffix}`,
+      {
+        code: lambda.Code.fromAsset(
+          path.join(
+            __dirname,
+            '../../apps/swivel-portal-api/dist/meal/listMealNotifications.js.zip'
+          )
+        ),
+        handler: 'listMealNotifications.handler',
+        runtime: lambda.Runtime.NODEJS_22_X,
+        functionName: `ListMealNotificationsLambda${this.envSuffix}`,
+        environment: {
+          ...DB_ENV,
+        },
+        timeout: cdk.Duration.seconds(10),
+      }
+    );
+
 
     // Lambda for GET /api/meal/notifications/enabled (admin)
-    const getEnabledMealNotificationUsersLambda = new lambda.Function(
-      this,
-      `GetEnabledMealNotificationUsersLambda${this.envSuffix}`,
-      {
-        code: lambda.Code.fromAsset(
-          path.join(
-            __dirname,
-            '../../apps/swivel-portal-api/dist/meal/getEnabledMealNotificationUsers.js.zip'
-          )
-        ),
-        handler: 'getEnabledMealNotificationUsers.handler',
-        runtime: lambda.Runtime.NODEJS_22_X,
-        functionName: `GetEnabledMealNotificationUsersLambda${this.envSuffix}`,
-        environment: {
-          ...DB_ENV,
-        },
-        layers: [sharedLayer],
-        timeout: cdk.Duration.seconds(10),
-      }
-    );
 
     // --- TEAM API Gateway Resources ---
     const teamResource = apiResource.addResource('team');
@@ -709,33 +710,34 @@ export class SwivelPortalStack extends BaseStack {
 
 
     const mealNotificationsResource = mealResource.addResource('notifications');
-    mealNotificationsResource.addMethod(
+
+    // GET /api/meal/notifications/all (admin, all users)
+    const mealNotificationsAllResource = mealNotificationsResource.addResource('all');
+    mealNotificationsAllResource.addMethod(
       'GET',
-      new apigateway.LambdaIntegration(getMealNotificationsLambda, { proxy: true }),
+      new apigateway.LambdaIntegration(listMealNotificationsLambda, { proxy: true }),
       {
         authorizer: apiAuthorizer,
         authorizationType: apigateway.AuthorizationType.CUSTOM,
       }
     );
     mealNotificationsResource.addMethod(
-      'PUT',
-      new apigateway.LambdaIntegration(putMealNotificationsLambda, { proxy: true }),
+      'POST',
+      new apigateway.LambdaIntegration(addMealNotificationLambda, { proxy: true }),
+      {
+        authorizer: apiAuthorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
+      }
+    );
+    mealNotificationsResource.addMethod(
+      'DELETE',
+      new apigateway.LambdaIntegration(deleteMealNotificationLambda, { proxy: true }),
       {
         authorizer: apiAuthorizer,
         authorizationType: apigateway.AuthorizationType.CUSTOM,
       }
     );
 
-    // GET /api/meal/notifications/enabled (admin)
-    const enabledNotificationsResource = mealNotificationsResource.addResource('enabled');
-    enabledNotificationsResource.addMethod(
-      'GET',
-      new apigateway.LambdaIntegration(getEnabledMealNotificationUsersLambda, { proxy: true }),
-      {
-        authorizer: apiAuthorizer,
-        authorizationType: apigateway.AuthorizationType.CUSTOM,
-      }
-    );
 
     // --- Scheduled Daily Email Job Lambda ---
     const mealDailyEmailLambda = new lambda.Function(
@@ -755,7 +757,7 @@ export class SwivelPortalStack extends BaseStack {
           ...DB_ENV,
           EMAIL_FROM: process.env.EMAIL_FROM || '',
         },
-        layers: [sharedLayer],
+        // layers: [sharedLayer],
         timeout: cdk.Duration.seconds(30),
       }
     );

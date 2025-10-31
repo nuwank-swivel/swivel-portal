@@ -1,0 +1,1 @@
+{"root":["./types.ts","./bin/swivel-portal-frontend.ts","./bin/swivel-portal.ts","./lib/basestack.ts","./lib/swivel-portal-frontend-stack.ts","./lib/swivel-portal-stack.ts","./test/infra.test.ts"],"version":"5.6.3"}

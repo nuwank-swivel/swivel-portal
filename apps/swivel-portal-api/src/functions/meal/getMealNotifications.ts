@@ -1,9 +1,9 @@
-import { connectToDb, RepositoryContext } from '@swivel-portal/dal';
+import { getMealNotifications } from '@swivel-portal/domain';
 import { defineLambda } from '../../lambda/defineLambda';
 import { authMiddleware, ExtrasWithUser } from '../../middleware/authMiddleware';
 import { HttpError } from '@swivel-portal/types';
 
-export const handler = defineLambda<never, { userId?: string }, never, { settings: { receiveDailyEmail: boolean; preferredTimeUTC?: string | null } | null }, ExtrasWithUser>({
+export const handler = defineLambda<never, { userId?: string }, never, { settings: Awaited<ReturnType<typeof getMealNotifications>> }, ExtrasWithUser>({
   middlewares: [authMiddleware],
   log: true,
   handler: async ({ query, extras }) => {
@@ -12,10 +12,8 @@ export const handler = defineLambda<never, { userId?: string }, never, { setting
     if (query.userId && !isAdmin) {
       throw new HttpError(403, 'Forbidden: admin access required to query other users');
     }
-    await connectToDb();
-    const settings = await RepositoryContext.mealNotificationSettingsRepository.getByUserId(targetUserId);
-    if (!settings) return { settings: null };
-    return { settings: { receiveDailyEmail: settings.receiveDailyEmail, preferredTimeUTC: settings.preferredTimeUTC } };
+    const settings = await getMealNotifications(targetUserId);
+    return { settings };
   },
 });
 

@@ -12,7 +12,7 @@ echo "Deploying API in $ENV_MODE mode"
 rm -rf ./apps/swivel-portal-api/dist
 
 # build api and dependencies
-nx build swivel-portal-api --configuration=$ENV_MODE --tui false --skipNxCache
+npx nx build swivel-portal-api --configuration=$ENV_MODE --tui false --skipNxCache
 
 # zip api functions
 ./scripts/zip-api-functions.sh

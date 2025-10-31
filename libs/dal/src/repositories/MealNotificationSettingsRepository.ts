@@ -10,48 +10,51 @@ export class MealNotificationSettingsRepository
     super(MealNotificationSettings);
   }
 
-  async getByUserId(userId: string): Promise<MealNotificationSettings | null> {
-    return this.repository.findOne({ where: { userId } });
+  async getByUserEmail(userEmail: string): Promise<MealNotificationSettings | null> {
+    return this.repository.findOne({ where: { userEmail } });
   }
 
-  async setForUser(
-    userId: string,
+  async addForUser(
+    userEmail: string,
     settings: {
-      receiveDailyEmail: boolean;
       preferredTimeUTC?: string | null;
       addedBy?: string;
       updatedBy?: string;
     }
   ): Promise<MealNotificationSettings> {
-    const existing = await this.getByUserId(userId);
-    if (!existing) {
-      // On create, always set both addedBy and updatedBy, and log the object
-      const addedBy = settings.addedBy || 'system';
-      const updatedBy = settings.updatedBy || settings.addedBy || 'system';
-      const toSave: Partial<MealNotificationSettings> = {
-        userId,
-        receiveDailyEmail: settings.receiveDailyEmail,
-        preferredTimeUTC: settings.preferredTimeUTC ?? null,
-        addedBy,
-        updatedBy,
-      };
-      console.log('[MealNotificationSettingsRepository] Saving new:', toSave);
-      return this.repository.save(toSave as MealNotificationSettings);
+    const existing = await this.getByUserEmail(userEmail);
+    if (existing) {
+      // Already exists, update preferredTimeUTC if provided
+      if (settings.preferredTimeUTC !== undefined) {
+        existing.preferredTimeUTC = settings.preferredTimeUTC;
+      }
+      existing.updatedBy = settings.updatedBy || existing.updatedBy || 'system';
+      await this.repository.save(existing);
+      return existing;
     }
-    existing.receiveDailyEmail = settings.receiveDailyEmail;
-    existing.preferredTimeUTC = settings.preferredTimeUTC ?? null;
-    existing.updatedBy = settings.updatedBy || existing.updatedBy || 'system';
-    // Defensive: if addedBy is missing and provided in settings, set it
-    if (!existing.addedBy && settings.addedBy) {
-      existing.addedBy = settings.addedBy;
+    const addedBy = settings.addedBy || 'system';
+    const updatedBy = settings.updatedBy || settings.addedBy || 'system';
+    const toSave: Partial<MealNotificationSettings> = {
+      userEmail,
+      preferredTimeUTC: settings.preferredTimeUTC ?? null,
+      addedBy,
+      updatedBy,
+    };
+    console.log('[MealNotificationSettingsRepository] Adding new:', toSave);
+    return this.repository.save(toSave as MealNotificationSettings);
+  }
+
+  async deleteForUser(userEmail: string): Promise<void> {
+    const existing = await this.getByUserEmail(userEmail);
+    if (existing) {
+      await this.repository.remove(existing);
+      console.log('[MealNotificationSettingsRepository] Deleted for:', userEmail);
     }
-    console.log('[MealNotificationSettingsRepository] Updating existing:', existing);
-    await this.repository.save(existing);
-    return existing;
   }
 
   async listAllEnabled(): Promise<MealNotificationSettings[]> {
-    return this.repository.find({ where: { receiveDailyEmail: true } });
+    // All records are enabled
+    return this.repository.find();
   }
 }
 

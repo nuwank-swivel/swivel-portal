@@ -9,6 +9,7 @@
   },
   "private": true,
   "dependencies": {
+    "@aws-sdk/client-ses": "^3.921.0",
     "@azure/msal-node": "^3.8.0",
     "@mantine/core": "^8.3.4",
     "@mantine/dates": "^8.3.4",
