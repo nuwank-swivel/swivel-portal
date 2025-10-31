@@ -41,6 +41,11 @@ jobs:
           VITE_BACKEND_URL: ${{ vars.VITE_BACKEND_URL }}
         run: npx nx build swivel-portal-api --configuration=production --tui false --skipNxCache
 
+      - name: Zip functions
+        run: |
+          chmod +x ./scripts/zip-api-functions.sh
+          ./scripts/zip-api-functions.sh
+
       - name: Deploy api to Staging
         env:
           AWS_ACCESS_KEY_ID: ${{ vars.AWS_ACCESS_KEY_ID }}
