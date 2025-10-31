@@ -4,7 +4,7 @@ import { authMiddleware, ExtrasWithUser } from '../../middleware/authMiddleware'
 import { HttpError } from '@swivel-portal/types';
 
 interface PutBody {
-  userId?: string; // if absent, apply to self
+  userId?: string;
   receiveDailyEmail: boolean;
   preferredTimeUTC?: string | null;
 }
@@ -23,6 +23,8 @@ export const handler = defineLambda<PutBody, never, never, { ok: true }, ExtrasW
     await RepositoryContext.mealNotificationSettingsRepository.setForUser(targetUserId, {
       receiveDailyEmail: body.receiveDailyEmail,
       preferredTimeUTC: body.preferredTimeUTC ?? null,
+      addedBy: extras.user.email || extras.user.azureAdId,
+      updatedBy: extras.user.email || extras.user.azureAdId,
     });
     return { ok: true };
   },

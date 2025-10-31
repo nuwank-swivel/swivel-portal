@@ -471,6 +471,7 @@ export class SwivelPortalStack extends BaseStack {
       }
     );
 
+
     // --- MEAL Lambda Functions ---
 
     const getMealNotificationsLambda = new lambda.Function(
@@ -507,6 +508,28 @@ export class SwivelPortalStack extends BaseStack {
         handler: 'putMealNotifications.handler',
         runtime: lambda.Runtime.NODEJS_22_X,
         functionName: `PutMealNotificationsLambda${this.envSuffix}`,
+        environment: {
+          ...DB_ENV,
+        },
+        layers: [sharedLayer],
+        timeout: cdk.Duration.seconds(10),
+      }
+    );
+
+    // Lambda for GET /api/meal/notifications/enabled (admin)
+    const getEnabledMealNotificationUsersLambda = new lambda.Function(
+      this,
+      `GetEnabledMealNotificationUsersLambda${this.envSuffix}`,
+      {
+        code: lambda.Code.fromAsset(
+          path.join(
+            __dirname,
+            '../../apps/swivel-portal-api/dist/meal/getEnabledMealNotificationUsers.js.zip'
+          )
+        ),
+        handler: 'getEnabledMealNotificationUsers.handler',
+        runtime: lambda.Runtime.NODEJS_22_X,
+        functionName: `GetEnabledMealNotificationUsersLambda${this.envSuffix}`,
         environment: {
           ...DB_ENV,
         },
@@ -571,6 +594,7 @@ export class SwivelPortalStack extends BaseStack {
     const mealResource = apiResource.addResource('meal');
     // Meal options endpoints removed per scope adjustment
 
+
     const mealNotificationsResource = mealResource.addResource('notifications');
     mealNotificationsResource.addMethod(
       'GET',
@@ -583,6 +607,17 @@ export class SwivelPortalStack extends BaseStack {
     mealNotificationsResource.addMethod(
       'PUT',
       new apigateway.LambdaIntegration(putMealNotificationsLambda, { proxy: true }),
+      {
+        authorizer: apiAuthorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
+      }
+    );
+
+    // GET /api/meal/notifications/enabled (admin)
+    const enabledNotificationsResource = mealNotificationsResource.addResource('enabled');
+    enabledNotificationsResource.addMethod(
+      'GET',
+      new apigateway.LambdaIntegration(getEnabledMealNotificationUsersLambda, { proxy: true }),
       {
         authorizer: apiAuthorizer,
         authorizationType: apigateway.AuthorizationType.CUSTOM,

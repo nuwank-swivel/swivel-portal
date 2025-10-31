@@ -14,7 +14,11 @@ import { DatePickerInput } from '@mantine/dates';
 import { getAllBookingsForDate } from '@/lib/api/seatBooking';
 import { Button } from '../ui/button';
 import { searchUsers } from '@/lib/api/user';
-import { putMealNotifications } from '@/lib/api/meal';
+import {
+  putMealNotifications,
+  getEnabledMealNotificationUsers,
+  EnabledMealNotificationUser,
+} from '@/lib/api/meal';
 import { notifications } from '@mantine/notifications';
 import { Sheet } from 'lucide-react';
 import { useAuthContext } from '@/lib/AuthContext';
@@ -45,6 +49,11 @@ export function AllBookingsModal({ opened, onClose }: AllBookingsModalProps) {
   const [userOptions, setUserOptions] = useState<string[]>([]);
   const [userLoading, setUserLoading] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [enabledUsers, setEnabledUsers] = useState<
+    EnabledMealNotificationUser[]
+  >([]);
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [removingUserId, setRemovingUserId] = useState<string | null>(null);
 
   const fetchBookings = async (dateObj: Date) => {
     if (!dateObj) return;
@@ -74,11 +83,23 @@ export function AllBookingsModal({ opened, onClose }: AllBookingsModalProps) {
 
   const handleDownloadExcel = () => exportBookingsExcel(bookings, date);
 
-  const openSelectUsers = () => {
+  // Fetch all users with receiveDailyEmail enabled (admin only)
+  const openSelectUsers = async () => {
     setSelectedUsers([]);
     setUserSearch('');
     setUserOptions([]);
     setSelectUsersOpened(true);
+    setUserLoading(true);
+    try {
+      if (user?.isAdmin) {
+        const enabled = await getEnabledMealNotificationUsers();
+        setEnabledUsers(enabled);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setUserLoading(false);
+    }
   };
 
   const handleUserSearch = async (q: string) => {
@@ -90,7 +111,9 @@ export function AllBookingsModal({ opened, onClose }: AllBookingsModalProps) {
     setUserLoading(true);
     try {
       const results = await searchUsers(q);
-      setUserOptions(results);
+      // Remove already enabled users from search results
+      const enabledIds = new Set(enabledUsers.map((u) => u.userId));
+      setUserOptions(results.filter((id: string) => !enabledIds.has(id)));
     } finally {
       setUserLoading(false);
     }
@@ -101,13 +124,16 @@ export function AllBookingsModal({ opened, onClose }: AllBookingsModalProps) {
       setSelectUsersOpened(false);
       return;
     }
+    setSaveLoading(true);
     try {
       await Promise.all(
         selectedUsers.map((email) =>
-          // backend expects userId (azureAdId). If search returns emails as in user search, we need a mapping.
-          // Current searchUsers returns string[] likely of emails. For now, pass userId as email; backend getByUserId expects azureAdId.
-          // If mismatch, adjust API later. Here we store preferences per user via azureAdId; assuming search returns azureAdId list in this project.
-          putMealNotifications({ userId: email, receiveDailyEmail: true })
+          putMealNotifications({
+            userId: email,
+            receiveDailyEmail: true,
+            addedBy: user?.email || user?.azureAdId,
+            updatedBy: user?.email || user?.azureAdId,
+          })
         )
       );
       notifications.show({
@@ -115,13 +141,49 @@ export function AllBookingsModal({ opened, onClose }: AllBookingsModalProps) {
         message: 'Users enabled for daily meal emails',
         color: 'green',
       });
+      // Refresh enabled users list
+      const enabled = await getEnabledMealNotificationUsers();
+      setEnabledUsers(enabled);
+      setSelectedUsers([]);
+      setUserSearch('');
+      setUserOptions([]);
       setSelectUsersOpened(false);
-    } catch (_e) {
+    } catch {
       notifications.show({
         title: 'Save failed',
         message: 'Could not update users',
         color: 'red',
       });
+    } finally {
+      setSaveLoading(false);
+    }
+  };
+
+  // Remove/disable a user
+  const handleRemoveEnabledUser = async (userId: string) => {
+    setRemovingUserId(userId);
+    try {
+      await putMealNotifications({
+        userId,
+        receiveDailyEmail: false,
+        updatedBy: user?.email || user?.azureAdId,
+      });
+      notifications.show({
+        title: 'Removed',
+        message: 'User removed from daily meal emails',
+        color: 'green',
+      });
+      // Refresh enabled users list
+      const enabled = await getEnabledMealNotificationUsers();
+      setEnabledUsers(enabled);
+    } catch {
+      notifications.show({
+        title: 'Remove failed',
+        message: 'Could not remove user',
+        color: 'red',
+      });
+    } finally {
+      setRemovingUserId(null);
     }
   };
 
@@ -185,7 +247,162 @@ export function AllBookingsModal({ opened, onClose }: AllBookingsModalProps) {
         onClose={() => setSelectUsersOpened(false)}
         title="Select users for meal email"
         centered
+        size="50vw"
+        styles={{
+          content: { minWidth: 'min(500px, 100vw)', maxWidth: '50vw' },
+        }}
       >
+        <Text mb="sm">Enabled users:</Text>
+        <Table
+          striped
+          highlightOnHover
+          withTableBorder
+          withColumnBorders
+          mb="md"
+        >
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+                  User ID
+                </span>
+              </Table.Th>
+              <Table.Th>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+                  Added By
+                </span>
+              </Table.Th>
+              <Table.Th>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+                  Updated By
+                </span>
+              </Table.Th>
+              <Table.Th>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+                  Updated At
+                </span>
+              </Table.Th>
+              <Table.Th>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+                  Action
+                </span>
+              </Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {enabledUsers.length === 0 ? (
+              <Table.Tr>
+                <Table.Td colSpan={5} style={{ textAlign: 'center' }}>
+                  No users enabled
+                </Table.Td>
+              </Table.Tr>
+            ) : (
+              enabledUsers.map((u) => (
+                <Table.Tr key={u.userId}>
+                  <Table.Td>
+                    <span
+                      style={{
+                        fontSize: '0.75rem',
+                        color: '#333',
+                        display: 'inline-block',
+                        maxWidth: 120,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {u.userId}
+                    </span>
+                  </Table.Td>
+                  <Table.Td>
+                    <span
+                      style={{
+                        fontSize: '0.75rem',
+                        color: '#666',
+                        display: 'inline-block',
+                        maxWidth: 120,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontWeight: 500,
+                          color: '#888',
+                          marginRight: 4,
+                        }}
+                      >
+                        Added:
+                      </span>
+                      {u.addedBy || '-'}
+                    </span>
+                  </Table.Td>
+                  <Table.Td>
+                    <span
+                      style={{
+                        fontSize: '0.75rem',
+                        color: '#666',
+                        display: 'inline-block',
+                        maxWidth: 120,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontWeight: 500,
+                          color: '#888',
+                          marginRight: 4,
+                        }}
+                      >
+                        Upd:
+                      </span>
+                      {u.updatedBy || '-'}
+                    </span>
+                  </Table.Td>
+                  <Table.Td>
+                    <span
+                      style={{
+                        fontSize: '0.75rem',
+                        color: '#666',
+                        display: 'inline-block',
+                        maxWidth: 120,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {u.updatedAt
+                        ? new Date(u.updatedAt).toLocaleString()
+                        : '-'}
+                    </span>
+                  </Table.Td>
+                  <Table.Td>
+                    <MantineButton
+                      color="red"
+                      size="compact-xs"
+                      loading={removingUserId === u.userId}
+                      onClick={() => handleRemoveEnabledUser(u.userId)}
+                      style={{
+                        fontSize: '0.75rem',
+                        padding: '2px 8px',
+                        height: 22,
+                      }}
+                      disabled={
+                        removingUserId !== null && removingUserId !== u.userId
+                      }
+                    >
+                      Remove
+                    </MantineButton>
+                  </Table.Td>
+                </Table.Tr>
+              ))
+            )}
+          </Table.Tbody>
+        </Table>
+        <Text mb="xs">Add new users:</Text>
         <MultiSelect
           data={userOptions}
           searchable
@@ -201,10 +418,17 @@ export function AllBookingsModal({ opened, onClose }: AllBookingsModalProps) {
           <MantineButton
             variant="outline"
             onClick={() => setSelectUsersOpened(false)}
+            disabled={saveLoading}
           >
             Cancel
           </MantineButton>
-          <MantineButton onClick={saveMealEmailUsers}>Save</MantineButton>
+          <MantineButton
+            onClick={saveMealEmailUsers}
+            loading={saveLoading}
+            disabled={saveLoading}
+          >
+            Save
+          </MantineButton>
         </Group>
       </Modal>
       {loading ? (

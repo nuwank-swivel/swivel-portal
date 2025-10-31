@@ -16,6 +16,12 @@ export class MealNotificationSettings {
   @Column({ nullable: true })
   preferredTimeUTC?: string | null;
 
+  @Column({ nullable: true })
+  addedBy?: string;
+
+  @Column({ nullable: true })
+  updatedBy?: string;
+
   @UpdateDateColumn()
   updatedAt!: Date;
 }

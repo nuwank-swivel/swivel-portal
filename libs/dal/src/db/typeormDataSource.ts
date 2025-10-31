@@ -5,11 +5,12 @@ import { Booking } from '../models/Booking.js';
 import { DaySeatOverride } from '../models/DaySeatOverride.js';
 import { SeatConfiguration } from '../models/SeatConfiguration.js';
 import { Team } from '../models/Team.js';
+import { MealNotificationSettings } from '../models/MealNotificationSettings.js';
 
 export const AppDataSource = new DataSource({
   type: 'mongodb',
   url: process.env.DB_URL || '',
-  entities: [User, Booking, DaySeatOverride, SeatConfiguration, Team],
+  entities: [User, Booking, DaySeatOverride, SeatConfiguration, Team, MealNotificationSettings],
   synchronize: true, // Set to false in production
   logging: false,
 });
