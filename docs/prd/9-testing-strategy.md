@@ -17,3 +17,9 @@
 - Booking workflow
 - Admin operations
 - Cross-browser compatibility
+
+## 9.4 Availability Management Testing
+
+- Unit and integration tests for availability event endpoints
+- UI tests for dashboard availability section and admin view
+- UAT for presence management and admin reporting

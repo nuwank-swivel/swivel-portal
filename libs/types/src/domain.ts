@@ -1,6 +1,22 @@
+export interface PresenceEventRecord {
+  _id?: string;
+  userId: string;
+  event: PresenceEventType;
+  message?: string;
+  eta?: number;
+  timestamp: Date;
+}
+export enum PresenceEventType {
+  Signin = 'signin',
+  Signoff = 'signoff',
+  Afk = 'afk',
+  Back = 'back',
+}
+
 export interface User {
   _id?: string;
   azureAdId: string;
+  userGraphId: string;
   name?: string;
   email: string;
   isAdmin?: boolean;
@@ -63,6 +79,10 @@ export interface Team {
   color: string; // hex code
   ownerId: string; // admin user who created the team
   members: string[];
+  membersDetails?: Array<{
+    email: string;
+    name: string;
+  }>;
   deleted?: boolean;
   createdAt?: Date;
   updatedAt?: Date;

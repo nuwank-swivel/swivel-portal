@@ -1,3 +1,4 @@
+export const getDataSource = () => AppDataSource;
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import { User } from '../models/User.js';
@@ -6,11 +7,12 @@ import { DaySeatOverride } from '../models/DaySeatOverride.js';
 import { SeatConfiguration } from '../models/SeatConfiguration.js';
 import { Team } from '../models/Team.js';
 import { MealNotificationSettings } from '../models/MealNotificationSettings.js';
+import { PresenceEvent } from '../models/PresenceEvent.js';
 
 export const AppDataSource = new DataSource({
   type: 'mongodb',
   url: process.env.DB_URL || '',
-  entities: [User, Booking, DaySeatOverride, SeatConfiguration, Team, MealNotificationSettings],
+  entities: [User, Booking, DaySeatOverride, SeatConfiguration, Team, MealNotificationSettings, PresenceEvent,],
   synchronize: true, // Set to false in production
   logging: false,
 });

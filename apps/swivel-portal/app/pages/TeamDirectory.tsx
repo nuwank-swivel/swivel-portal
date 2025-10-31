@@ -217,7 +217,23 @@ export default function TeamDirectory() {
           </Card>
         ) : teams.length === 0 ? (
           <Card p="lg" style={{ marginBottom: 16 }}>
-            <div style={{ fontWeight: 600 }}>No teams found.</div>
+            {user?.isAdmin ? (
+              <Grid gutter={24} mt={8}>
+                <Grid.Col span={3}>
+                  <Button
+                    p="lg"
+                    w="100%"
+                    style={{ position: 'relative', minHeight: 120 }}
+                    onClick={() => setShowCreate(true)}
+                    variant="default"
+                  >
+                    <PlusCircleIcon size={18} className="mr-2" /> Create Team
+                  </Button>
+                </Grid.Col>
+              </Grid>
+            ) : (
+              <div style={{ fontWeight: 600 }}>No teams found.</div>
+            )}
           </Card>
         ) : (
           <Grid gutter={24} mt={8}>

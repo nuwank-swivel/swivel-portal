@@ -12,3 +12,9 @@
 - Role-based access control
 - Admin privileges via Azure AD groups
 - API endpoint protection
+
+## 7.3 Availability Management Security
+
+- All availability events require authentication
+- Only admins can access historical availability records for all users
+- API endpoints for availability events are protected and validated

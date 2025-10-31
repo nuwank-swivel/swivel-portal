@@ -15,7 +15,7 @@ export class BaseStack extends cdk.Stack {
     if (props?.envName === 'dev') {
       dotenv.config({ path: path.join(__dirname, '../.env.dev') });
     } else {
-      dotenv.config();
+      dotenv.config({ path: path.join(__dirname, '../.env') });
     }
   }
 }

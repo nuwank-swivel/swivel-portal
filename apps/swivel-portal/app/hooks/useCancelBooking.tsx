@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { cancelBooking } from '@/lib/api/seatBooking';
 import { Modal, Button, Text, Group, Radio } from '@mantine/core';
 import { Booking } from '@swivel-portal/types';
+import { Logger } from '@/lib/logger';
+import { useAuthContext } from '@/lib/AuthContext';
 
 export function useCancelBooking() {
   const [open, setOpen] = useState(false);
@@ -10,7 +12,8 @@ export function useCancelBooking() {
   const [error, setError] = useState<string | null>(null);
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [cancelMode, setCancelMode] = useState<'single' | 'all' | null>(null);
-  const [booking, setBooking] = useState<any | null>(null);
+  const [booking, setBooking] = useState<Booking | null>(null);
+  const { user } = useAuthContext();
 
   const showDialog = () => setOpen(true);
   const hideDialog = () => {
@@ -29,6 +32,12 @@ export function useCancelBooking() {
   ) => {
     setLoading(true);
     setError(null);
+    Logger.info('[booking] Cancellation requested', {
+      bookingId,
+      mode,
+      userId: user?.azureAdId,
+      recurring: Boolean(bookingObj?.recurring),
+    });
     try {
       if (mode === 'single' && bookingObj) {
         await cancelBooking(bookingId, { date: bookingObj.bookingDate });
@@ -36,9 +45,20 @@ export function useCancelBooking() {
         await cancelBooking(bookingId);
       }
       setOpen(false);
+      Logger.info('[booking] Cancellation succeeded', {
+        bookingId,
+        mode,
+        userId: user?.azureAdId,
+      });
       if (onSuccess) onSuccess();
     } catch (err) {
       setError('Failed to cancel booking');
+      Logger.error('[booking] Cancellation failed', {
+        bookingId,
+        mode,
+        userId: user?.azureAdId,
+        error: err,
+      });
     } finally {
       setLoading(false);
     }
@@ -111,11 +131,16 @@ export function useCancelBooking() {
     );
   }
 
-  function initiateCancel(bookingId: string, bookingObj?: any) {
+  function initiateCancel(bookingId: string, bookingObj?: Booking) {
     showDialog();
     setBookingId(bookingId);
     setBooking(bookingObj || null);
     setCancelMode(null);
+    Logger.debug('[booking] Cancellation initiated', {
+      bookingId,
+      userId: user?.azureAdId,
+      recurring: Boolean(bookingObj?.recurring),
+    });
   }
 
   return {

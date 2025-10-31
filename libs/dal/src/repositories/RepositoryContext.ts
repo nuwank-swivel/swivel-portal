@@ -14,6 +14,7 @@ import { DaySeatOverrideRepository } from './index.js';
 import { DaySeatOverride } from 'src/models/DaySeatOverride.js';
 import { TeamRepository } from './TeamRepository.js';
 import { MealNotificationSettingsRepository } from './MealNotificationSettingsRepository.js';
+import { PresenceEventRepository } from './PresenceEventRepository.js';
 
 class RepositoryContext {
   private _bookingRepository: IBookingRepository<Booking>;
@@ -22,6 +23,7 @@ class RepositoryContext {
   private _daySeatOverrideRepository: IDaySeatOverrideRepository<DaySeatOverride>;
   private _teamRepository: TeamRepository;
   private _mealNotificationSettingsRepository: MealNotificationSettingsRepository;
+  private _presenceEventRepository: PresenceEventRepository;
 
   constructor() {
     this._bookingRepository = new BookingRepository();
@@ -31,6 +33,10 @@ class RepositoryContext {
     this._teamRepository =
       new (require('./TeamRepository.js').TeamRepository)();
     this._mealNotificationSettingsRepository = new MealNotificationSettingsRepository();
+    this._presenceEventRepository = new PresenceEventRepository();
+  }
+  get presenceEventRepository(): PresenceEventRepository {
+    return this._presenceEventRepository;
   }
   get teamRepository(): TeamRepository {
     return this._teamRepository;
