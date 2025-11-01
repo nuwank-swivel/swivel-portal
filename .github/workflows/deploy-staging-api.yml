@@ -1,4 +1,4 @@
-name: Deploy Staging Frontend
+name: Deploy Staging API
 on:
   workflow_dispatch:
     inputs:
@@ -36,31 +36,25 @@ jobs:
           npm install
           cd ../
 
-      - name: Build frontend
-        env:
-          VITE_BACKEND_URL: ${{ vars.VITE_BACKEND_URL }}
-        run: npx nx build swivel-portal --configuration=production --skipNxCache --mode=production
+      - name: Build api
+        run: npx nx build swivel-portal-api --configuration=production --tui false --skipNxCache
 
-      # - name: zip frontend build artifacts
-      #   run: |
-      #     cd apps/swivel-portal/build/client
-      #     zip -r ../../../../swivel-portal-ui-${{ github.event.inputs.tag }}.zip .
-      #     cd ../../../../
+      - name: Zip functions
+        run: |
+          chmod +x ./scripts/zip-api-functions.sh
+          ./scripts/zip-api-functions.sh
 
-      # - name: Create GitHub Release
-      #   uses: softprops/action-gh-release@v1
-      #   with:
-      #     tag_name: ${{ github.event.inputs.tag }}
-      #     files: swivel-portal-ui-${{ github.event.inputs.tag }}.zip
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Deploy frontend to Staging
+      - name: Deploy api to Staging
         env:
           AWS_ACCESS_KEY_ID: ${{ vars.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ vars.AWS_SECRET_ACCESS_KEY }}
+          DB_URL: ${{ vars.DB_URL }}
+          ADMIN_GROUP_ID: ${{ vars.ADMIN_GROUP_ID }}
+          MS_ENTRA_TENANT_ID: ${{ vars.MS_ENTRA_TENANT_ID }}
+          MS_ENTRA_CLIENT_ID: ${{ vars.MS_ENTRA_CLIENT_ID }}
+          MS_ENTRA_CLIENT_SECRET: ${{ secrets.MS_ENTRA_CLIENT_SECRET }}
         run: |
           cd infra
           # for testing purpose
           ls -a
-          npx cdk deploy  SwivelPortalFrontendStack-staging  --require-approval never --app "npx ts-node --prefer-ts-exts ./bin/swivel-portal-frontend.ts"
+          npx cdk deploy SwivelPortalStack-staging --context env=staging --require-approval never --app "npx ts-node --prefer-ts-exts ./bin/swivel-portal.ts"
