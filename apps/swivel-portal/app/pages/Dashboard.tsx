@@ -8,7 +8,7 @@ import { useEffect } from 'react';
 import { useAuthContext } from '@/lib/AuthContext';
 import { Logger } from '@/lib/logger';
 
-const baseTools = [
+const tools = [
   {
     id: 'seat-booking',
     name: 'Seat Booking',
@@ -77,7 +77,7 @@ export default function Dashboard() {
           gap: 24,
         }}
       >
-        {baseTools.map((tool) => {
+        {tools.map((tool) => {
           const Icon = tool.icon;
           return (
             <Card
