@@ -16,7 +16,6 @@ import { Repeat, Sheet } from 'lucide-react';
 import { useCancelBooking } from '@/hooks/useCancelBooking';
 import { useAuthContext } from '@/lib/AuthContext';
 import { Booking } from '@swivel-portal/types';
-import { SelectUsersMealEmail } from './SelectUsersMealEmail';
 
 interface AdminBooking {
   bookingId: string;
@@ -30,7 +29,6 @@ interface AdminBooking {
 }
 
 export function AllBookingsPage() {
-  const [modalOpened, setModalOpened] = useState(false);
   const { user } = useAuthContext();
   const exportBookingsExcel = useExportBookingsExcel();
   const {
@@ -108,34 +106,19 @@ export function AllBookingsPage() {
           popoverProps={{ withinPortal: true }}
           clearable={false}
         />
-        <Group>
-          {bookings.length > 0 && (
-            <Button
-              onClick={handleDownloadExcel}
-              type="button"
-              variant="outline"
-              data-testid="download-excel-btn"
-              size="xs"
-              color="green"
-            >
-              <Sheet size="20" className="mr-2" />
-              Download as Excel
-            </Button>
-          )}
-
-          {user?.isAdmin && (
-            <Button
-              type="button"
-              variant="outline"
-              size="xs"
-              color="blue"
-              onClick={() => setModalOpened(true)}
-              style={{ marginLeft: 8 }}
-            >
-              Select users for meal email
-            </Button>
-          )}
-        </Group>
+        {bookings.length > 0 && (
+          <Button
+            onClick={handleDownloadExcel}
+            type="button"
+            variant="outline"
+            data-testid="download-excel-btn"
+            size="xs"
+            color="green"
+          >
+            <Sheet size="20" className="mr-2" />
+            Download as Excel
+          </Button>
+        )}
       </Group>
       {loading ? (
         <div className="flex justify-center">
@@ -232,11 +215,6 @@ export function AllBookingsPage() {
           }
           setSelectedBooking(null);
         }}
-      />
-      {/* Modal for selecting users for meal email */}
-      <SelectUsersMealEmail
-        opened={modalOpened}
-        onClose={() => setModalOpened(false)}
       />
     </Card>
   );

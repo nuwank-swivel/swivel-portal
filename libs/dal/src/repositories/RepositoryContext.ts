@@ -13,7 +13,6 @@ import { SeatConfigurationRepository } from './SeatConfigurationRepository.js';
 import { DaySeatOverrideRepository } from './index.js';
 import { DaySeatOverride } from 'src/models/DaySeatOverride.js';
 import { TeamRepository } from './TeamRepository.js';
-import { MealNotificationSettingsRepository } from './MealNotificationSettingsRepository.js';
 import { PresenceEventRepository } from './PresenceEventRepository.js';
 
 class RepositoryContext {
@@ -22,7 +21,6 @@ class RepositoryContext {
   private _seatConfigurationRepository: ISeatConfigurationRepository<SeatConfiguration>;
   private _daySeatOverrideRepository: IDaySeatOverrideRepository<DaySeatOverride>;
   private _teamRepository: TeamRepository;
-  private _mealNotificationSettingsRepository: MealNotificationSettingsRepository;
   private _presenceEventRepository: PresenceEventRepository;
 
   constructor() {
@@ -32,7 +30,6 @@ class RepositoryContext {
     this._daySeatOverrideRepository = new DaySeatOverrideRepository();
     this._teamRepository =
       new (require('./TeamRepository.js').TeamRepository)();
-    this._mealNotificationSettingsRepository = new MealNotificationSettingsRepository();
     this._presenceEventRepository = new PresenceEventRepository();
   }
   get presenceEventRepository(): PresenceEventRepository {
@@ -56,11 +53,6 @@ class RepositoryContext {
 
   get daySeatOverrideRepository(): IDaySeatOverrideRepository<DaySeatOverride> {
     return this._daySeatOverrideRepository;
-  }
-
-
-  get mealNotificationSettingsRepository(): MealNotificationSettingsRepository {
-    return this._mealNotificationSettingsRepository;
   }
 }
 

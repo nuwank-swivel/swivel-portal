@@ -22,5 +22,5 @@ require('esbuild').build({
   minifyWhitespace: true,
   minifyIdentifiers: false,
   minifySyntax: true,
-  external: ['mongoose', '@aws-sdk/client-ses'],
+  external: ['mongoose'],
 });
